@@ -1,0 +1,45 @@
+.menuButton {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  letter-spacing: 2px;
+  padding: 0;
+}
+.burger {
+  width: 28px;
+  height: 28px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+.burger span {
+  display: block;
+  width: 28px;
+  height: 3px;
+  background: white;
+  border-radius: 2px;
+  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+.burgerOpen {
+  width: 28px;
+  height: 28px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+.burgerOpen span:first-child {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+.burgerOpen span:last-child {
+  transform: rotate(-45deg) translate(5px, -5px);
+} 

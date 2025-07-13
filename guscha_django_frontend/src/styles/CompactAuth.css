@@ -1,0 +1,137 @@
+/* Компактная аутентификация */
+.compact-auth-trigger {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.auth-trigger-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #333333;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  height: 36px;
+  box-sizing: border-box;
+}
+
+.auth-trigger-btn:hover {
+  border-color: #000000;
+  background: #f9f9f9;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.auth-trigger-btn.login-btn {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+}
+
+.auth-trigger-btn.login-btn:hover {
+  background: #333333;
+  border-color: #333333;
+}
+
+.auth-trigger-btn.register-btn {
+  background: #ffffff;
+  color: #000000;
+  border-color: #e0e0e0;
+}
+
+.auth-trigger-btn.register-btn:hover {
+  background: #f9f9f9;
+  border-color: #000000;
+}
+
+/* Оверлей для форм */
+.compact-auth-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 2rem;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.compact-auth-wrapper {
+  position: relative;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.compact-auth-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: #f5f5f5;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+  color: #666666;
+}
+
+.compact-auth-close:hover {
+  background: #e0e0e0;
+  color: #000000;
+  transform: scale(1.1);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .compact-auth-trigger {
+    gap: 0.375rem;
+  }
+  
+  .auth-trigger-btn {
+    padding: 0.5rem 0.625rem;
+    font-size: 0.75rem;
+    height: 32px;
+  }
+  
+  .compact-auth-overlay {
+    padding-top: 1rem;
+  }
+  
+  .compact-auth-wrapper {
+    margin: 0 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-trigger-btn {
+    padding: 0.375rem 0.5rem;
+    font-size: 0.7rem;
+    height: 28px;
+  }
+  
+  .auth-trigger-btn span {
+    display: none; /* Скрываем текст на очень маленьких экранах */
+  }
+} 

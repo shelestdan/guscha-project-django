@@ -1,0 +1,167 @@
+/* Modern Form and Tabs Styles */
+.modern-tabs {
+    display: flex;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 2rem;
+}
+
+.modern-tabs .nav-link {
+    border: none;
+    padding: 1rem 2rem;
+    font-weight: 600;
+    color: var(--gray-color);
+    transition: var(--transition);
+    position: relative;
+}
+
+.modern-tabs .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: var(--primary-color);
+    transition: var(--transition);
+}
+
+.modern-tabs .nav-link.active, 
+.modern-tabs .nav-link:hover {
+    color: var(--primary-color);
+}
+
+.modern-tabs .nav-link.active::after, 
+.modern-tabs .nav-link:hover::after {
+    width: 100%;
+}
+
+.tab-content {
+    padding: 2rem 0;
+}
+
+/* Modern Form Layout */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.form-card {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    box-shadow: var(--shadow-md);
+    transition: var(--transition);
+}
+
+.form-card:hover {
+    box-shadow: var(--shadow-xl);
+    transform: translateY(-4px);
+}
+
+.form-card h3 {
+    font-weight: 700;
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 1rem;
+    color: var(--dark-color);
+}
+
+/* Enhanced Form Fields */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    color: var(--gray-color);
+    margin-bottom: 0.5rem;
+}
+
+.form-control, .custom-select {
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    padding: 0.75rem 1.25rem;
+    transition: var(--transition);
+    width: 100%;
+    background: var(--light-color);
+    color: var(--dark-color);
+    font-size: 1rem;
+}
+
+.form-control:focus, .custom-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(81, 69, 229, 0.1);
+    background: white;
+    outline: none;
+}
+
+/* Checkbox and Radio Styles */
+.custom-control-label::before {
+    border-radius: 4px;
+    border-color: var(--border-color);
+}
+
+.custom-checkbox .custom-control-input:checked ~ .custom-control-label::before {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Action Buttons */
+.submit-row {
+    margin-top: 2rem;
+    text-align: right;
+}
+
+.btn-action {
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: var(--border-radius-sm);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Inlines */
+.inline-group {
+    margin-top: 2rem;
+    border-top: 2px solid var(--border-color);
+    padding-top: 2rem;
+}
+
+.inline-related h3 {
+    font-weight: 600;
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Dark Mode Support */
+.theme-dark .form-card {
+    background: #1e293b;
+    color: var(--light-color);
+    border: 1px solid #334155;
+}
+
+.theme-dark .form-card h3 {
+    color: white;
+    border-color: #334155;
+}
+
+.theme-dark .form-control, 
+.theme-dark .custom-select {
+    background: #334155;
+    border-color: #475569;
+    color: var(--light-color);
+}
+
+.theme-dark .form-control:focus, 
+.theme-dark .custom-select:focus {
+    background: #1e293b;
+    border-color: var(--primary-light);
+}

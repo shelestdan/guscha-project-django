@@ -1,0 +1,109 @@
+/* Стили для обертки форм аутентификации */
+.account-auth-wrapper {
+  min-height: 100vh;
+  width: 100%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  box-sizing: border-box;
+}
+
+/* Стили для старой формы логина, если она еще используется где-то */
+.account-figma-login-form {
+  margin: 0 auto 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  padding: 40px 32px 32px 32px;
+  max-width: 340px;
+  width: 100%;
+}
+.account-figma-login-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 32px;
+  letter-spacing: 0.04em;
+}
+.account-figma-login-input {
+  width: 100%;
+  font-size: 16px;
+  padding: 12px 16px;
+  margin-bottom: 18px;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  background: #fafafa;
+  color: #222;
+  outline: none;
+  transition: border 0.2s;
+}
+.account-figma-login-input:focus {
+  border: 1.5px solid #222;
+}
+.account-figma-login-btn {
+  width: 100%;
+  background: #222;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 0;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background 0.2s;
+}
+.account-figma-login-btn:disabled {
+  background: #bdbdbd;
+  cursor: not-allowed;
+}
+.account-figma-login-btn:not(:disabled):hover {
+  background: #444;
+}
+.account-figma-login-error {
+  color: #e74c3c;
+  font-size: 15px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+/* Стили для переключателя Войти/Регистрация */
+.account-figma-auth-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  margin: 48px 0 24px 0;
+  width: 340px;
+  max-width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+}
+.account-figma-auth-btn,
+.account-figma-auth-btn-active {
+  flex: 1;
+  padding: 14px 0;
+  font-size: 18px;
+  font-weight: 600;
+  border: none;
+  background: #fafafa;
+  color: #bdbdbd;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  outline: none;
+}
+.account-figma-auth-btn-active {
+  background: #fff;
+  color: #222;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  z-index: 1;
+}
+.account-figma-auth-btn:not(.account-figma-auth-btn-active):hover {
+  background: #f0f0f0;
+  color: #888;
+}

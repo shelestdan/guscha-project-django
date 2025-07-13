@@ -1,0 +1,169 @@
+/* Импорт шрифтов */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&display=swap');
+
+/* Импорт компонентных стилей */
+@import './Header.css';
+@import './BurgerMenu.css';
+@import './Footer.css';
+@import '../components/features/cart/Cart.css';
+@import '../components/ui/Toast.css';
+@import './ProductShowcase.css';
+@import './Account.css';
+@import './AccountDetails.css';
+@import './OrderHistory.css';
+@import './csp-compliance.css';
+
+/* Глобальные CSS переменные */
+:root {
+  --primary-color: #111;
+  --secondary-color: #f1f1f1;
+  --accent-color: #007bff;
+  --text-color: #333;
+  --text-light: #666;
+  --border-color: #ddd;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --border-radius: 8px;
+  --transition: all 0.3s ease;
+}
+
+/* Базовые стили для элементов */
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  overflow-x: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+/* Улучшенная типографика */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+p {
+  font-family: 'Inter', sans-serif;
+  line-height: 1.6;
+}
+
+/* Утилитарные классы для шрифтов */
+.font-light { font-weight: 300; }
+.font-normal { font-weight: 400; }
+.font-medium { font-weight: 500; }
+.font-semibold { font-weight: 600; }
+.font-bold { font-weight: 700; }
+.font-extrabold { font-weight: 800; }
+.font-black { font-weight: 900; }
+
+/* Стили для HeroSection и стрелки */
+.hero-section {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  min-height: 700px;
+}
+
+.hero-section-main {
+  width: 100vw;
+  height: 100vh;
+  min-height: 700px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-section .scroll-down-arrow {
+  position: absolute;
+  right: 32px;
+  bottom: 32px;
+  z-index: 999;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: opacity 1s ease-out, transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity, transform;
+  transform-origin: center;
+  /* Обеспечиваем приоритет */
+  isolation: isolate;
+  /* Базовое состояние */
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.hero-section .scroll-down-arrow.visible {
+  opacity: 1 !important;
+  transform: translateY(0) scale(1) !important;
+  pointer-events: auto;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.hero-section .scroll-down-arrow.hidden {
+  opacity: 0 !important;
+  transform: translateY(20px) scale(0.9) !important;
+  pointer-events: none;
+  animation: fadeOutDown 0.6s ease-out;
+}
+
+.hero-section .scroll-down-arrow:hover {
+  transform: translateY(-2px) scale(1.05) !important;
+}
+
+.hero-section .scroll-down-arrow.visible:hover {
+  transform: translateY(-2px) scale(1.05) !important;
+}
+
+/* Анимации для стрелки */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeOutDown {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(30px) scale(0.8);
+  }
+}
+
+.arrow-svg {
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity, transform;
+}
+
+.arrow-svg.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.arrow-svg.hidden {
+  opacity: 0;
+  transform: translateY(16px);
+  pointer-events: none;
+}

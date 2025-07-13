@@ -1,0 +1,175 @@
+/* Header Styles */
+.header-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 96px;
+  z-index: 100;
+  pointer-events: none;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  background: transparent;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Для подложки */
+  overflow: visible;
+}
+
+.header-background-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  z-index: 99;
+  background: rgba(255,255,255,0.95);
+  pointer-events: none;
+}
+
+.header-content {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  pointer-events: auto;
+  position: relative;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  z-index: 102;
+  flex: 0 0 auto;
+}
+
+.header-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 101;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  z-index: 102;
+  flex: 0 0 auto;
+}
+
+/* Анимации для переходов */
+.header-white {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Состояния видимости */
+.header-visible {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.header-hidden {
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.header-transparent {
+  background: transparent;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Анимация элементов внутри header */
+.header-left, .header-center, .header-right {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Стили для скрытия элементов при скролле */
+.header-content.hide-elements .header-left,
+.header-content.hide-elements .header-center,
+.header-content.hide-elements .header-right {
+  opacity: 0;
+  transform: translateY(-20px);
+  pointer-events: none;
+}
+
+/* Стили для корзины в header */
+.header-cart-icon {
+  position: relative;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.75rem;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border-radius: 50%;
+}
+
+.header-cart-icon:hover {
+  transform: scale(1.05);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.header-cart-icon.white-theme:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.header-cart-icon.dark-theme:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.header-cart-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #000;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.header-cart-icon.dark-theme .header-cart-badge {
+  background: #fff;
+  color: #000;
+  border-color: transparent;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .header-content {
+    padding: 0 1rem;
+  }
+  
+  .header-cart-icon {
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-content {
+    padding: 0 0.5rem;
+  }
+} 

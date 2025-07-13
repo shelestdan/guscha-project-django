@@ -1,0 +1,293 @@
+/* Стили импортируются через globals.css */
+
+html, body, #root {
+  height: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100vh;
+  background: #111111;
+  position: relative;
+  z-index: 0;
+  overflow-x: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  line-height: 1.6;
+}
+
+.frame2-root {
+  position: relative;
+  min-height: 100vh;
+  width: 100vw;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+.frame2-content {
+  position: relative;
+  margin: 0;
+  width: 100vw;
+  min-height: 100vh;
+  background: transparent;
+  border-radius: 0;
+  display: flex;
+  flex-direction: row;
+  box-shadow: none;
+  overflow: visible;
+  z-index: 1;
+}
+
+.frame2-left {
+  display: none;
+}
+
+.frame2-main-bg {
+  position: absolute;
+  left: 0; top: 0; right: 0; bottom: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  opacity: 1;
+  background: #232323;
+}
+
+.frame2-logo {
+  position: absolute;
+  left: 50%;
+  top: 5vh;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 150px;
+  max-height: 100px;
+  z-index: 2;
+}
+
+.frame2-arrow {
+  position: absolute;
+  right: 40px;
+  bottom: 32px;
+  z-index: 2;
+  opacity: 0.8;
+}
+
+.burger-btn {
+  position: absolute;
+  left: 48px;
+  top: 48px;
+  z-index: 1002;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.burger-icon-2lines {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+}
+.burger-icon-2lines .line {
+  position: absolute;
+  left: 0;
+  width: 32px;
+  height: 2.5px;
+  background: #fff;
+  border-radius: 2px;
+  transition: transform 0.3s cubic-bezier(.77,0,.18,1), top 0.3s cubic-bezier(.77,0,.18,1), opacity 0.3s;
+}
+.burger-icon-2lines .top {
+  top: 12px;
+  transform: rotate(0deg);
+}
+.burger-icon-2lines .bottom {
+  top: 24px;
+  transform: rotate(0deg);
+}
+.burger-icon-2lines .top.open {
+  top: 18px;
+  transform: rotate(45deg);
+}
+.burger-icon-2lines .bottom.open {
+  top: 18px;
+  transform: rotate(-45deg);
+}
+.burger-menu-label {
+  color: #fff;
+  font-family: 'Comfortaa', Arial, sans-serif;
+  font-size: 22px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.95;
+  user-select: none;
+}
+
+/* Sidebar menu */
+.menu-sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 340px;
+  max-width: 90vw;
+  height: 100vh;
+  background: #111;
+  color: #fff;
+  z-index: 1003;
+  transform: translateX(-100%);
+  transition: transform 0.35s cubic-bezier(.77,0,.18,1);
+  box-shadow: 2px 0 24px rgba(0,0,0,0.18);
+  display: flex;
+  flex-direction: column;
+  padding: 32px 24px 24px 32px;
+}
+.menu-sidebar.open {
+  transform: translateX(0);
+}
+.menu-close {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  margin-bottom: 32px;
+}
+.menu-close-icon {
+  font-size: 32px;
+  line-height: 1;
+  font-weight: 700;
+}
+.menu-label {
+  font-family: 'Comfortaa', Arial, sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+.menu-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 164px;
+}
+.menu-link {
+  color: #fff;
+  font-family: 'Comfortaa', Arial, sans-serif;
+  font-size: 32px;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  transition: color 0.2s;
+  line-height: 1.2;
+}
+.menu-link:hover {
+  color: #e0e0e0;
+}
+
+.frame2-overlay {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.45);
+  z-index: 1001;
+  animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Адаптивность */
+@media (max-width: 900px) {
+  .frame2-logo {
+    max-width: 160px;
+    max-height: 80px;
+    top: 32px;
+  }
+  .frame2-arrow {
+    right: 16px;
+    bottom: 16px;
+  }
+}
+@media (max-width: 600px) {
+  .frame2-logo {
+    width: 480px;
+    top: 16px;
+  }
+  .burger-btn {
+    left: 16px;
+    top: 16px;
+  }
+  .menu-sidebar {
+    width: 90vw;
+    padding: 24px 12px 12px 16px;
+  }
+  .menu-link {
+    font-size: 22px;
+  }
+}
+
+.App {
+  text-align: center;
+  width: 100vw;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.App-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80px;
+  padding: 0;
+  background: transparent;
+  z-index: 10000;
+}
+
+.App-logo {
+  height: 60px;
+  pointer-events: none;
+  display: block;
+  margin: 0 auto;
+  z-index: 10001;
+}
+
+
+main, .App, .App-header, .burger-panel {
+  background: transparent;
+}
+
+main {
+  width: 100vw;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}

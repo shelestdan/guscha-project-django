@@ -1,0 +1,200 @@
+import React, { useState, useEffect } from "react";
+import addressesApi from "../../../api/addresses";
+import "../../../styles/AddressForm.css";
+
+const AddressForm = ({ address, addressType, onSuccess, onCancel }) => {
+  const [formData, setFormData] = useState({
+    address_type: addressType || "shipping",
+    first_name: "",
+    last_name: "",
+    address_line1: "",
+    city: "",
+    postal_code: "",
+    phone: "",
+    is_default: false
+  });
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  // Загружаем данные пользователя для автозаполнения
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (token) {
+          const response = await fetch(
+            "http://127.0.0.1:8000/api/accounts/users/me/",
+            {
+              headers: {
+                Authorization: `Token ${token}`
+              }
+            }
+          );
+          if (response.ok) {
+            const userData = await response.json();
+            setFormData((prev) => ({
+              ...prev,
+              first_name: userData.first_name || "",
+              last_name: userData.last_name || "",
+              phone: userData.phone || ""
+            }));
+          }
+        }
+      } catch (error) {
+        console.error("Ошибка загрузки данных пользователя:", error);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  useEffect(() => {
+    if (address) {
+      setFormData({
+        address_type: address.address_type || addressType || "shipping",
+        first_name: address.first_name || "",
+        last_name: address.last_name || "",
+        address_line1: address.address_line1 || "",
+        city: address.city || "",
+        postal_code: address.postal_code || "",
+        phone: address.phone || "",
+        is_default: address.is_default || false
+      });
+    }
+  }, [address, addressType]);
+
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value
+    }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: null }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.first_name.trim()) newErrors.first_name = "Имя обязательно";
+    if (!formData.last_name.trim()) newErrors.last_name = "Фамилия обязательна";
+    if (!formData.address_line1.trim())
+      newErrors.address_line1 = "Адрес обязателен";
+    if (!formData.city.trim()) newErrors.city = "Город обязателен";
+    if (!formData.postal_code.trim())
+      newErrors.postal_code = "Почтовый индекс обязателен";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      if (address?.id) {
+        await addressesApi.updateAddress(address.id, formData);
+      } else {
+        await addressesApi.createAddress(formData);
+      }
+      onSuccess();
+    } catch (error) {
+      console.error("Error saving address:", error);
+      if (error.response?.data) {
+        setErrors(error.response.data);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderField = (name, label, type = "text", options = {}) => (
+    <div className="form-group">
+      <label htmlFor={name}>
+        {label}
+        {options.required && <span className="required">*</span>}
+      </label>
+      {type === "checkbox" ? (
+        <label className="checkbox-label">
+          <input
+            type="checkbox"
+            name={name}
+            checked={formData[name]}
+            onChange={handleInputChange}
+          />
+          {label}
+        </label>
+      ) : (
+        <input
+          type={type}
+          id={name}
+          name={name}
+          value={formData[name]}
+          onChange={handleInputChange}
+          placeholder={options.placeholder}
+          className={errors[name] ? "error" : ""}
+          readOnly={options.readOnly}
+        />
+      )}
+      {errors[name] && <span className="error-message">{errors[name]}</span>}
+    </div>
+  );
+
+  return (
+    <form onSubmit={handleSubmit} className="address-form">
+      <div className="form-row">
+        {renderField("first_name", "Имя", "text", { required: true })}
+        {renderField("last_name", "Фамилия", "text", { required: true })}
+      </div>
+
+      {renderField("address_line1", "Адрес", "text", {
+        required: true,
+        placeholder: "Улица, номер дома"
+      })}
+
+      <div className="form-row">
+        {renderField("city", "Город", "text", {
+          required: true,
+          placeholder: "Москва"
+        })}
+        {renderField("postal_code", "Почтовый индекс", "text", {
+          required: true,
+          placeholder: "123456"
+        })}
+      </div>
+
+      {renderField("phone", "Телефон", "tel", {
+        placeholder: "+7 (999) 123-45-67"
+      })}
+
+      <div className="form-group">
+        <label className="checkbox-label">
+          <input
+            type="checkbox"
+            name="is_default"
+            checked={formData.is_default}
+            onChange={handleInputChange}
+          />
+          Установить как адрес по умолчанию
+        </label>
+      </div>
+
+      <div className="form-actions">
+        <button type="button" className="btn-cancel" onClick={onCancel}>
+          Отмена
+        </button>
+        <button type="submit" className="btn-submit" disabled={loading}>
+          {loading ? "Сохранение..." : address ? "Обновить" : "Добавить"}
+        </button>
+      </div>
+    </form>
+  );
+};
+
+export default AddressForm;

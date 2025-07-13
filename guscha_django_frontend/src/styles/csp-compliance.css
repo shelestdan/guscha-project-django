@@ -1,0 +1,526 @@
+/* CSP COMPLIANCE CSS - Замена inline стилей */
+
+/* HomePage.jsx inline styles */
+.homepage-divider {
+  width: 100vw;
+  height: 2px;
+  background: #111;
+  margin: 0;
+  border: none;
+  padding: 0;
+}
+
+/* HeroSection.jsx inline styles */
+.hero-section-background {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-section-main {
+  /* Стили будут добавлены после анализа исходного inline стиля */
+}
+
+/* Стили для видео-фона */
+.hero-video-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+
+.hero-image-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* MenuButton inline styles */
+.menu-button-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 48px;
+  height: 48px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.menu-button-label {
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  letter-spacing: 2px;
+  margin-top: 4px;
+}
+
+/* Logo component inline styles */
+.logo-container {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+}
+
+.logo-image {
+  height: 32px;
+  width: auto;
+  margin-right: 12px;
+}
+
+.logo-text {
+  font-size: 24px;
+  font-weight: bold;
+  color: #fff;
+}
+
+/* Header component inline styles */
+.header-main {
+  /* Стили будут добавлены после анализа */
+}
+
+
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.footer-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 48px;
+  justify-content: center;
+}
+
+.footer-section {
+  min-width: 160px;
+}
+
+.footer-section-wide {
+  min-width: 220px;
+}
+
+.footer-section-social {
+  min-width: 180px;
+}
+
+.footer-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-list-social {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.footer-list-item {
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.footer-list-item-regular {
+  margin-bottom: 12px;
+}
+
+.footer-social-link {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+/* ProductShowcase inline styles */
+.product-showcase-link {
+  display: block;
+  height: 100%;
+}
+
+.product-showcase-images {
+  position: relative;
+}
+
+.product-showcase-images-overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+}
+
+.product-showcase-arrow-path {
+  fill: #232326;
+}
+
+/* AdvancedRegistration inline styles */
+.password-strength-container {
+  /* Стили будут добавлены после анализа */
+}
+
+.password-strength-indicator {
+  /* Динамические стили для цвета силы пароля */
+}
+
+/* AdminPanel inline styles */
+.order-status-badge {
+  /* Динамические стили для статуса заказа */
+}
+
+.admin-hidden-input {
+  display: none;
+}
+
+.admin-form-group-spaced {
+  margin-top: 1rem;
+}
+
+/* Account component inline styles */
+.account-sidebar {
+  width: 320px;
+  min-width: 0;
+}
+
+.account-nav-item {
+  white-space: nowrap;
+  text-align: left;
+}
+
+/* BurgerMenu inline styles */
+.burger-menu-label {
+  /* Динамический цвет будет управляться через CSS переменные */
+}
+
+.burger-menu-container {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 300px;
+  height: 100vh;
+  background: #fff;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  z-index: 1000;
+  box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+}
+
+.burger-menu-bars {
+  /* Динамический цвет будет управляться через CSS переменные */
+}
+
+/* Header inline styles */
+.header-cart-icon-filter {
+  transition: filter 0.3s ease;
+}
+
+.header-cart-icon-filter.dark {
+  filter: invert(1);
+}
+
+.header-cart-icon-filter.light {
+  filter: invert(0);
+}
+
+/* HeroSection inline styles */
+.hero-section-main {
+  width: 100vw;
+  height: 100vh;
+  min-height: 700px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+
+/* Logo inline styles */
+.logo-main-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-link {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.logo-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+.logo-image.black {
+  filter: invert(1);
+}
+
+.logo-image.white {
+  filter: invert(0);
+}
+
+.logo-image.visible {
+  opacity: 1;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.logo-image.hidden {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ProductShowcase inline styles */
+.product-showcase-link {
+  display: block;
+  height: 100%;
+}
+
+.product-showcase-images {
+  position: relative;
+}
+
+.product-showcase-overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+}
+
+.product-showcase-arrow-path {
+  fill: #232326;
+}
+
+/* CSP COMPLIANCE STYLES */
+/* Заменяет inline стили для соответствия Content Security Policy */
+
+/* Logo размеры */
+.logo-dynamic-size {
+  /* Размер устанавливается через CSS переменные */
+}
+
+/* Header уведомления */
+.user-notification {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  min-width: 200px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 1000;
+  padding: 12px;
+  margin-top: 8px;
+  font-size: 14px;
+  color: #333;
+}
+
+.user-notification::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  right: 16px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid white;
+}
+
+/* HeroSection scroll стили */
+.hero-scroll-indicator {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-size: 0.875rem;
+  text-align: center;
+  transition: opacity 0.3s ease;
+  z-index: 10;
+}
+
+/* ProductShowcase стили */
+.showcase-grid-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+/* Account.jsx стили */
+.account-sidebar-fixed {
+  width: 320px;
+  min-width: 0;
+}
+
+.account-menu-item-nowrap {
+  white-space: nowrap;
+  text-align: left;
+}
+
+/* AdminPanel.jsx стили */
+.admin-status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+}
+
+.admin-hidden-input {
+  display: none;
+}
+
+.admin-form-group-spaced {
+  margin-top: 1rem;
+}
+
+/* BurgerMenu.jsx стили */
+.burger-menu-btn-dynamic {
+  /* Цвет устанавливается через CSS переменные */
+}
+
+.burger-menu-label-animated {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s, transform 0.3s;
+  margin-right: 12px;
+}
+
+.burger-menu-label-hidden {
+  opacity: 0;
+  transform: translateY(-16px);
+  transition: opacity 0.3s, transform 0.3s;
+  margin-right: 12px;
+}
+
+.burger-menu-bar-dynamic {
+  /* Цвет фона устанавливается через CSS переменные */
+}
+
+/* AdvancedRegistration.jsx стили */
+.password-strength-bar {
+  height: 4px;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+  margin-top: 8px;
+}
+
+.password-strength-weak {
+  background: linear-gradient(to right, #dc2626 0%, #dc2626 33%, #e5e7eb 33%, #e5e7eb 100%);
+}
+
+.password-strength-medium {
+  background: linear-gradient(to right, #f59e0b 0%, #f59e0b 66%, #e5e7eb 66%, #e5e7eb 100%);
+}
+
+.password-strength-strong {
+  background: linear-gradient(to right, #10b981 0%, #10b981 100%);
+}
+
+.password-strength-text {
+  font-size: 12px;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.password-strength-weak-text {
+  color: #dc2626;
+}
+
+.password-strength-medium-text {
+  color: #f59e0b;
+}
+
+.password-strength-strong-text {
+  color: #10b981;
+}
+
+/* Утилитные классы для цветов */
+.text-red-600 { color: #dc2626; }
+.text-orange-500 { color: #f59e0b; }
+.text-green-500 { color: #10b981; }
+
+.bg-red-600 { background-color: #dc2626; }
+.bg-orange-500 { background-color: #f59e0b; }
+.bg-green-500 { background-color: #10b981; }
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .account-sidebar-fixed {
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .admin-form-group-spaced {
+    margin-top: 0.5rem;
+  }
+
+  /* Footer адаптивность для мобильных */
+  .footer-content {
+    justify-content: center;
+    text-align: center;
+    gap: 24px;
+  }
+  
+  .footer-section,
+  .footer-section-wide,
+  .footer-section-social {
+    min-width: auto;
+    width: 100%;
+    max-width: 280px;
+  }
+  
+  .footer-container {
+    padding: 0 16px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* Footer для планшетов */
+  .footer-content {
+    justify-content: center;
+    gap: 32px;
+  }
+}
+
+@media (min-width: 1025px) {
+  /* Footer для десктопов */
+  .footer-content {
+    justify-content: center;
+    gap: 48px;
+  }
+}

@@ -1,0 +1,274 @@
+/* Модальное окно добавления адреса */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  padding: 0;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #eee;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #111;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover {
+  color: #111;
+}
+
+.address-form {
+  padding: 24px;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-group {
+  flex: 1;
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #111;
+  font-size: 14px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #111;
+}
+
+.checkbox-group {
+  margin: 20px 0;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  font-weight: normal;
+  cursor: pointer;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: auto;
+  margin-right: 8px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.btn-cancel {
+  background: #f5f5f5;
+  color: #666;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.btn-cancel:hover {
+  background: #e5e5e5;
+}
+
+.btn-submit {
+  background: #111;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.btn-submit:hover {
+  background: #333;
+}
+
+.btn-pickup {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.btn-pickup:hover {
+  background: #0056b3;
+}
+
+/* Стили для отображения адресов */
+.address-item {
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.address-item:last-child {
+  border-bottom: none;
+}
+
+.default-badge {
+  color: #007bff;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+/* Адаптивность */
+/* Стили для списка адресов */
+.address-list {
+  margin-top: 15px;
+}
+
+.address-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  background-color: #f9f9f9;
+}
+
+.address-info {
+  flex: 1;
+}
+
+.address-info p {
+  margin: 5px 0;
+  color: #333;
+}
+
+.address-info p:first-child {
+  margin-top: 0;
+}
+
+.address-info p:last-child {
+  margin-bottom: 0;
+}
+
+.delete-address-btn {
+  background-color: #ff4757;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+  flex-shrink: 0;
+  margin-left: 10px;
+}
+
+.delete-address-btn:hover {
+  background-color: #ff3742;
+}
+
+.delete-address-btn:active {
+  transform: scale(0.95);
+}
+
+@media (max-width: 768px) {
+  .modal-content {
+    width: 95%;
+    margin: 20px;
+  }
+  
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .form-actions button {
+    width: 100%;
+  }
+  
+  .address-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .delete-address-btn {
+    align-self: flex-end;
+    margin-left: 0;
+    margin-top: 10px;
+  }
+}

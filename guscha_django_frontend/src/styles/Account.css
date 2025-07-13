@@ -1,0 +1,148 @@
+/* Figma inspired Account page styles */
+.account-figma-root {
+  display: flex;
+  min-height: 80vh;
+  background: #ffffff;
+  font-family: "Inter", Arial, sans-serif;
+}
+
+.account-figma-sidebar {
+  width: 320px;
+  background: #fff;
+  border-right: 1px solid #e5e5e5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 48px 0 0 48px;
+  position: fixed;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.account-figma-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  align-items: flex-start;
+}
+
+.account-figma-menu-item {
+  font-size: 24px;
+  color: #bdbdbd;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: color 0.2s;
+  user-select: none;
+}
+
+.account-menu-item-nowrap {
+  white-space: nowrap;
+}
+
+.account-figma-menu-item-active {
+  color: #222;
+}
+
+.account-figma-content {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 64px 0 0 0;
+  margin-left: 320px;
+  overflow-y: auto;
+  height: 100vh;
+  box-sizing: border-box;
+}
+
+.account-figma-login-placeholder {
+  margin: 120px auto;
+  font-size: 22px;
+  color: #bdbdbd;
+  text-align: center;
+}
+
+.account-figma-loading {
+  margin: 120px auto;
+  font-size: 22px;
+  color: #bdbdbd;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .account-figma-content {
+    padding: 32px 0 0 0;
+    margin-left: 160px;
+  }
+  .account-figma-sidebar {
+    padding-left: 16px;
+    width: 160px;
+  }
+}
+
+.account-figma-content.centered-auth {
+  height: 100vh;
+  min-height: 100vh;
+  max-height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100vw;
+  padding: 0;
+  box-sizing: border-box;
+  margin-top: 32px;
+}
+
+/* Мобильные стили для очень маленьких экранов */
+@media (max-width: 600px) {
+  .account-figma-sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+    padding: 16px;
+    border-right: none;
+    border-bottom: 1px solid #e5e5e5;
+  }
+
+  .account-figma-content {
+    margin-left: 0;
+    height: auto;
+    overflow-y: visible;
+  }
+
+  .account-figma-root {
+    flex-direction: column;
+  }
+
+  .account-figma-menu {
+    flex-direction: row;
+    gap: 16px;
+    justify-content: center;
+  }
+
+  .account-figma-menu-item {
+    font-size: 18px;
+  }
+}
+
+/* Стили для обертки аутентификации */
+.account-auth-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  padding: 2rem;
+}
+
+/* Адаптивные стили для обертки */
+@media (max-width: 768px) {
+  .account-auth-wrapper {
+    padding: 1rem;
+    align-items: flex-start;
+    padding-top: 6rem;
+  }
+}

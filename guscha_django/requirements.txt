@@ -1,0 +1,23 @@
+Django==5.2.4
+django-filter==25.1
+djangorestframework==3.15.1
+Pillow==11.2.1
+python-slugify==8.0.4
+python-dotenv==1.0.1
+requests==2.32.3
+urllib3==2.2.2
+cryptography==41.0.7
+bcrypt==4.1.2
+pyjwt==2.8.0
+pyotp==2.9.0
+markupsafe==2.1.5
+itsdangerous==2.2.0
+blinker==1.8.2
+redis==5.0.4
+celery==5.3.4
+structlog==23.2.0
+
+# Django Datta Able Admin UI
+django-jazzmin==3.0.1
+django-admin-datta==1.0.17
+str2bool==1.1

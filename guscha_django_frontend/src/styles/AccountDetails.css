@@ -1,0 +1,92 @@
+/* Стили для блока с деталями аккаунта */
+.account-details-container {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 48px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  margin-top: 48px;
+}
+/* Этот класс, похоже, не используется в JSX, но на всякий случай переименуем и его */
+.account-details-title {
+  font-size: 48px;
+  font-weight: 700;
+  color: #111;
+  line-height: 1.05;
+  min-width: 320px;
+  letter-spacing: 0.01em;
+  margin-right: 32px;
+  margin-top: 12px;
+}
+.account-details-block {
+  flex: 1;
+  background: #fff;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0 32px 0 0;
+  min-width: 320px;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  border-top: 2px solid #222;
+  margin-bottom: 0;
+  margin-right: 24px;
+}
+.account-details-block-header {
+  font-size: 18px;
+  font-weight: 600;
+  color: #222;
+  margin-top: 18px;
+  margin-bottom: 6px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.account-details-block-sub {
+  font-size: 13px;
+  color: #888;
+  font-weight: 400;
+  margin-bottom: 12px;
+  margin-top: 2px;
+  letter-spacing: 0.01em;
+}
+.account-details-block-value {
+  font-size: 20px;
+  color: #111;
+  font-weight: 500;
+  margin-bottom: 24px;
+  margin-top: 8px;
+  word-break: break-all;
+  text-align: left;
+}
+.account-details-add-btn {
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 0;
+  padding: 10px 36px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 12px;
+  transition: background 0.2s;
+  text-transform: uppercase;
+}
+.account-details-add-btn:hover {
+  background: #222;
+}
+@media (max-width: 900px) {
+  .account-details-container {
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+    max-width: 100vw;
+  }
+  .account-details-block {
+    min-width: unset;
+    padding: 0 0 0 0;
+    margin-right: 0;
+  }
+}

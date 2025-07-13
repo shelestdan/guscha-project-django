@@ -1,0 +1,258 @@
+/* 🔐 Стили для индикатора безопасности паролей */
+
+.security-indicator {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  padding: 20px;
+  color: white;
+  margin: 16px 0;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+  transition: all 0.3s ease;
+}
+
+.security-indicator.inactive {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ffa500 100%);
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.2);
+}
+
+.security-indicator.compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin: 0;
+  font-size: 14px;
+  border-radius: 20px;
+}
+
+.security-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.security-header h4 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.shield-icon {
+  font-size: 24px;
+  color: #4ade80;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.security-indicator.compact .shield-icon {
+  font-size: 16px;
+}
+
+.shield-icon.active {
+  color: #4ade80;
+  animation: pulse 2s infinite;
+}
+
+.security-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.security-feature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.feature-icon {
+  font-size: 18px;
+  color: #a7f3d0;
+  min-width: 20px;
+}
+
+.feature-text {
+  flex: 1;
+}
+
+.feature-text strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.feature-text p {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.9;
+  line-height: 1.4;
+}
+
+.security-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4ade80;
+}
+
+.status-dot.inactive {
+  background: #fbbf24;
+}
+
+.status-text {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* 🔐 Мини-бейдж для форм */
+.password-security-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(102, 126, 234, 0.1);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  color: #667eea;
+  margin-top: 4px;
+  cursor: help;
+}
+
+.badge-icon {
+  font-size: 12px;
+}
+
+.badge-text {
+  font-weight: 500;
+}
+
+.badge-tooltip {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  margin-top: 8px;
+}
+
+.password-security-badge:hover .badge-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.tooltip-content {
+  background: #1f2937;
+  color: white;
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  min-width: 280px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.tooltip-content p {
+  margin: 0 0 8px 0;
+}
+
+.tooltip-content ul {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.tooltip-content li {
+  margin-bottom: 4px;
+}
+
+/* 🔐 Индикатор прогресса хеширования */
+.hashing-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(102, 126, 234, 0.1);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  border-radius: 6px;
+  font-size: 14px;
+  color: #667eea;
+  margin-top: 8px;
+}
+
+.hashing-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(102, 126, 234, 0.3);
+  border-top: 2px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.hashing-text {
+  font-weight: 500;
+}
+
+/* Анимации */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .security-indicator {
+    padding: 16px;
+  }
+  
+  .security-header h4 {
+    font-size: 16px;
+  }
+  
+  .security-details {
+    gap: 8px;
+  }
+  
+  .tooltip-content {
+    min-width: 240px;
+    font-size: 12px;
+  }
+}
+
+/* Темная тема */
+@media (prefers-color-scheme: dark) {
+  .password-security-badge {
+    background: rgba(102, 126, 234, 0.2);
+    border-color: rgba(102, 126, 234, 0.4);
+  }
+  
+  .hashing-progress {
+    background: rgba(102, 126, 234, 0.2);
+    border-color: rgba(102, 126, 234, 0.4);
+  }
+} 

@@ -1,0 +1,107 @@
+/* AddressesPage Styles */
+.addresses-page {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.addresses-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.addresses-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.addresses-header h1 {
+  font-size: 32px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.addresses-header p {
+  font-size: 16px;
+  color: #666;
+}
+
+.addresses-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.tab-button {
+  padding: 12px 24px;
+  border: 1px solid #d9d9d9;
+  background: white;
+  color: #666;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.tab-button:hover {
+  border-color: #1890ff;
+  color: #1890ff;
+}
+
+.tab-button.active {
+  background: #1890ff;
+  color: white;
+  border-color: #1890ff;
+}
+
+.addresses-content {
+  background: white;
+  border-radius: 8px;
+  padding: 32px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .addresses-container {
+    padding: 20px 16px;
+  }
+
+  .addresses-header h1 {
+    font-size: 24px;
+  }
+
+  .addresses-header p {
+    font-size: 14px;
+  }
+
+  .addresses-tabs {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .tab-button {
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .addresses-content {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .addresses-container {
+    padding: 16px 12px;
+  }
+
+  .addresses-header {
+    margin-bottom: 24px;
+  }
+
+  .addresses-content {
+    padding: 16px;
+  }
+}

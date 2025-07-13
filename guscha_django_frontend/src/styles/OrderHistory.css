@@ -1,0 +1,29 @@
+/* Стили для блока истории заказов */
+.account-figma-orders-block {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  margin-top: 48px;
+}
+.account-figma-orders-header {
+  display: flex;
+  flex-direction: row;
+  border-bottom: 2px solid #e5e5e5;
+  margin-bottom: 32px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #222;
+  letter-spacing: 0.04em;
+}
+.account-figma-orders-col {
+  flex: 1;
+  padding: 0 8px 12px 0;
+  text-align: left;
+}
+.account-figma-orders-empty {
+  color: #bdbdbd;
+  font-size: 20px;
+  text-align: center;
+  margin-top: 48px;
+  font-weight: 500;
+}
