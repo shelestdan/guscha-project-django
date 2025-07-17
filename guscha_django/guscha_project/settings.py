@@ -61,6 +61,15 @@ INSTALLED_APPS = [
     'apps.addresses.apps.AddressesConfig',
 ]
 
+# Добавляем новые приложения для безопасности
+INSTALLED_APPS += [
+    'guardian',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'django_recaptcha',
+]
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -68,6 +77,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'allauth.account.middleware.AccountMiddleware',  # Добавляем middleware для allauth
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'apps.core.middleware.SecurityHeadersMiddleware',
@@ -216,3 +226,31 @@ LOGGING = {
         'level': 'INFO',
     },
 }
+
+
+# Настройки для django-allauth
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_UNIQUE_EMAIL = True
+
+# Настройки для reCAPTCHA
+RECAPTCHA_PUBLIC_KEY = os.environ.get('RECAPTCHA_PUBLIC_KEY', 'your-public-key-here')
+RECAPTCHA_PRIVATE_KEY = os.environ.get('RECAPTCHA_PRIVATE_KEY', 'your-private-key-here')
+
+# Настройки для ratelimit
+RATELIMIT_ENABLE = True
+
+# Дополнительные настройки безопасности
+SECURE_SSL_REDIRECT = not DEBUG
+SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+# Authentication backends
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',  # Default backend
+    'guardian.backends.ObjectPermissionBackend',  # Guardian backend для объектных разрешений
+    'allauth.account.auth_backends.AuthenticationBackend',  # Allauth backend
+)
