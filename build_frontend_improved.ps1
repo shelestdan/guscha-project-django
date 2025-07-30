@@ -122,9 +122,9 @@ foreach ($file in $StaticFiles) {
     }
 }
 
-# Копируем index.html в templates
+# Копируем index.html в корень static для Nginx
 $IndexHtmlSource = Join-Path $BuildDir "index.html"
-$IndexHtmlDest = Join-Path $TemplatesDir "index.html"
+$IndexHtmlDest = Join-Path $StaticDir "index.html"
 if (Test-Path $IndexHtmlSource) {
     Copy-Item -Path $IndexHtmlSource -Destination $IndexHtmlDest -Force
     Write-ColorLog "Скопирован index.html в $IndexHtmlDest" -ForegroundColor Green
@@ -149,38 +149,29 @@ if (Test-Path $SourceAxiosConfig) {
     Write-ColorLog "Предупреждение: axiosConfig.js не найден в $SourceAxiosConfig" -ForegroundColor Yellow
 }
 
-# Шаг 4: Обновление index.html для Django
-Write-ColorLog "Шаг 4/4: Обновление index.html для Django..." -ForegroundColor Cyan
+# Шаг 4: Обновление путей в index.html для Nginx
+Write-ColorLog "Шаг 4/4: Обновление путей в index.html..." -ForegroundColor Cyan
 
 if (Test-Path $IndexHtmlDest) {
     # Читаем содержимое index.html
     $IndexContent = Get-Content -Path $IndexHtmlDest -Raw
     
-    # Заменяем пути на Django-совместимые с {% load static %}
-    $IndexContent = $IndexContent -replace '/static/css/', '{% static "css/'
-    $IndexContent = $IndexContent -replace '/static/js/', '{% static "js/'
-    $IndexContent = $IndexContent -replace '\.css"', '.css" %}"'
-    $IndexContent = $IndexContent -replace '\.js"', '.js" %}"'
-    
-    # Заменяем ссылки на статические файлы
-    $IndexContent = $IndexContent -replace 'href="/favicon.ico"', 'href="{% static "favicon.ico" %}"'
-    $IndexContent = $IndexContent -replace 'href="/logo192.png"', 'href="{% static "logo192.png" %}"'
-    $IndexContent = $IndexContent -replace 'href="/manifest.json"', 'href="{% static "manifest.json" %}"'
-    
-    # Исправляем возможные ошибки в тегах скриптов
-    $IndexContent = $IndexContent -replace '" %}" async', '" async'
-    $IndexContent = $IndexContent -replace 'api.js" %}"', 'api.js"'
-    
-    # Добавляем {% load static %} в начало, если его нет
-    if ($IndexContent -notmatch '{% load static %}') {
-        $IndexContent = "{% load static %}`n" + $IndexContent
+    # Добавляем скрипт axiosConfig.js после заголовка, если его там нет
+    if ($IndexContent -notmatch 'axiosConfig.js') {
+        $IndexContent = $IndexContent -replace '(</head>)', '<script src="/static/js/axiosConfig.js"></script>`n$1'
+        Write-ColorLog "Добавлена ссылка на axiosConfig.js в index.html" -ForegroundColor Green
     }
     
     # Записываем обновленное содержимое
     Set-Content -Path $IndexHtmlDest -Value $IndexContent -Encoding UTF8
-    Write-ColorLog "index.html обновлен с Django-совместимыми путями" -ForegroundColor Green
+    Write-ColorLog "index.html обновлен" -ForegroundColor Green
 }
 
 Write-ColorLog "Сборка и копирование завершены успешно!" -ForegroundColor Green
-Write-ColorLog "Теперь вы можете запустить сервер Django командой:" -ForegroundColor Cyan
-Write-ColorLog "cd $DjangoDir; python manage.py runserver" -ForegroundColor Yellow
+Write-ColorLog "Статические файлы готовы в директории: $StaticDir" -ForegroundColor Green
+Write-ColorLog "" -ForegroundColor White
+Write-ColorLog "Для запуска приложения используйте Docker Compose:" -ForegroundColor Cyan
+Write-ColorLog "cd $DjangoDir" -ForegroundColor Yellow
+Write-ColorLog "docker-compose up -d" -ForegroundColor Yellow
+Write-ColorLog "" -ForegroundColor White
+Write-ColorLog "Приложение будет доступно по адресу: http://localhost" -ForegroundColor Green

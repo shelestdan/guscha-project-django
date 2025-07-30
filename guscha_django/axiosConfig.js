@@ -13,6 +13,11 @@ const getBaseURL = () => {
     return 'http://localhost:8000';
   }
   
+  // Если работаем через nginx (порт 80 или без порта), используем текущий хост
+  if (currentHost === 'localhost' || currentHost.includes(':80') || !currentHost.includes(':')) {
+    return `${currentProtocol}//${currentHost}`;
+  }
+  
   // По умолчанию используем localhost:8000
   return 'http://localhost:8000';
 };

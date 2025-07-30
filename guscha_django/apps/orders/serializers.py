@@ -72,22 +72,105 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         return value
     
     def create(self, validated_data):
-        """Создание заказа"""
+        """Создание заказа с элементами из корзины"""
+        from apps.addresses.models import Address
+        from apps.cart.models import CartItem
+        from apps.cart.services import ReservationService
+        from django.db import transaction
+        
         billing_address_id = validated_data.pop('billing_address_id', None)
         shipping_address_id = validated_data.pop('shipping_address_id', None)
         
-        order = Order.objects.create(**validated_data)
+        user = self.context['request'].user
+        request = self.context['request']
         
-        if billing_address_id:
-            from apps.addresses.models import Address
-            order.billing_address = Address.objects.get(id=billing_address_id)
-        
-        if shipping_address_id:
-            from apps.addresses.models import Address
-            order.shipping_address = Address.objects.get(id=shipping_address_id)
-        
-        order.save()
-        return order
+        with transaction.atomic():
+            # Получаем товары из корзины пользователя
+            cart_items = CartItem.objects.filter(user=user)
+            
+            if not cart_items.exists():
+                raise serializers.ValidationError("Корзина пуста")
+            
+            # Используем существующие резервирования или создаем новые
+            reservations = []
+            for cart_item in cart_items:
+                reservation = cart_item.reservation
+                
+                # Если резервирование уже существует, проверяем его актуальность
+                if reservation and not reservation.is_expired():
+                    # Проверяем, что количество в резервировании соответствует количеству в корзине
+                    if reservation.quantity != cart_item.quantity:
+                        # Обновляем количество в резервировании
+                        success = ReservationService.update_reservation_quantity(
+                            reservation.id, cart_item.quantity
+                        )
+                        if not success:
+                            raise serializers.ValidationError(
+                                f"Не удалось обновить резервирование для товара: {cart_item.product.name if cart_item.product else cart_item.preorder.name}"
+                            )
+                        # Обновляем объект резервирования
+                        reservation.refresh_from_db()
+                else:
+                    # Создаем новое резервирование
+                    if cart_item.item_type == 'product':
+                        reservation = ReservationService.create_reservation(
+                            user=user if user.is_authenticated else None,
+                            session_id=request.headers.get('X-Session-ID') if not user.is_authenticated else None,
+                            product=cart_item.product,
+                            product_size=cart_item.product_size,
+                            quantity=cart_item.quantity
+                        )
+                    elif cart_item.item_type == 'preorder':
+                        reservation = ReservationService.create_reservation(
+                            user=user if user.is_authenticated else None,
+                            session_id=request.headers.get('X-Session-ID') if not user.is_authenticated else None,
+                            preorder=cart_item.preorder,
+                            preorder_size=cart_item.preorder_size,
+                            quantity=cart_item.quantity
+                        )
+                    
+                    if not reservation:
+                        raise serializers.ValidationError(
+                            f"Не удалось зарезервировать товар: {cart_item.product.name if cart_item.product else cart_item.preorder.name}. Возможно, недостаточно товара на складе."
+                        )
+                    
+                    # Связываем резервирование с элементом корзины
+                    cart_item.reservation = reservation
+                    cart_item.save()
+                
+                reservations.append((cart_item, reservation))
+            
+            # Создаем заказ
+            order = Order.objects.create(user=user, **validated_data)
+            
+            # Устанавливаем адреса
+            if billing_address_id:
+                order.billing_address_obj = Address.objects.get(id=billing_address_id)
+            if shipping_address_id:
+                order.shipping_address_obj = Address.objects.get(id=shipping_address_id)
+            
+            # Создаем элементы заказа из корзины с резервированиями
+            for cart_item, reservation in reservations:
+                # Создаем элемент заказа
+                order_item = OrderItem.objects.create(
+                    order=order,
+                    product=cart_item.product,
+                    product_size=cart_item.product_size,
+                    preorder=cart_item.preorder,
+                    preorder_size=cart_item.preorder_size,
+                    name=cart_item.product.name if cart_item.product else cart_item.preorder.name,
+                    size=cart_item.product_size.size if cart_item.product_size else (cart_item.preorder_size.size if cart_item.preorder_size else None),
+                    quantity=cart_item.quantity,
+                    price=cart_item.price,
+                    item_type=cart_item.item_type,
+                    reservation=reservation
+                )
+            
+            # Очищаем корзину после создания заказа
+            cart_items.delete()
+            
+            order.save()
+            return order
 
 
 class OrderUpdateSerializer(serializers.ModelSerializer):

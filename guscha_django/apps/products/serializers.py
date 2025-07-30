@@ -36,11 +36,11 @@ class ProductSerializer(BaseSerializer):
         
         primary_image = obj.product_images.filter(is_primary=True).first()
         if primary_image:
-            return primary_image.image_url
+            return primary_image.get_image_url
         
         first_image = obj.product_images.first()
         if first_image:
-            return first_image.image_url
+            return first_image.get_image_url
         
         return None
 
@@ -81,7 +81,7 @@ class ProductSizeSerializer(BaseSerializer):
         model = ProductSize
         fields = [
             'id', 'size_name', 'size_label', 'stock_quantity',
-            'max_quantity', 'is_active', 'is_sold_out', 'is_available'
+            'limit', 'is_active', 'is_sold_out', 'is_available'
         ]
 
 
@@ -143,11 +143,11 @@ class ProductListSerializer(BaseSerializer):
         
         primary_image = obj.product_images.filter(is_primary=True).first()
         if primary_image:
-            return primary_image.image_url
+            return primary_image.get_image_url
         
         first_image = obj.product_images.first()
         if first_image:
-            return first_image.image_url
+            return first_image.get_image_url
         
         return None
         
@@ -240,7 +240,7 @@ class ProductListSerializer(BaseSerializer):
 class ProductDetailSerializer(BaseSerializer):
     """Сериализатор для детальной информации о товаре"""
     category_name = serializers.SerializerMethodField()
-    images = serializers.SerializerMethodField()
+    product_images = serializers.SerializerMethodField()
     sizes = ProductSizeSerializer(many=True, read_only=True)
     variants = ProductVariantSerializer(many=True, read_only=True)
     reviews = serializers.SerializerMethodField()
@@ -257,7 +257,7 @@ class ProductDetailSerializer(BaseSerializer):
             'weight', 'dimensions', 'is_active', 'is_featured', 'requires_shipping',
             'is_digital', 'stock_quantity', 'low_stock_threshold', 'track_inventory',
             'allow_backorder', 'meta_title', 'meta_description', 'search_keywords',
-            'image_url', 'images', 'sizes', 'variants', 'reviews', 'average_rating',
+            'image_url', 'product_images', 'sizes', 'variants', 'reviews', 'average_rating',
             'review_count', 'is_in_stock', 'in_wishlist', 'created_at', 'updated_at'
         ]
     
@@ -265,8 +265,8 @@ class ProductDetailSerializer(BaseSerializer):
         """Получение названия категории"""
         return obj.category.name if obj.category else None
     
-    def get_images(self, obj):
-        """Получение всех изображений товара"""
+    def get_product_images(self, obj):
+        """Получение всех изображений товара через новую модель ProductImage"""
         images = []
         
         # Добавление основного изображения, если оно есть
@@ -282,30 +282,13 @@ class ProductDetailSerializer(BaseSerializer):
         product_images = obj.product_images.all()
         if product_images.exists():
             for img in product_images:
-                images.append({
-                    'id': img.id,
-                    'image_url': img.image_url,
-                    'alt_text': img.alt_text or obj.name,
-                    'is_primary': img.is_primary
-                })
-        
-        # Добавление изображений из JSON-поля
-        additional_images = obj.get_images()
-        if additional_images:
-            for i, img_url in enumerate(additional_images):
-                if isinstance(img_url, str):
+                image_url = img.get_image_url
+                if image_url:  # Добавляем только если URL существует
                     images.append({
-                        'id': f'json_{i}',
-                        'image_url': img_url,
-                        'alt_text': f"{obj.name} - изображение {i+1}",
-                        'is_primary': False
-                    })
-                elif isinstance(img_url, dict) and 'url' in img_url:
-                    images.append({
-                        'id': f'json_{i}',
-                        'image_url': img_url['url'],
-                        'alt_text': img_url.get('alt', f"{obj.name} - изображение {i+1}"),
-                        'is_primary': img_url.get('is_primary', False)
+                        'id': img.id,
+                        'image_url': image_url,
+                        'alt_text': img.alt_text or obj.name,
+                        'is_primary': img.is_primary
                     })
         
         return images
@@ -392,10 +375,8 @@ class ProductCreateSerializer(BaseSerializer):
         # Создание товара
         product = Product.objects.create(**validated_data)
         
-        # Сохранение дополнительных изображений в JSON-поле
-        if additional_images:
-            product.images = json.dumps(additional_images)
-            product.save(update_fields=['images'])
+        # Дополнительные изображения теперь обрабатываются через ProductImage модель
+        # TODO: Реализовать создание ProductImage объектов для additional_images
         
         # Создание размеров товара
         for size_data in sizes_data:
@@ -431,9 +412,8 @@ class ProductUpdateSerializer(BaseSerializer):
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         
-        # Обновление дополнительных изображений в JSON-поле
-        if additional_images is not None:
-            instance.images = json.dumps(additional_images)
+        # Дополнительные изображения теперь обрабатываются через ProductImage модель
+        # TODO: Реализовать обновление ProductImage объектов для additional_images
         
         instance.save()
         return instance
@@ -451,7 +431,7 @@ class PreorderSizeSerializer(BaseSerializer):
     class Meta:
         model = PreorderSize
         fields = [
-            'id', 'size_name', 'size_label', 'stock_quantity', 'max_quantity',
+            'id', 'size_name', 'size_label', 'stock_quantity',
             'is_active', 'is_sold_out', 'is_available'
         ]
 
@@ -459,64 +439,62 @@ class PreorderSizeSerializer(BaseSerializer):
 class PreorderListSerializer(BaseSerializer):
     """Сериализатор для списка предзаказов"""
     is_active_now = serializers.BooleanField(read_only=True)
+    model_image = serializers.SerializerMethodField()
+    product_image = serializers.SerializerMethodField()
     
     class Meta:
         model = Preorder
         fields = [
             'id', 'name', 'slug', 'short_description', 'price',
-            'image_url', 'start_date', 'end_date', 'is_active',
-            'is_featured', 'is_active_now'
+            'image_url', 'model_image', 'product_image', 'is_active', 'is_featured', 'is_active_now',
+            'created_at', 'updated_at'
         ]
+    
+    def get_model_image(self, obj):
+        """Получение изображения модели"""
+        return obj.model_image
+    
+    def get_product_image(self, obj):
+        """Получение изображения товара"""
+        return obj.product_image
 
 
 class PreorderDetailSerializer(BaseSerializer):
     """Сериализатор для детальной информации о предзаказе"""
-    images = serializers.SerializerMethodField()
     sizes = PreorderSizeSerializer(many=True, read_only=True)
     is_active_now = serializers.BooleanField(read_only=True)
+    model_image = serializers.SerializerMethodField()
+    product_image = serializers.SerializerMethodField()
+    additional_images = serializers.SerializerMethodField()
     
     class Meta:
         model = Preorder
         fields = [
             'id', 'name', 'slug', 'description', 'short_description',
-            'price', 'image_url', 'images', 'start_date', 'end_date',
-            'is_active', 'is_featured', 'is_active_now', 'meta_title',
-            'meta_description', 'sizes', 'created_at', 'updated_at'
+            'price', 'image_url', 'model_image', 'product_image', 'additional_images', 'is_active', 'is_featured', 
+            'is_active_now', 'meta_title', 'meta_description', 'sizes', 
+            'created_at', 'updated_at'
         ]
     
-    def get_images(self, obj):
-        """Получение всех изображений предзаказа"""
-        images = []
-        
-        # Добавление основного изображения, если оно есть
-        if obj.image_url:
-            images.append({
-                'id': 'main',
-                'image_url': obj.image_url,
-                'alt_text': obj.name,
-                'is_primary': True
-            })
-        
-        # Добавление изображений из JSON-поля
-        additional_images = obj.get_images()
-        if additional_images:
-            for i, img_url in enumerate(additional_images):
-                if isinstance(img_url, str):
-                    images.append({
-                        'id': f'json_{i}',
-                        'image_url': img_url,
-                        'alt_text': f"{obj.name} - изображение {i+1}",
-                        'is_primary': False
-                    })
-                elif isinstance(img_url, dict) and 'url' in img_url:
-                    images.append({
-                        'id': f'json_{i}',
-                        'image_url': img_url['url'],
-                        'alt_text': img_url.get('alt', f"{obj.name} - изображение {i+1}"),
-                        'is_primary': img_url.get('is_primary', False)
-                    })
-        
-        return images
+    def get_model_image(self, obj):
+        """Получение изображения модели"""
+        return obj.model_image
+    
+    def get_product_image(self, obj):
+        """Получение изображения товара"""
+        return obj.product_image
+    
+    def get_additional_images(self, obj):
+        """Получение дополнительных изображений"""
+        additional_images = obj.preorder_images.filter(image_type='additional')
+        return [{
+            'id': img.id,
+            'image_url': img.get_image_url,
+            'alt_text': img.alt_text or obj.name,
+            'image_type': img.image_type
+        } for img in additional_images if img.get_image_url]
+    
+
 
 
 class WishlistSerializer(BaseSerializer):

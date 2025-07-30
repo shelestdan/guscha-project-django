@@ -16,12 +16,12 @@
 
 .auth-container {
   background: #ffffff;
-  border: 1px solid #e0e0e0;
+  border: none;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
   padding: 2rem;
   width: 100%;
-  max-width: 420px;
+  max-width: 600px;
   animation: none;
 }
 
@@ -79,6 +79,25 @@
 }
 
 /* Инпуты */
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 0.75rem;
+  color: #666666;
+  width: 18px;
+  height: 18px;
+  z-index: 1;
+}
+
+.input-with-icon .form-input {
+  padding-left: 2.5rem;
+}
+
 .form-input {
   padding: 0.875rem;
   border: 1px solid #e0e0e0;
@@ -89,6 +108,7 @@
   color: #000000;
   height: 48px;
   box-sizing: border-box;
+  width: 100%;
 }
 
 .form-input:focus {
@@ -400,4 +420,202 @@
     background: #f9f9f9;
     border-color: #e0e0e0;
   }
-} 
+}
+
+/* Стили для выбора способа верификации */
+.verification-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.choice-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.choice-btn:hover {
+  border-color: #667eea;
+  background: #f8f9ff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+}
+
+.choice-btn.qr-choice:hover {
+  border-color: #667eea;
+  background: linear-gradient(135deg, #f8f9ff, #f0f4ff);
+}
+
+.choice-btn.telegram-choice:hover {
+  border-color: #0088cc;
+  background: linear-gradient(135deg, #f0f8ff, #e6f3ff);
+}
+
+.choice-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+}
+
+.qr-choice .choice-icon {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+}
+
+.telegram-choice .choice-icon {
+  background: linear-gradient(135deg, #0088cc, #0066aa);
+  color: white;
+}
+
+.choice-btn h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 0.5rem 0;
+}
+
+.choice-btn p {
+  font-size: 0.875rem;
+  color: #666;
+  margin: 0 0 1rem 0;
+  line-height: 1.4;
+}
+
+.choice-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Адаптивность для выбора верификации */
+@media (max-width: 768px) {
+  .verification-choice {
+    gap: 0.75rem;
+    margin: 1.5rem 0;
+  }
+  
+  .choice-btn {
+    padding: 1.25rem;
+  }
+  
+  .choice-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .choice-btn h3 {
+    font-size: 1.125rem;
+  }
+  
+  .choice-btn p {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .choice-btn {
+    padding: 1rem;
+  }
+  
+  .choice-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .choice-btn h3 {
+    font-size: 1rem;
+  }
+  
+  .choice-btn p {
+    font-size: 0.75rem;
+  }
+  
+  .choice-badge {
+    top: 0.75rem;
+    right: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.7rem;
+  }
+}
+
+/* Стили для кнопки Telegram-бота */
+.telegram-bot-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.25rem;
+  background: #000000;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  width: 100%;
+  height: 48px;
+  box-sizing: border-box;
+  margin-top: 1rem;
+}
+
+.telegram-bot-btn:hover {
+  background: #333333;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.telegram-bot-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.telegram-bot-btn svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2;
+}
+
+/* Адаптивность для кнопки Telegram-бота */
+@media (max-width: 480px) {
+  .telegram-bot-btn {
+    font-size: 0.875rem;
+    padding: 0.75rem 1rem;
+    height: 44px;
+  }
+  
+  .telegram-bot-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+}

@@ -93,11 +93,26 @@ export async function clearCart() {
   console.log('🛒 cartApi.clearCart called');
 
   try {
-    const { data } = await axios.post('/api/cart/clear/');
+    const { data } = await axios.delete('/api/cart/clear/');
     console.log('🛒 cartApi.clearCart response:', data);
     return data;
   } catch (error) {
     console.error('🛒 Error in clearCart:', error);
+    throw error;
+  }
+}
+
+export async function createCartReservations() {
+  console.log('🛒 cartApi.createCartReservations called');
+  const sessionId = localStorage.getItem('cart_session_id');
+  console.log('🛒 Frontend session ID for reservations:', sessionId);
+
+  try {
+    const { data } = await axios.post('/api/cart/create-reservations/');
+    console.log('🛒 cartApi.createCartReservations response:', data);
+    return data;
+  } catch (error) {
+    console.error('🛒 Error in createCartReservations:', error);
     throw error;
   }
 }

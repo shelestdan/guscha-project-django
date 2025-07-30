@@ -12,13 +12,13 @@ const getBaseURL = () => {
     return `${currentProtocol}//${currentHost}`;
   }
   
-  // Если фронтенд на development сервере (порт 3000), используем Django на 8000
+  // Если фронтенд на development сервере (порт 3000), используем Nginx на 80
   if (currentHost.includes(':3000')) {
-    return 'http://localhost:8000';
+    return 'http://localhost';
   }
   
-  // По умолчанию используем localhost:8000
-  return 'http://localhost:8000';
+  // По умолчанию используем localhost (Nginx на порту 80)
+  return 'http://localhost';
 };
 
 const instance = axios.create({
@@ -32,7 +32,7 @@ const instance = axios.create({
 // 🔒 Функция для получения CSRF токена из cookies (Django использует имя 'csrftoken')
 function getCSRFToken() {
   const cookies = document.cookie.split(';');
-  for (let cookie of cookies) {
+  for (const cookie of cookies) {
     const [name, value] = cookie.trim().split('=');
     if (name === 'csrftoken') {
       return value;
@@ -46,7 +46,14 @@ instance.interceptors.request.use((config) => {
   // Добавляем токен аутентификации из localStorage
   const token = localStorage.getItem('token');
   if (token) {
-    config.headers['Authorization'] = `Token ${token}`;
+    // Проверяем, является ли токен JWT (содержит точки) или обычным Django Token
+    if (token.includes('.')) {
+      // JWT токен - используем Bearer
+      config.headers['Authorization'] = `Bearer ${token}`;
+    } else {
+      // Обычный Django Token
+      config.headers['Authorization'] = `Token ${token}`;
+    }
   }
   
   // 🔒 CSRF защита: добавляем CSRF токен для всех небезопасных запросов

@@ -4,6 +4,7 @@ import { useCartStore } from '../store/cartStore';
 import { useToast } from '../hooks/useToast';
 import { createOrder } from '../api/ordersApi';
 import { fetchUserProfile } from '../api/profileApi';
+import { createCartReservations } from '../api/cartApi';
 import '../styles/CheckoutPage.css';
 import { getProductImageUrl, getProductName } from '../utils/imageUtils';
 
@@ -51,7 +52,7 @@ const CheckoutPage = () => {
       
       const response = await fetch('/api/users/addresses', {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         credentials: 'include'
@@ -87,12 +88,46 @@ const CheckoutPage = () => {
     }
   };
 
+  // Создание резервирований для товаров в корзине
+  const createReservations = async () => {
+    try {
+      console.log('🛒 Создаем резервирования для товаров в корзине...');
+      const result = await createCartReservations();
+      console.log('🛒 Резервирования созданы:', result);
+      
+      if (result.errors && result.errors.length > 0) {
+        console.warn('🛒 Некоторые товары не удалось зарезервировать:', result.errors);
+        showError('Некоторые товары могут быть недоступны. Проверьте корзину.');
+        return;
+      }
+      
+      // Подсчитываем новые и существующие резервирования
+      const newReservations = result.reservations_created?.filter(r => r.status === 'created') || [];
+      const existingReservations = result.reservations_created?.filter(r => r.status === 'already_exists') || [];
+      
+      if (newReservations.length > 0) {
+        console.log(`🛒 Создано новых резервирований: ${newReservations.length}`);
+        showSuccess(`Товары зарезервированы на 30 минут (${newReservations.length} новых)`);
+      } else if (existingReservations.length > 0) {
+        console.log(`🛒 Все товары уже зарезервированы: ${existingReservations.length}`);
+        // Не показываем уведомление, если все резервирования уже существуют
+      } else {
+        console.log('🛒 Нет товаров для резервирования');
+      }
+    } catch (error) {
+      console.error('🛒 Ошибка создания резервирований:', error);
+      showError('Не удалось зарезервировать товары. Некоторые позиции могут быть недоступны.');
+    }
+  };
+
   // Проверяем, есть ли товары в корзине и загружаем адреса и данные пользователя
   useEffect(() => {
     if (items.length === 0) {
       navigate('/');
       showError('Корзина пуста. Добавьте товары перед оформлением заказа.');
     } else {
+      // Создаем резервирования для товаров в корзине
+      createReservations();
       fetchSavedAddresses();
       fetchUserData();
     }
@@ -167,16 +202,31 @@ const CheckoutPage = () => {
     setLoading(true);
 
     try {
-      // Если выбрана опция "Адрес доставки совпадает с адресом плательщика"
+      // Подготавливаем данные для создания заказа в формате, ожидаемом OrderCreateSerializer
       const checkoutData = {
-        ...formData,
-        shipping_address: formData.use_same_address 
-          ? formData.billing_address 
-          : formData.shipping_address
+        email: formData.billing_address.email,
+        subtotal: total,
+        tax: 0, // Пока налоги не рассчитываются
+        shipping: 0, // Пока доставка бесплатная
+        discount: 0, // Пока скидки нет
+        total,
+        shipping_method: formData.shipping_method,
+        payment_method: formData.payment_method,
+        notes: formData.notes
       };
       
-      // Удаляем служебное поле, которое не нужно отправлять на сервер
-      delete checkoutData.use_same_address;
+      // Если выбраны сохраненные адреса, добавляем их ID
+      if (selectedBillingAddress) {
+        checkoutData.billing_address_id = parseInt(selectedBillingAddress);
+      }
+      
+      if (!formData.use_same_address && selectedShippingAddress) {
+        checkoutData.shipping_address_id = parseInt(selectedShippingAddress);
+      } else if (formData.use_same_address && selectedBillingAddress) {
+        checkoutData.shipping_address_id = parseInt(selectedBillingAddress);
+      }
+      
+      console.log('Отправляем данные заказа:', checkoutData);
       
       const orderResult = await createOrder(checkoutData);
       
@@ -186,9 +236,10 @@ const CheckoutPage = () => {
       showSuccess('Заказ успешно оформлен!');
       
       // Перенаправляем на страницу подтверждения заказа
-      navigate(`/order-confirmation/${orderResult.order_id}`);
+      navigate(`/order-confirmation/${orderResult.id}`);
     } catch (error) {
-      showError(error.response?.data?.message || 'Произошла ошибка при оформлении заказа');
+      console.error('Ошибка при создании заказа:', error);
+      showError(error.response?.data?.detail || error.response?.data?.message || 'Произошла ошибка при оформлении заказа');
     } finally {
       setLoading(false);
     }

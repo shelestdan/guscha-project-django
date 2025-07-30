@@ -34,7 +34,7 @@ class CartItemSerializer(serializers.ModelSerializer):
     
     def get_total_price(self, obj):
         """Вычисление общей стоимости позиции"""
-        return float(obj.price * obj.quantity)
+        return float(obj.price.amount * obj.quantity)
     
     def get_item_name(self, obj):
         """Получение названия товара или предзаказа"""
@@ -53,7 +53,7 @@ class CartItemSerializer(serializers.ModelSerializer):
             if obj.product.image_url:
                 image_url = obj.product.image_url
             elif obj.product.primary_image:
-                image_url = obj.product.primary_image.image_url
+                image_url = obj.product.primary_image.get_image_url
             
             if image_url and request:
                 # Если URL уже абсолютный (начинается с http), возвращаем как есть
@@ -78,7 +78,7 @@ class CartItemSerializer(serializers.ModelSerializer):
             if obj.product.image_url:
                 return obj.product.image_url
             elif obj.product.primary_image:
-                return obj.product.primary_image.image_url
+                return obj.product.primary_image.get_image_url
         return None
     
     def get_preorder_image_url(self, obj):

@@ -20,12 +20,9 @@ const useScrollDirection = (containerRef = null) => {
       setScrollPosition(scrollY);
       
       // Вычисляем direction ДО обновления lastScrollY
-      let newDirection = scrollDirection;
       if (scrollY > lastScrollY.current) {
-        newDirection = 'down';
         setScrollDirection('down');
       } else if (scrollY < lastScrollY.current) {
-        newDirection = 'up';
         setScrollDirection('up');
       }
       
@@ -40,4 +37,4 @@ const useScrollDirection = (containerRef = null) => {
   return { scrollDirection, scrollPosition, containerRef };
 };
 
-export default useScrollDirection; 
+export default useScrollDirection;

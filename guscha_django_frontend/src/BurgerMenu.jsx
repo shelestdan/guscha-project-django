@@ -1,12 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './styles/BurgerMenu.css';
 
 const BurgerMenu = ({ black = false, menuLabelVisible = true }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const toggleMenu = () => setIsOpen((v) => !v);
-  const closeMenu = () => setIsOpen(false);
+  const toggleMenu = useCallback(() => {
+    setIsOpen(prev => !prev);
+  }, []);
+  
+  const closeMenu = useCallback(() => {
+    setIsOpen(false);
+  }, []);
+
+  // Закрытие меню по Escape
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        closeMenu();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, closeMenu]);
 
   // Функция плавной прокрутки к элементу
   const scrollToSection = (sectionId) => {
@@ -30,7 +56,7 @@ const BurgerMenu = ({ black = false, menuLabelVisible = true }) => {
       <button
         className={`burger-menu-btn${isOpen ? ' open' : ''}`}
         onClick={toggleMenu}
-        aria-label="Открыть меню"
+        aria-label={isOpen ? 'Закрыть меню' : 'Открыть меню'}
         style={{ '--label-color': labelColor, '--bar-color': barColor }}
       >
         <span
@@ -47,7 +73,14 @@ const BurgerMenu = ({ black = false, menuLabelVisible = true }) => {
       </button>
       
       {/* Overlay и панель */}
-      <div className={`burger-overlay${isOpen ? ' open' : ''}`} onClick={closeMenu} />
+      <div 
+        className={`burger-overlay${isOpen ? ' open' : ''}`} 
+        onClick={closeMenu}
+        onKeyDown={(e) => e.key === 'Escape' && closeMenu()}
+        role="button"
+        tabIndex={isOpen ? 0 : -1}
+        aria-label="Close menu"
+      />
       <aside className={`burger-panel${isOpen ? ' open' : ''}`}> 
         <nav className="burger-nav">
           <Link to="/" onClick={closeMenu}>Коллекция</Link>
@@ -70,4 +103,4 @@ const BurgerMenu = ({ black = false, menuLabelVisible = true }) => {
   );
 };
 
-export default BurgerMenu; 
+export default BurgerMenu;

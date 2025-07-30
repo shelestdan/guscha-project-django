@@ -57,23 +57,24 @@ const CompactAuth = ({ onLogin, onRegister, onGoogleLogin, onClose }) => {
         </button>
         
         <AdvancedAuth
-          onLogin={async (data) => {
-            await onLogin(data);
+          onLogin={async (email, password) => {
+            await onLogin({ email, password });
             handleClose();
           }}
           onRegister={async (data) => {
-            await onRegister(data);
-            handleClose();
+            const result = await onRegister(data);
+            // Не закрываем сразу, так как может потребоваться Telegram-верификация
+            return result;
           }}
           onGoogleLogin={async () => {
             await onGoogleLogin();
             handleClose();
           }}
-          initialMode={authMode}
+          onClose={handleClose}
         />
       </div>
     </div>
   );
 };
 
-export default CompactAuth; 
+export default CompactAuth;

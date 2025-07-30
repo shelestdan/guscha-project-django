@@ -5,6 +5,7 @@ import { Header, Footer } from './components/layout';
 import { HomePage } from './pages';
 import { CartSidebar } from './components/features/cart';
 import { useCartStore } from './store/cartStore';
+import { useAuth } from './hooks/useAuth';
 import ToastContainer from './components/ui/ToastContainer';
 
 // Импортируем крупные страницы лениво
@@ -13,18 +14,41 @@ const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'));
 const PreorderDetailPage = lazy(() => import('./pages/PreorderDetailPage'));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
 const OrderConfirmationPage = lazy(() => import('./pages/OrderConfirmationPage'));
+const AddressesPage = lazy(() => import('./pages/AddressesPage'));
+const PasswordResetConfirm = lazy(() => import('./components/PasswordResetConfirm'));
+const GoogleOAuthCallback = lazy(() => import('./components/GoogleOAuthCallback'));
 
 function AppContent() {
   const location = useLocation();
   const isHome = location.pathname === '/';
   const fetchCart = useCartStore((state) => state.fetchCart);
   const mainRef = useRef(null);
+  
+  // Инициализируем аутентификацию для проверки токена при загрузке
+  const { loading } = useAuth();
 
   // Загружаем корзину при инициализации приложения
   useEffect(() => {
     console.log('🛒 Initializing cart on app start');
     fetchCart();
   }, [fetchCart]);
+
+  // Показываем загрузку пока проверяется аутентификация
+  if (loading) {
+    return (
+      <div className="App">
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          fontSize: '18px'
+        }}>
+          Загрузка...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="App">
@@ -42,8 +66,11 @@ function AppContent() {
             <Route path="/products/:slug" element={<ProductDetailPage />} />
             <Route path="/preorders/:id" element={<PreorderDetailPage />} />
             <Route path="/account" element={<Account />} />
+            <Route path="/addresses" element={<AddressesPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/order-confirmation/:orderId" element={<OrderConfirmationPage />} />
+            <Route path="/reset-password" element={<PasswordResetConfirm />} />
+            <Route path="/auth/google/callback" element={<GoogleOAuthCallback />} />
           </Routes>
         </Suspense>
         {isHome && <Footer />}

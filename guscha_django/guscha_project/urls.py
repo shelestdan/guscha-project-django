@@ -19,10 +19,13 @@ from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
+from apps.accounts.views import qr_trigger
 
 urlpatterns = [
     # Админка должна быть первой, чтобы не перехватывалась React-приложением
     path('admin/', admin.site.urls),
+    
+
     
     # API маршруты
     path('api/products/', include('apps.products.urls')),
@@ -30,16 +33,26 @@ urlpatterns = [
     path('api/orders/', include('apps.orders.urls')),
     path('api/cart/', include('apps.cart.urls')),
     path('api/addresses/', include('apps.addresses.urls')),
+    path('api/auth/', include('allauth.urls')),
+
+    path('api/admin/', include('apps.core.urls')),  # API для админки
+    
+    # Server-Sent Events (закомментировано - пакет не установлен)
+    # path('events/', include('django_eventstream.urls')),
     
     # Дополнительные API маршруты для совместимости с фронтендом
     path('api/preorders/', include(('apps.products.urls', 'products'), namespace='api-preorders')),
     path('api/public/', include(('apps.core.urls', 'core'), namespace='api-public')),
     
+    # QR-trigger маршрут (должен быть перед catch-all)
+    path('qr-trigger/<uuid:qr_id>/', qr_trigger, name='qr_trigger'),
+    
     # Основные маршруты приложения
     path('', include('apps.core.urls')),
     
     # React-приложение должно быть последним (catch-all)
-    re_path(r'^(?!admin|api).*$', TemplateView.as_view(template_name='index.html'))
+    # Исключаем admin, api, media и qr-trigger из перехвата React-приложением
+    re_path(r'^(?!admin|api|media|static|qr-trigger).*$', TemplateView.as_view(template_name='index.html'))
 ]
 
 if settings.DEBUG:

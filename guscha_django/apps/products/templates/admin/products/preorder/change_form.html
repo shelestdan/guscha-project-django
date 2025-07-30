@@ -1,0 +1,32 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'products/css/admin_inline_styles.css' %}">
+    <script src="{% static 'products/js/admin_inline_forms.js' %}"></script>
+{% endblock %}
+
+{% block admin_change_form_document_ready %}
+    {{ block.super }}
+    <script>
+        (function($) {
+            // Дополнительная инициализация для предзаказов
+            $(document).ready(function() {
+                // Убеждаемся, что кнопки стилизованы после полной загрузки
+                setTimeout(function() {
+                    $('.add-row a').each(function() {
+                        const $button = $(this);
+                        const text = $button.text().trim();
+                        
+                        // Специально для размеров предзаказов
+                        if (text.includes('preorder size') || text.includes('размер предзаказа') || 
+                            $button.closest('.inline-group').find('h2').text().includes('размер')) {
+                            $button.text('ДОБАВИТЬ РАЗМЕР');
+                        }
+                    });
+                }, 500);
+            });
+        })(django.jQuery || jQuery);
+    </script>
+{% endblock %}

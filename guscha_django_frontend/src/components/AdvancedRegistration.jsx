@@ -24,7 +24,8 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
     email: '',
     phone: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    termsAccepted: true
   });
 
   const [validation, setValidation] = useState({
@@ -33,7 +34,8 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
     email: { isValid: false, message: '' },
     phone: { isValid: false, message: '' },
     password: { isValid: false, message: '', strength: 0 },
-    confirmPassword: { isValid: false, message: '' }
+    confirmPassword: { isValid: false, message: '' },
+    termsAccepted: { isValid: true, message: '' } // По умолчанию true, так как termsAccepted тоже true
   });
 
   // Состояние для серверных ошибок
@@ -51,7 +53,7 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
   // Скролл теперь разрешен на страницах регистрации
 
   // Валидация имени
-  const validateName = (name, field) => {
+  const validateName = (name, _field) => {
     if (!name.trim()) {
       return { isValid: false, message: 'Поле обязательно для заполнения' };
     }
@@ -122,7 +124,7 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
       uppercase: /[A-Z]/.test(password),
       lowercase: /[a-z]/.test(password),
       number: /\d/.test(password),
-      special: /[!@#$%^&*()_+=\[\]{};':"\|,.<>/?]/.test(password),
+      special: /[!@#$%^&*()_\-+,.?":{}|<>]/.test(password),
       noSpaces: !/\s/.test(password)
     };
 
@@ -168,11 +170,11 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
     
     return {
       isValid: errors.length === 0 && score >= 3,
-      errors: errors,
-      suggestions: suggestions,
-      score: score,
+      errors,
+      suggestions,
+      score,
       strength: score >= 4 ? 'strong' : score >= 2 ? 'medium' : 'weak',
-      checks: checks
+      checks
     };
   };
 
@@ -185,6 +187,14 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
       return { isValid: false, message: 'Пароли не совпадают' };
     }
     return { isValid: true, message: 'Пароли совпадают' };
+  };
+
+  // Валидация принятия условий
+  const validateTermsAccepted = (accepted) => {
+    if (!accepted) {
+      return { isValid: false, message: 'Необходимо принять условия использования' };
+    }
+    return { isValid: true, message: 'Условия приняты' };
   };
 
   // Обработка изменений в форме
@@ -222,6 +232,9 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
       case 'confirmPassword':
         validationResult = validateConfirmPassword(value, formData.password);
         break;
+      case 'termsAccepted':
+        validationResult = validateTermsAccepted(value);
+        break;
       default:
         return;
     }
@@ -232,9 +245,13 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
   // Проверка валидности всей формы
   useEffect(() => {
     const allFieldsValid = Object.values(validation).every(field => field.isValid);
-    const allFieldsFilled = Object.values(formData).every(value => value.trim() !== '');
+    // Проверяем все поля кроме termsAccepted (это boolean)
+    const textFieldsFilled = Object.entries(formData)
+      .filter(([key]) => key !== 'termsAccepted')
+      .every(([_key, value]) => value.trim() !== '');
+    const termsAccepted = formData.termsAccepted;
     const noServerErrors = !serverErrors.email && !serverErrors.phone && !serverErrors.general;
-    setIsFormValid(allFieldsValid && allFieldsFilled && noServerErrors);
+    setIsFormValid(allFieldsValid && textFieldsFilled && termsAccepted && noServerErrors);
   }, [validation, formData, serverErrors]);
 
   // Отправка формы
@@ -244,7 +261,8 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
     // Проверяем валидность всех полей
     if (!validation.firstName.isValid || !validation.lastName.isValid || 
         !validation.email.isValid || !validation.phone.isValid || 
-        !validation.password.isValid || !validation.confirmPassword.isValid) {
+        !validation.password.isValid || !validation.confirmPassword.isValid ||
+        !validation.termsAccepted.isValid) {
       return;
     }
 
@@ -259,13 +277,22 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
         email: formData.email.trim().toLowerCase(),
         phone: formData.phone,
         password: formData.password, // Пароль в открытом виде
-        password_confirm: formData.confirmPassword // Подтверждение пароля
+        password_confirm: formData.confirmPassword, // Подтверждение пароля
+        terms_accepted: formData.termsAccepted
       };
       
       console.log('DEBUG: Registration data being sent:', registrationData);
+      console.log('DEBUG: termsAccepted value:', formData.termsAccepted);
+      console.log('DEBUG: termsAccepted in registrationData:', registrationData.terms_accepted);
 
       console.log('🔐 Отправка данных регистрации');
-      await onRegister(registrationData);
+      const result = await onRegister(registrationData);
+      
+      console.log('✅ Регистрация успешна:', result);
+      
+      // Результат уже передан через onRegister выше
+      // Родительский компонент (AdvancedAuth) обработает переход к Telegram-верификации
+      // если в result есть verification_id
     } catch (error) {
       console.error('Ошибка регистрации:', error);
       console.log('error.response:', error.response);
@@ -548,6 +575,34 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
               <div className={`validation-message ${validation.confirmPassword.isValid ? 'success' : 'error'}`}>
                 {validation.confirmPassword.isValid ? <FiCheck /> : <FiX />}
                 <span>{validation.confirmPassword.message}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="form-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={formData.termsAccepted}
+                onChange={(e) => handleInputChange('termsAccepted', e.target.checked)}
+                disabled={isSubmitting}
+              />
+              <span className="checkmark"></span>
+              <span className="checkbox-text">
+                Я принимаю{' '}
+                <a href="/terms" target="_blank" rel="noopener noreferrer">
+                  условия использования
+                </a>
+                {' '}и{' '}
+                <a href="/privacy" target="_blank" rel="noopener noreferrer">
+                  политику конфиденциальности
+                </a>
+              </span>
+            </label>
+            {!validation.termsAccepted.isValid && formData.termsAccepted !== null && (
+              <div className="validation-message error">
+                <FiX />
+                <span>{validation.termsAccepted.message}</span>
               </div>
             )}
           </div>

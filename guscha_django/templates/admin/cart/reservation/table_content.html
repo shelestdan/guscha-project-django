@@ -1,0 +1,51 @@
+{% load i18n admin_urls static admin_list %}
+
+<tbody>
+    {% for result in result_list %}
+        <tr class="{% cycle 'row1' 'row2' %}">
+            <td class="action-checkbox">
+                <input type="checkbox" name="_selected_action" value="{{ result.pk }}" class="action-select">
+            </td>
+            <td class="field-id nowrap">
+                <a href="{% url opts|admin_urlname:'change' result.pk|admin_urlquote %}">{{ result.id }}</a>
+            </td>
+            <td class="field-item_info">
+                {% if result.product %}
+                    <strong>{{ result.product.name }}</strong>
+                    {% if result.product_size %}
+                        ({{ result.product_size.size_name }})
+                    {% endif %}
+                {% elif result.preorder %}
+                    <strong style="color: #fd7e14;">{{ result.preorder.name }}</strong>
+                    {% if result.preorder_size %}
+                        ({{ result.preorder_size.size_name }})
+                    {% endif %}
+                {% else %}
+                    {% trans "Не указано" %}
+                {% endif %}
+            </td>
+            <td class="field-quantity nowrap">{{ result.quantity }}</td>
+            <td class="field-status_display">
+                {% if result.status == 'active' %}
+                    <span style="color: #28a745; font-weight: bold;">Активно</span>
+                {% elif result.status == 'expired' %}
+                    <span style="color: #dc3545; font-weight: bold;">Истекло</span>
+                {% elif result.status == 'cancelled' %}
+                    <span style="color: #6c757d; font-weight: bold;">Отменено</span>
+                {% else %}
+                    <span style="color: #6c757d; font-weight: bold;">{{ result.status }}</span>
+                {% endif %}
+            </td>
+            <td class="field-expires_at nowrap">{{ result.expires_at|date:"d.m.Y H:i" }}</td>
+            <td class="field-time_remaining">
+                {% load cart_extras %}
+                {{ result|time_remaining_display }}
+            </td>
+            <td class="field-created_at nowrap">{{ result.created_at|date:"d.m.Y H:i" }}</td>
+        </tr>
+    {% empty %}
+        <tr>
+            <td colspan="8">{% trans "Резервирования не найдены" %}</td>
+        </tr>
+    {% endfor %}
+</tbody>

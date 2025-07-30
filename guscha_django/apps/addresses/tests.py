@@ -99,6 +99,9 @@ class AddressAPITest(APITestCase):
     """Тесты API адресов"""
     
     def setUp(self):
+        # Очищаем все адреса перед каждым тестом
+        Address.objects.all().delete()
+        
         self.user = User.objects.create_user(
             email='test@example.com',
             password='testpass123'

@@ -10,4 +10,6 @@ class OrdersConfig(AppConfig):
         """
         Импортируем сигналы при запуске приложения
         """
-        import apps.orders.signals
+        # Временно отключаем импорт сигналов для диагностики
+        # import apps.orders.signals
+        pass

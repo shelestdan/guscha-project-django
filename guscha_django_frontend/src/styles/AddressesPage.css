@@ -1,7 +1,7 @@
-/* AddressesPage Styles */
+/* AddressesPage Styles - Минималистичный черно-белый дизайн */
 .addresses-page {
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: #ffffff;
 }
 
 .addresses-container {
@@ -11,56 +11,97 @@
 }
 
 .addresses-header {
-  text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 2rem;
+}
+
+.addresses-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 2px solid #000;
 }
 
 .addresses-header h1 {
-  font-size: 32px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 8px;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #000;
+  margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .addresses-header p {
-  font-size: 16px;
+  font-size: 1rem;
   color: #666;
+  margin: 0;
+}
+
+.add-address-btn {
+  background-color: #000;
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-address-btn:hover {
+  background-color: #333;
+}
+
+.add-address-btn:active {
+  background-color: #000;
+  transform: translateY(1px);
 }
 
 .addresses-tabs {
   display: flex;
-  justify-content: center;
-  gap: 16px;
+  justify-content: flex-start;
+  gap: 0;
   margin-bottom: 32px;
+  border: 2px solid #000000;
 }
 
 .tab-button {
-  padding: 12px 24px;
-  border: 1px solid #d9d9d9;
-  background: white;
-  color: #666;
-  border-radius: 6px;
+  padding: 16px 32px;
+  border: none;
+  background: #ffffff;
+  color: #000000;
+  border-radius: 0;
   cursor: pointer;
   font-size: 16px;
-  transition: all 0.3s ease;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
+  border-right: 2px solid #000000;
+}
+
+.tab-button:last-child {
+  border-right: none;
 }
 
 .tab-button:hover {
-  border-color: #1890ff;
-  color: #1890ff;
+  background: #000000;
+  color: #ffffff;
 }
 
 .tab-button.active {
-  background: #1890ff;
-  color: white;
-  border-color: #1890ff;
+  background: #000000;
+  color: #ffffff;
 }
 
 .addresses-content {
-  background: white;
-  border-radius: 8px;
+  background: #ffffff;
+  border: 2px solid #000000;
+  border-radius: 0;
   padding: 32px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
 }
 
 /* Responsive styles */

@@ -1,3 +1,66 @@
+# Импортируем сервисы для работы с изображениями
+from .services.image_service import ImageService
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.admin.views.decorators import staff_member_required
+
+# Создаем экземпляр сервиса
+image_service = ImageService()
+
+@staff_member_required
+@csrf_exempt
+def upload_product_image(request):
+    """Загрузка изображений товара через сервис"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    try:
+        files = request.FILES.getlist('images')
+        uploaded_images = image_service.upload_multiple_images(files)
+        return JsonResponse({'success': True, 'images': uploaded_images})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@staff_member_required
+def get_product_images(request, product_id):
+    """Получение списка изображений товара через сервис"""
+    try:
+        images_data = image_service.get_product_images(product_id)
+        return JsonResponse({'success': True, 'images': images_data})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@staff_member_required
+@csrf_exempt
+def reorder_product_images(request):
+    """Изменение порядка изображений товара через сервис"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    try:
+        data = json.loads(request.body)
+        image_order = data.get('order', [])
+        image_service.reorder_images(image_order)
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@staff_member_required
+@csrf_exempt
+def set_primary_image(request):
+    """Установка основного изображения товара через сервис"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    try:
+        data = json.loads(request.body)
+        image_id = data.get('image_id')
+        image_service.set_primary_image(image_id)
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
 from django.db.models import Avg, Count, Q, Prefetch
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -6,6 +69,15 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
+import os
+import base64
+import uuid
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
+import json
 
 from .models import (
     Category, Product, ProductImage, ProductSize, 
@@ -24,6 +96,16 @@ from .filters import ProductFilter
 from .permissions import IsAdminOrReadOnly, IsOwnerOrReadOnly
 from .pagination import StandardResultsSetPagination
 
+# Импортируем сервисы и репозитории
+from .services.product_service import ProductService
+from .services.category_service import CategoryService
+from .repositories.product_repository import ProductRepository
+from .repositories.category_repository import CategoryRepository
+
+# Создаем экземпляры сервисов
+product_service = ProductService()
+category_service = CategoryService()
+
 
 class CategoryViewSet(viewsets.ModelViewSet):
     """ViewSet для работы с категориями товаров"""
@@ -41,23 +123,12 @@ class CategoryViewSet(viewsets.ModelViewSet):
         return CategorySerializer
     
     def get_queryset(self):
-        queryset = Category.objects.all()
-        
-        # Фильтрация по активности
-        is_active = self.request.query_params.get('is_active')
-        if is_active is not None:
-            is_active = is_active.lower() == 'true'
-            queryset = queryset.filter(is_active=is_active)
-        
-        # Фильтрация по родительской категории
-        parent = self.request.query_params.get('parent')
-        if parent is not None:
-            if parent == 'null':
-                queryset = queryset.filter(parent__isnull=True)
-            else:
-                queryset = queryset.filter(parent__slug=parent)
-        
-        return queryset
+        # Используем сервис для получения категорий с фильтрацией
+        filters = {
+            'is_active': self.request.query_params.get('is_active'),
+            'parent': self.request.query_params.get('parent')
+        }
+        return category_service.get_filtered_categories(filters)
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -87,63 +158,13 @@ class ProductViewSet(viewsets.ModelViewSet):
         return context
     
     def get_queryset(self):
-        queryset = Product.objects.all()
-        
-        # Оптимизация запросов для списка товаров
-        if self.action == 'list':
-            queryset = queryset.select_related('category')\
-                .prefetch_related(
-                    Prefetch('product_images', queryset=ProductImage.objects.filter(is_primary=True))
-                )\
-                .annotate(
-                    avg_rating_annotated=Avg('reviews__rating', filter=Q(reviews__is_approved=True)),
-                    review_count_annotated=Count('reviews', filter=Q(reviews__is_approved=True))
-                )
-        
-        # Оптимизация запросов для детального представления товара
-        elif self.action == 'retrieve':
-            queryset = queryset.select_related('category')\
-                .prefetch_related(
-                    'product_images',
-                    'sizes',
-                    'variants',
-                    Prefetch('reviews', queryset=ProductReview.objects.filter(is_approved=True))
-                )\
-                .annotate(
-                    avg_rating_annotated=Avg('reviews__rating', filter=Q(reviews__is_approved=True)),
-                    review_count_annotated=Count('reviews', filter=Q(reviews__is_approved=True))
-                )
-        
-        # Фильтрация по активности
-        is_active = self.request.query_params.get('is_active')
-        if is_active is not None:
-            is_active = is_active.lower() == 'true'
-            queryset = queryset.filter(is_active=is_active)
-        
-        # Фильтрация по рекомендуемым товарам
-        is_featured = self.request.query_params.get('is_featured')
-        if is_featured is not None:
-            is_featured = is_featured.lower() == 'true'
-            queryset = queryset.filter(is_featured=is_featured)
-        
-        # Фильтрация по наличию на складе
-        in_stock = self.request.query_params.get('in_stock')
-        if in_stock is not None:
-            in_stock = in_stock.lower() == 'true'
-            if in_stock:
-                queryset = queryset.filter(
-                    Q(track_inventory=False) | 
-                    Q(stock_quantity__gt=0) | 
-                    Q(allow_backorder=True)
-                )
-            else:
-                queryset = queryset.filter(
-                    track_inventory=True,
-                    stock_quantity=0,
-                    allow_backorder=False
-                )
-        
-        return queryset
+        # Используем сервис для получения оптимизированного queryset
+        filters = {
+            'is_active': self.request.query_params.get('is_active'),
+            'is_featured': self.request.query_params.get('is_featured'),
+            'in_stock': self.request.query_params.get('in_stock')
+        }
+        return product_service.get_optimized_queryset(filters)
     
     @action(detail=True, methods=['get'])
     def reviews(self, request, slug=None):
@@ -164,67 +185,55 @@ class ProductViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def add_review(self, request, slug=None):
-        """Добавление отзыва о товаре"""
+        """Добавление отзыва о товаре через сервис"""
         product = self.get_object()
         
-        # Проверка на существование отзыва от этого пользователя
-        existing_review = ProductReview.objects.filter(
-            product=product,
-            user=request.user
-        ).first()
-        
-        if existing_review:
+        try:
+            review_data = product_service.add_review(
+                product=product,
+                user=request.user,
+                review_data=request.data
+            )
+            return Response(review_data, status=status.HTTP_201_CREATED)
+        except ValueError as e:
             return Response(
-                {"detail": "Вы уже оставляли отзыв на этот товар"},
+                {"detail": str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
-        serializer = ProductReviewCreateSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(product=product, user=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def add_to_wishlist(self, request, slug=None):
-        """Добавление товара в список желаний"""
+        """Добавление товара в список желаний через сервис"""
         product = self.get_object()
-        user = request.user
         
-        # Проверяем, есть ли уже этот товар в списке желаний
-        if user.wishlist_items.filter(product=product).exists():
+        try:
+            product_service.add_to_wishlist(request.user, product)
             return Response(
-                {"detail": "Товар уже в списке желаний"},
+                {"detail": "Товар добавлен в список желаний"},
+                status=status.HTTP_201_CREATED
+            )
+        except ValueError as e:
+            return Response(
+                {"detail": str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
-        # Добавляем товар в список желаний
-        user.wishlist_items.create(product=product)
-        return Response(
-            {"detail": "Товар добавлен в список желаний"},
-            status=status.HTTP_201_CREATED
-        )
     
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def remove_from_wishlist(self, request, slug=None):
-        """Удаление товара из списка желаний"""
+        """Удаление товара из списка желаний через сервис"""
         product = self.get_object()
-        user = request.user
         
-        # Проверяем, есть ли товар в списке желаний
-        wishlist_item = user.wishlist_items.filter(product=product).first()
-        if not wishlist_item:
+        try:
+            product_service.remove_from_wishlist(request.user, product)
             return Response(
-                {"detail": "Товар не найден в списке желаний"},
+                {"detail": "Товар удален из списка желаний"},
+                status=status.HTTP_200_OK
+            )
+        except ValueError as e:
+            return Response(
+                {"detail": str(e)},
                 status=status.HTTP_404_NOT_FOUND
             )
-        
-        # Удаляем товар из списка желаний
-        wishlist_item.delete()
-        return Response(
-            {"detail": "Товар удален из списка желаний"},
-            status=status.HTTP_200_OK
-        )
 
 
 class PreorderViewSet(viewsets.ReadOnlyModelViewSet):
@@ -233,8 +242,8 @@ class PreorderViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'description']
-    ordering_fields = ['name', 'price', 'start_date', 'end_date']
-    ordering = ['-start_date']
+    ordering_fields = ['name', 'price', 'created_at']
+    ordering = ['-created_at']
     pagination_class = StandardResultsSetPagination
     
     def get_serializer_class(self):
@@ -246,21 +255,13 @@ class PreorderViewSet(viewsets.ReadOnlyModelViewSet):
         queryset = Preorder.objects.all()
         
         # Фильтрация по активным предзаказам
-        now = timezone.now()
         is_active = self.request.query_params.get('is_active')
         if is_active is not None:
             is_active = is_active.lower() == 'true'
             if is_active:
-                queryset = queryset.filter(
-                    start_date__lte=now,
-                    end_date__gte=now,
-                    is_active=True
-                )
+                queryset = queryset.filter(is_active=True)
             else:
-                queryset = queryset.filter(
-                    Q(end_date__lt=now) | 
-                    Q(is_active=False)
-                )
+                queryset = queryset.filter(is_active=False)
         
         return queryset
 

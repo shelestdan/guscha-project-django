@@ -1,8 +1,26 @@
-import { create } from 'zustand'
+import { create } from 'zustand';
 import { persist, devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import * as cartApi from '../api/cartApi'
+import * as cartApi from '../api/cartApi';
+import { logger } from '../utils/logger';
 
+const MODULE_NAME = 'CartStore';
+
+/**
+ * @typedef {Object} CartItem
+ * @property {number} id
+ * @property {number} [product_id]
+ * @property {number} [preorder_id]
+ * @property {Object} [product]
+ * @property {Object} [preorder]
+ * @property {Object} [size]
+ * @property {number} quantity
+ * @property {string} price
+ */
+
+/**
+ * Zustand store для управления корзиной
+ */
 export const useCartStore = create(
   devtools(
     persist(
@@ -16,7 +34,7 @@ export const useCartStore = create(
 
         // API: загрузка корзины
         fetchCart: async () => {
-          console.log('🛒 fetchCart called');
+          logger.debug(MODULE_NAME, 'fetchCart called');
           set((state) => {
             state.loading = true;
             state.error = null;
@@ -24,7 +42,7 @@ export const useCartStore = create(
 
           try {
             const data = await cartApi.getCartItems();
-            console.log('🛒 fetchCart data received:', data);
+            logger.debug(MODULE_NAME, 'fetchCart data received', data);
             set((state) => {
               const itemsArray = (data && Array.isArray(data.items)) ? data.items : [];
               state.items = itemsArray;
@@ -37,7 +55,7 @@ export const useCartStore = create(
               state.loading = false;
             });
           } catch (error) {
-            console.error('🛒 Error in fetchCart:', error);
+            logger.error(MODULE_NAME, 'Error in fetchCart', error);
             set((state) => {
               state.loading = false;
               state.error = error.message || 'Ошибка загрузки корзины';
@@ -55,7 +73,7 @@ export const useCartStore = create(
 
         // API: добавить товар
         addToCart: async (productId, sizeId = null, quantity = 1) => {
-          console.log('🛒 cartStore.addToCart called:', { productId, sizeId, quantity });
+          logger.debug(MODULE_NAME, 'addToCart called', { productId, sizeId, quantity });
           set((state) => { state.loading = true; state.error = null; });
 
           try {
@@ -63,7 +81,7 @@ export const useCartStore = create(
             await get().fetchCart();
             return true;
           } catch (error) {
-            console.error('🛒 Error in cartStore.addToCart:', error);
+            logger.error(MODULE_NAME, 'Error in addToCart', error);
             set((state) => {
               state.loading = false;
               state.error = error.message || 'Ошибка добавления в корзину';
@@ -74,7 +92,7 @@ export const useCartStore = create(
 
         // API: добавить предзаказ
         addPreorderToCart: async (preorderId, sizeId = null, quantity = 1) => {
-          console.log('🛒 cartStore.addPreorderToCart called:', { preorderId, sizeId, quantity });
+          logger.debug(MODULE_NAME, 'addPreorderToCart called', { preorderId, sizeId, quantity });
           set((state) => { state.loading = true; state.error = null; });
 
           try {
@@ -82,7 +100,7 @@ export const useCartStore = create(
             await get().fetchCart();
             return true;
           } catch (error) {
-            console.error('🛒 Error in cartStore.addPreorderToCart:', error);
+            logger.error(MODULE_NAME, 'Error in addPreorderToCart', error);
             set((state) => {
               state.loading = false;
               state.error = error.message || 'Ошибка добавления предзаказа';
@@ -93,21 +111,21 @@ export const useCartStore = create(
 
         // API: обновить количество
         updateQuantity: async (itemId, quantity) => {
-          console.log(`🛒 cartStore.updateQuantity called for item ${itemId} with quantity ${quantity}`);
+          logger.debug(MODULE_NAME, `updateQuantity called for item ${itemId}`, { itemId, quantity });
           set((state) => { state.loading = true; state.error = null; });
 
           try {
             await cartApi.updateCartItem(itemId, quantity);
             await get().fetchCart();
           } catch (error) {
-            console.error('🛒 Error in cartStore.updateQuantity:', error);
+            logger.error(MODULE_NAME, 'Error in updateQuantity', error);
             set((state) => {
               state.loading = false;
               state.error = error.message || 'Ошибка обновления количества';
             });
 
             if (error.response?.status === 404) {
-              console.log('🛒 Item not found, refreshing cart...');
+              logger.info(MODULE_NAME, 'Item not found, refreshing cart');
               await get().fetchCart();
             }
           }
@@ -115,21 +133,21 @@ export const useCartStore = create(
 
         // API: удалить товар
         removeFromCart: async (itemId) => {
-          console.log(`🛒 cartStore.removeFromCart called for item ${itemId}`);
+          logger.debug(MODULE_NAME, `removeFromCart called for item ${itemId}`, { itemId });
           set((state) => { state.loading = true; state.error = null; });
 
           try {
             await cartApi.removeCartItem(itemId);
             await get().fetchCart();
           } catch (error) {
-            console.error('🛒 Error in cartStore.removeFromCart:', error);
+            logger.error(MODULE_NAME, 'Error in removeFromCart', error);
             set((state) => {
               state.loading = false;
               state.error = error.message || 'Ошибка удаления из корзины';
             });
 
             if (error.response?.status === 404) {
-              console.log('🛒 Item not found, refreshing cart...');
+              logger.info(MODULE_NAME, 'Item not found, refreshing cart');
               await get().fetchCart();
             }
           }
@@ -137,7 +155,7 @@ export const useCartStore = create(
 
         // API: очистить корзину
         clearCart: async () => {
-          console.log('🛒 cartStore.clearCart called');
+          logger.debug(MODULE_NAME, 'clearCart called');
           set((state) => { state.loading = true; state.error = null; });
 
           try {
@@ -149,7 +167,7 @@ export const useCartStore = create(
               state.loading = false;
             });
           } catch (error) {
-            console.error('🛒 Error in cartStore.clearCart:', error);
+            logger.error(MODULE_NAME, 'Error in clearCart', error);
             set((state) => {
               state.loading = false;
               state.error = error.message || 'Ошибка очистки корзины';

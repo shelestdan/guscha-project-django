@@ -22,9 +22,8 @@ const DetailPage = ({ item, itemType }) => {
 
   if (!item) return null;
 
-  const allImages = [item.image_url, ...(item.images || [])].filter(Boolean);
-  const mainImage = allImages.find(img => typeof img === 'string');
-  const extraImages = allImages.filter(img => typeof img === 'object' && img.image_url !== mainImage);
+  // Показываем только дополнительные изображения (исключаем товарные фото)
+  const extraImages = item.additional_images || [];
 
   const AddButton = itemType === 'product' ? AddToCartButton : AddToPreorderButton;
   const addButtonProps = itemType === 'product' 
@@ -90,11 +89,8 @@ const DetailPage = ({ item, itemType }) => {
         </div>
 
         <div className="pdp-image-gallery">
-          {mainImage && (
-            <img src={mainImage} alt={item.name + ' - main'} className="pdp-image" />
-          )}
           {extraImages.map((img, idx) => (
-            <img key={idx} src={img.image_url} alt={img.alt_text || (item.name + ' - extra ' + (idx + 1))} className="pdp-image" />
+            <img key={idx} src={img.image_url} alt={img.alt_text || (item.name + ' - дополнительное фото ' + (idx + 1))} className="pdp-image" />
           ))}
         </div>
       </div>

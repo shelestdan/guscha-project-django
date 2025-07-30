@@ -11,14 +11,19 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+import json
 from pathlib import Path
 from dotenv import load_dotenv
 from str2bool import str2bool
-
-load_dotenv()  # take environment variables from .env.
+from django.templatetags.static import static
+from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Загружаем переменные окружения из .env файла
+load_dotenv(BASE_DIR / '.env')  # Явно указываем путь к .env файлу
 
 
 # Quick-start development settings - unsuitable for production
@@ -36,21 +41,40 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    # Django Datta Able Admin UI (must be before django.contrib.admin)
-    'jazzmin',
+    'unfold',  # Django Unfold должен быть первым
+    'unfold.contrib.filters',  # Опциональные фильтры
+    'unfold.contrib.forms',  # Опциональные формы
+    # 'unfold.contrib.import_export',  # Временно отключено для отладки
+    # 'unfold.contrib.simple_history',  # Временно отключено для отладки
     'django.contrib.admin',
-    'admin_datta.apps.AdminDattaConfig',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',  # Required for allauth
     
     # Сторонние приложения
     'rest_framework',
     'rest_framework.authtoken',
+    'rest_framework_simplejwt',
     'django_filters',
     'corsheaders',
+    # 'crispy_forms',  # Временно отключено для отладки
+    # 'crispy_tailwind',  # Временно отключено для отладки
+    # 'import_export',  # Временно отключено для отладки
+    'djmoney',  # Django Money для работы с валютами
+    
+    # Google OAuth
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    
+    # dj-rest-auth для API аутентификации
+    'dj_rest_auth',
+    'dj_rest_auth.registration',
+
     
     # Приложения проекта
     'apps.products.apps.ProductsConfig',
@@ -59,15 +83,15 @@ INSTALLED_APPS = [
     'apps.cart.apps.CartConfig',
     'apps.core.apps.CoreConfig',
     'apps.addresses.apps.AddressesConfig',
+    'telegram_bot',
+
 ]
 
 # Добавляем новые приложения для безопасности
 INSTALLED_APPS += [
     'guardian',
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
     'django_recaptcha',
+    'simple_history',  # История изменений моделей
 ]
 
 MIDDLEWARE = [
@@ -77,10 +101,11 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'allauth.account.middleware.AccountMiddleware',  # Добавляем middleware для allauth
+    'simple_history.middleware.HistoryRequestMiddleware',  # Middleware для simple_history
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'apps.core.middleware.SecurityHeadersMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'guscha_project.urls'
@@ -155,17 +180,79 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'static_root'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
-    BASE_DIR / 'guscha_django_frontend' / 'build' / 'static',
 ]
 
+# Добавляем версионирование статических файлов для принудительного обновления кеша
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+
 # Media files
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# File upload settings
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+FILE_UPLOAD_PERMISSIONS = 0o644
+FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o755
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Django Sites Framework
+SITE_ID = 1
+
+# Telegram Bot Settings
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '')
+TELEGRAM_BOT_USERNAME = os.getenv('TELEGRAM_BOT_USERNAME', 'GuschaBot')
+
+# Allauth settings
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+
+# Google OAuth settings
+GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
+GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APP': {
+            'client_id': os.environ.get('GOOGLE_CLIENT_ID'),
+            'secret': os.environ.get('GOOGLE_CLIENT_SECRET'),
+            'key': ''
+        },
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        },
+        'VERIFIED_EMAIL': True,
+    }
+}
+
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_USER_MODEL_EMAIL_FIELD = 'email'
+
+# Новый API для методов входа (заменяет ACCOUNT_AUTHENTICATION_METHOD)
+ACCOUNT_LOGIN_METHODS = {'email'}
+
+# Настройки для dj_rest_auth
+REST_AUTH = {
+    'USE_JWT': True,
+    'SESSION_LOGIN': True,
+    'JWT_AUTH_COOKIE': 'jwt-auth',
+    'JWT_AUTH_REFRESH_COOKIE': 'jwt-refresh-token',
+}
+
+# Новые настройки для allauth (исправление deprecated предупреждений)
+# Заменяет ACCOUNT_EMAIL_REQUIRED и ACCOUNT_USERNAME_REQUIRED
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
 
 # Пользовательская модель аутентификации
 AUTH_USER_MODEL = 'accounts.User'
@@ -173,11 +260,21 @@ AUTH_USER_MODEL = 'accounts.User'
 # Настройки Django REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
+    ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.JSONParser',
+        'rest_framework.parsers.FormParser',
+        'rest_framework.parsers.MultiPartParser',
     ],
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',
@@ -185,7 +282,42 @@ REST_FRAMEWORK = {
         'rest_framework.filters.OrderingFilter',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10
+    'PAGE_SIZE': 20
+}
+
+# JWT Settings
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': False,
+
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': None,
+    'JWK_URL': None,
+    'LEEWAY': 0,
+
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
+
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+    'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
+
+    'JTI_CLAIM': 'jti',
+
+    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
+    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
 # Настройки CORS для разработки
@@ -200,6 +332,10 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
+    "http://localhost:80",
+    "http://localhost",
+    "http://127.0.0.1:80",
+    "http://127.0.0.1",
 ]
 
 # Настройки безопасности
@@ -213,27 +349,86 @@ X_FRAME_OPTIONS = 'SAMEORIGIN'
 SECURE_HSTS_SECONDS = 0
 SECURE_SSL_REDIRECT = False
 
+# Создаем директорию для логов если она не существует
+import os
+LOGS_DIR = BASE_DIR / 'logs'
+if not os.path.exists(LOGS_DIR):
+    os.makedirs(LOGS_DIR, exist_ok=True)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': str(LOGS_DIR / 'django.log'),
+            'formatter': 'verbose',
         },
     },
     'root': {
         'handlers': ['console'],
         'level': 'INFO',
     },
+    'loggers': {
+        'apps.products': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'apps.products.admin': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'apps.products.models': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'apps.products.forms': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'apps.accounts': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'apps.accounts.views': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'unfold': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
 }
 
 
-# Настройки для django-allauth
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
-ACCOUNT_UNIQUE_EMAIL = True
+
 
 # Настройки для reCAPTCHA
 RECAPTCHA_PUBLIC_KEY = os.environ.get('RECAPTCHA_PUBLIC_KEY', 'your-public-key-here')
@@ -243,7 +438,7 @@ RECAPTCHA_PRIVATE_KEY = os.environ.get('RECAPTCHA_PRIVATE_KEY', 'your-private-ke
 RATELIMIT_ENABLE = True
 
 # Дополнительные настройки безопасности
-SECURE_SSL_REDIRECT = not DEBUG
+# SECURE_SSL_REDIRECT уже установлен выше в строке 230
 SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
@@ -254,3 +449,300 @@ AUTHENTICATION_BACKENDS = (
     'guardian.backends.ObjectPermissionBackend',  # Guardian backend для объектных разрешений
     'allauth.account.auth_backends.AuthenticationBackend',  # Allauth backend
 )
+
+# Настройки для crispy forms
+CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
+CRISPY_TEMPLATE_PACK = "tailwind"
+
+# Конфигурация Django Unfold
+UNFOLD = {
+    "SITE_TITLE": "Guscha Admin",
+    "SITE_HEADER": "Панель управления Guscha",
+    "SITE_URL": "/",
+    "SITE_ICON": {
+        "light": lambda request: static("images/logo.svg"),  # Светлая тема
+        "dark": lambda request: static("images/logo-dark.svg"),  # Тёмная тема
+    },
+    "SITE_LOGO": {
+        "light": lambda request: static("images/logo.svg"),  # Светлая тема
+        "dark": lambda request: static("images/logo-dark.svg"),  # Тёмная тема
+    },
+    "SITE_SYMBOL": "speed",  # Иконка Material Design
+    "SHOW_HISTORY": True,  # Показывать историю изменений
+    "SHOW_VIEW_ON_SITE": True,  # Показывать ссылку "Посмотреть на сайте"
+    "ENVIRONMENT": "guscha_project.settings.environment_callback",
+    "DASHBOARD_CALLBACK": "guscha_project.settings.dashboard_callback",
+    "LOGIN": {
+        "image": lambda request: static("images/login-bg.jpg"),
+        "redirect_after": lambda request: reverse_lazy("admin:index"),
+    },
+    "STYLES": [
+        # lambda request: static("admin/css/custom-admin.css"),  # Временно отключено для отладки
+    ],
+    "SCRIPTS": [
+        # lambda request: static("admin/js/fix_inline_buttons.js"),  # Временно отключено для отладки
+    ],
+    "COLORS": {
+        "primary": {
+            "50": "250 245 255",
+            "100": "243 232 255",
+            "200": "233 213 255",
+            "300": "216 180 254",
+            "400": "196 144 254",
+            "500": "168 85 247",
+            "600": "147 51 234",
+            "700": "126 34 206",
+            "800": "107 33 168",
+            "900": "88 28 135",
+            "950": "59 7 100",
+        },
+    },
+    "EXTENSIONS": {
+        "modeltranslation": {
+            "flags": {
+                "en": "🇬🇧",
+                "fr": "🇫🇷",
+                "nl": "🇳🇱",
+            },
+        },
+    },
+    "SIDEBAR": {
+        "show_search": True,  # Показывать поиск в сайдбаре
+        "show_all_applications": True,  # Показывать все приложения
+        "navigation": [
+            {
+                "title": _("Навигация"),
+                "separator": True,  # Разделитель
+                "items": [
+                    {
+                        "title": _("Дашборд"),
+                        "icon": "dashboard",  # Иконка Material Design
+                        "link": reverse_lazy("admin:index"),
+                    },
+                    {
+                        "title": _("Пользователи"),
+                        "icon": "people",
+                        "link": reverse_lazy("admin:accounts_user_changelist"),
+                    },
+                    {
+                        "title": _("Товары"),
+                        "icon": "inventory",
+                        "link": reverse_lazy("admin:products_product_changelist"),
+                    },
+                    {
+                        "title": _("Предзаказы"),
+                        "icon": "schedule",
+                        "link": reverse_lazy("admin:products_preorder_changelist"),
+                    },
+                    {
+                        "title": _("Заказы"),
+                        "icon": "shopping_cart",
+                        "link": reverse_lazy("admin:orders_order_changelist"),
+                    },
+                    {
+                        "title": _("Резервирования"),
+                        "icon": "bookmark",
+                        "link": reverse_lazy("admin:cart_reservation_changelist"),
+                    },
+                ],
+            },
+        ],
+    },
+    "TABS": [
+        {
+            "models": [
+                "accounts.user",
+            ],
+            "items": [
+                {
+                    "title": _("Пользователи"),
+                    "link": reverse_lazy("admin:accounts_user_changelist"),
+                },
+                {
+                    "title": _("Группы"),
+                    "link": reverse_lazy("admin:auth_group_changelist"),
+                },
+            ],
+        },
+    ],
+}
+
+# Функции обратного вызова для Unfold
+def environment_callback(request):
+    """Определяет окружение для отображения в админке"""
+    return "Разработка" if DEBUG else "Продакшн"
+
+def dashboard_callback(request, context):
+    """Добавляет данные для дашборда"""
+    from django.contrib.auth import get_user_model
+    from apps.products.models import Product, Category
+    from apps.orders.models import Order, OrderItem
+    from django.utils import timezone
+    from datetime import timedelta
+    from django.db.models import Sum, Count
+    from decimal import Decimal
+    
+    User = get_user_model()
+    
+    # Базовая статистика
+    total_users = User.objects.count()
+    total_products = Product.objects.count()
+    total_orders = Order.objects.count()
+    orders_today = Order.objects.filter(created_at__date=timezone.now().date()).count()
+    
+    # Общая выручка
+    total_revenue = Order.objects.filter(status='completed').aggregate(
+        total=Sum('total')
+    )['total'] or Decimal('0')
+    
+    # Данные для графика выручки за последние 30 дней
+    end_date = timezone.now().date()
+    start_date = end_date - timedelta(days=29)
+    
+    revenue_data = []
+    labels = []
+    
+    for i in range(30):
+        date = start_date + timedelta(days=i)
+        daily_revenue = Order.objects.filter(
+            created_at__date=date,
+            status='completed'
+        ).aggregate(total=Sum('total'))['total'] or Decimal('0')
+        
+        revenue_data.append(float(daily_revenue))
+        labels.append(date.strftime('%d.%m'))
+    
+    # Данные для графика регистраций пользователей за последние 30 дней
+    users_data = []
+    
+    for i in range(30):
+        date = start_date + timedelta(days=i)
+        daily_users = User.objects.filter(date_joined__date=date).count()
+        users_data.append(daily_users)
+    
+    # Данные для графика заказов по категориям
+    categories_data = []
+    categories_labels = []
+    
+    categories_stats = Category.objects.annotate(
+        order_count=Count('products__orderitem', distinct=True)
+    ).filter(order_count__gt=0).order_by('-order_count')[:10]
+    
+    for category in categories_stats:
+        categories_data.append(category.order_count)
+        categories_labels.append(category.name)
+    
+    # Последние заказы для таблицы
+    recent_orders = Order.objects.select_related('user').order_by('-created_at')[:10]
+    
+    # Формирование данных для графиков в формате Chart.js
+    revenue_chart_data = {
+        'labels': labels,
+        'datasets': [{
+            'label': 'Выручка (₽)',
+            'data': revenue_data,
+            'borderColor': 'rgb(168, 85, 247)',
+            'backgroundColor': 'rgba(168, 85, 247, 0.1)',
+            'tension': 0.4,
+            'fill': True
+        }]
+    }
+    
+    users_chart_data = {
+        'labels': labels,
+        'datasets': [{
+            'label': 'Регистрации',
+            'data': users_data,
+            'backgroundColor': 'rgba(59, 130, 246, 0.8)',
+            'borderColor': 'rgb(59, 130, 246)',
+            'borderWidth': 1
+        }]
+    }
+    
+    orders_by_category_data = {
+        'labels': categories_labels,
+        'datasets': [{
+            'label': 'Количество заказов',
+            'data': categories_data,
+            'backgroundColor': [
+                'rgba(168, 85, 247, 0.8)',
+                'rgba(59, 130, 246, 0.8)',
+                'rgba(16, 185, 129, 0.8)',
+                'rgba(245, 158, 11, 0.8)',
+                'rgba(239, 68, 68, 0.8)',
+                'rgba(139, 92, 246, 0.8)',
+                'rgba(236, 72, 153, 0.8)',
+                'rgba(34, 197, 94, 0.8)',
+                'rgba(251, 146, 60, 0.8)',
+                'rgba(14, 165, 233, 0.8)'
+            ],
+            'borderWidth': 1
+        }]
+    }
+    
+    # Данные для таблицы последних заказов
+    recent_orders_table = {
+        'headers': ['№ заказа', 'Пользователь', 'Сумма', 'Статус', 'Дата'],
+        'rows': []
+    }
+    
+    for order in recent_orders:
+        recent_orders_table['rows'].append([
+            f'#{order.id}',
+            (order.user.get_full_name() or order.user.email) if order.user else 'Гость',
+            f'{order.total} ₽',
+            order.get_status_display(),
+            order.created_at.strftime('%d.%m.%Y %H:%M')
+        ])
+    
+    context.update({
+        'total_users': total_users,
+        'total_revenue': f'{total_revenue:,.0f} ₽',
+        'orders_today': orders_today,
+        'products_count': total_products,
+        'revenue_chart_data': json.dumps(revenue_chart_data, ensure_ascii=False),
+        'users_chart_data': json.dumps(users_chart_data, ensure_ascii=False),
+        'orders_by_category_data': json.dumps(orders_by_category_data, ensure_ascii=False),
+        'recent_orders': recent_orders,
+        'recent_orders_table': recent_orders_table,
+    })
+    return context
+
+
+# Настройки django-money
+CURRENCIES = ('RUB',)  # Ограничиваем только рублем
+DEFAULT_CURRENCY = 'RUB'
+CURRENCY_CHOICES = [('RUB', 'Рубль')]
+
+# Дополнительные настройки для django-money
+USE_MONEY_LOCALIZATION = True
+MONEY_DECIMAL_PLACES = 2
+MONEY_MAX_DIGITS = 10
+
+# Настройки Email для сброса пароля
+# Для локальной разработки используем консольный бэкенд
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    # Для продакшена настройки SMTP (Beget)
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.beget.com')
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+    EMAIL_USE_TLS = str2bool(os.environ.get('EMAIL_USE_TLS', 'True'))
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+
+# Общие настройки email
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@guscha.ru')
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+EMAIL_SUBJECT_PREFIX = '[Guscha] '
+
+# Настройки для сброса пароля
+PASSWORD_RESET_TIMEOUT = 3600  # 1 час в секундах
+
+# Настройки Telegram бота
+TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
+
+
+
+

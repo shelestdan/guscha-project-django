@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google OAuth Test</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+    <h1>Google OAuth Test</h1>
+    <div id="g_id_onload"
+         data-client_id="1089807285342-qj024vcpk0j6gdfknfmpupt3erud7d9k.apps.googleusercontent.com"
+         data-callback="handleCredentialResponse">
+    </div>
+    <div class="g_id_signin" data-type="standard"></div>
+    
+    <button onclick="testGoogleLogin()">Test Google Login</button>
+    <div id="result"></div>
+    
+    <script>
+        function handleCredentialResponse(response) {
+            console.log("Encoded JWT ID token: " + response.credential);
+            document.getElementById('result').innerHTML = 'Got credential: ' + response.credential.substring(0, 50) + '...';
+        }
+        
+        function testGoogleLogin() {
+            console.log('Testing Google OAuth...');
+            
+            // Инициализируем Google OAuth клиент
+            window.google.accounts.oauth2.initTokenClient({
+                client_id: '1089807285342-qj024vcpk0j6gdfknfmpupt3erud7d9k.apps.googleusercontent.com',
+                scope: 'profile email',
+                callback: (response) => {
+                    console.log('OAuth response:', response);
+                    
+                    if (response.access_token) {
+                        console.log('Access token received:', response.access_token);
+                        
+                        // Отправляем токен на Django
+                        fetch('http://localhost:8000/api/accounts/users/google_login/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': getCookie('csrftoken')
+                            },
+                            credentials: 'include',
+                            body: JSON.stringify({
+                                access_token: response.access_token
+                            })
+                        })
+                        .then(response => {
+                            console.log('Django response status:', response.status);
+                            return response.json();
+                        })
+                        .then(data => {
+                            console.log('Django response data:', data);
+                            document.getElementById('result').innerHTML = 'Django response: ' + JSON.stringify(data, null, 2);
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            document.getElementById('result').innerHTML = 'Error: ' + error.message;
+                        });
+                    } else {
+                        console.error('No access token received');
+                        document.getElementById('result').innerHTML = 'No access token received';
+                    }
+                },
+                error_callback: (error) => {
+                    console.error('OAuth error:', error);
+                    document.getElementById('result').innerHTML = 'OAuth error: ' + JSON.stringify(error);
+                }
+            }).requestAccessToken();
+        }
+        
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>

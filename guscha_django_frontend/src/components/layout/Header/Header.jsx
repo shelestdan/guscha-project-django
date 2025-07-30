@@ -72,11 +72,13 @@ const Header = ({ isHome, scrollContainerRef }) => {
   }
 
   // Для остальных страниц — белая шапка
+  const showMenuLabel = !isScrollingDown;
+  
   return (
     <header className="header-container header-white header-visible">
       <div className="header-content">
         <div className="header-left">
-          <BurgerMenu black={true} menuLabelVisible={true} />
+          <BurgerMenu black={true} menuLabelVisible={showMenuLabel} />
         </div>
         <div className="header-center">
           <Logo isVisible={true} black={true} size={64} />
@@ -89,4 +91,4 @@ const Header = ({ isHome, scrollContainerRef }) => {
   );
 };
 
-export default Header; 
+export default Header;

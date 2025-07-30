@@ -1,10 +1,35 @@
 import React, { useState } from "react";
 import Header from "../components/layout/Header/Header";
 import AddressList from "../components/features/addresses/AddressList";
+import AddressForm from "../components/features/addresses/AddressForm";
 import "../styles/AddressesPage.css";
 
 const AddressesPage = () => {
   const [activeTab, setActiveTab] = useState("shipping");
+  const [showForm, setShowForm] = useState(false);
+  const [editingAddress, setEditingAddress] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleAddAddress = () => {
+    setEditingAddress(null);
+    setShowForm(true);
+  };
+
+  const handleEditAddress = (address) => {
+    setEditingAddress(address);
+    setShowForm(true);
+  };
+
+  const handleFormSuccess = () => {
+    setShowForm(false);
+    setEditingAddress(null);
+    setRefreshKey(prev => prev + 1); // Принудительно обновляем список
+  };
+
+  const handleFormCancel = () => {
+    setShowForm(false);
+    setEditingAddress(null);
+  };
 
   return (
     <div className="addresses-page">
@@ -12,8 +37,15 @@ const AddressesPage = () => {
 
       <div className="addresses-container">
         <div className="addresses-header">
-          <h1>Управление адресами</h1>
-          <p>Управляйте своими адресами доставки и оплаты</p>
+          <div className="addresses-header-content">
+            <div>
+              <h1>DELIVERY ADDRESSES</h1>
+              <p>Управляйте своими адресами доставки и оплаты</p>
+            </div>
+            <button className="add-address-btn" onClick={handleAddAddress}>
+              ДОБАВИТЬ
+            </button>
+          </div>
         </div>
 
         <div className="addresses-tabs">
@@ -32,8 +64,31 @@ const AddressesPage = () => {
         </div>
 
         <div className="addresses-content">
-          {activeTab === "shipping" && <AddressList addressType="shipping" />}
-          {activeTab === "billing" && <AddressList addressType="billing" />}
+          {showForm ? (
+            <AddressForm
+              address={editingAddress}
+              addressType={activeTab}
+              onSuccess={handleFormSuccess}
+              onCancel={handleFormCancel}
+            />
+          ) : (
+            <>
+              {activeTab === "shipping" && (
+                <AddressList 
+                  key={`shipping-${refreshKey}`}
+                  addressType="shipping" 
+                  onSelectAddress={handleEditAddress}
+                />
+              )}
+              {activeTab === "billing" && (
+                <AddressList 
+                  key={`billing-${refreshKey}`}
+                  addressType="billing" 
+                  onSelectAddress={handleEditAddress}
+                />
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>

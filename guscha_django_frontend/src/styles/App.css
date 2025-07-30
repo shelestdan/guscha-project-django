@@ -126,15 +126,7 @@ body {
   top: 18px;
   transform: rotate(-45deg);
 }
-.burger-menu-label {
-  color: #fff;
-  font-family: 'Comfortaa', Arial, sans-serif;
-  font-size: 22px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  opacity: 0.95;
-  user-select: none;
-}
+/* .burger-menu-label стиль перенесен в BurgerMenu.css */
 
 /* Sidebar menu */
 .menu-sidebar {

@@ -21,6 +21,7 @@ const AddressList = ({ addressType, onSelectAddress }) => {
       if (Array.isArray(response.data)) {
         allAddresses = response.data;
       } else if (response.data && Array.isArray(response.data.results)) {
+        // Django REST Framework pagination format
         allAddresses = response.data.results;
       } else if (response.data && typeof response.data === "object") {
         allAddresses = Object.values(response.data).flat();

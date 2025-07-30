@@ -8,9 +8,9 @@ const AddressForm = ({ address, addressType, onSuccess, onCancel }) => {
     first_name: "",
     last_name: "",
     address_line1: "",
+    address_line2: "",
     city: "",
     postal_code: "",
-    phone: "",
     is_default: false
   });
   const [loading, setLoading] = useState(false);
@@ -23,7 +23,7 @@ const AddressForm = ({ address, addressType, onSuccess, onCancel }) => {
         const token = localStorage.getItem("token");
         if (token) {
           const response = await fetch(
-            "http://127.0.0.1:8000/api/accounts/users/me/",
+            "http://localhost/api/accounts/users/me/",
             {
               headers: {
                 Authorization: `Token ${token}`
@@ -55,6 +55,7 @@ const AddressForm = ({ address, addressType, onSuccess, onCancel }) => {
         first_name: address.first_name || "",
         last_name: address.last_name || "",
         address_line1: address.address_line1 || "",
+        address_line2: address.address_line2 || "",
         city: address.city || "",
         postal_code: address.postal_code || "",
         phone: address.phone || "",
@@ -77,8 +78,6 @@ const AddressForm = ({ address, addressType, onSuccess, onCancel }) => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.first_name.trim()) newErrors.first_name = "Имя обязательно";
-    if (!formData.last_name.trim()) newErrors.last_name = "Фамилия обязательна";
     if (!formData.address_line1.trim())
       newErrors.address_line1 = "Адрес обязателен";
     if (!formData.city.trim()) newErrors.city = "Город обязателен";
@@ -98,12 +97,22 @@ const AddressForm = ({ address, addressType, onSuccess, onCancel }) => {
 
     setLoading(true);
     try {
+      // Добавляем имя и фамилию из профиля пользователя
+      const dataToSend = {
+        ...formData,
+        first_name: formData.first_name || "Пользователь",
+        last_name: formData.last_name || "Системы"
+      };
+
+      let savedAddress;
       if (address?.id) {
-        await addressesApi.updateAddress(address.id, formData);
+        const response = await addressesApi.updateAddress(address.id, dataToSend);
+        savedAddress = response.data;
       } else {
-        await addressesApi.createAddress(formData);
+        const response = await addressesApi.createAddress(dataToSend);
+        savedAddress = response.data;
       }
-      onSuccess();
+      onSuccess(savedAddress);
     } catch (error) {
       console.error("Error saving address:", error);
       if (error.response?.data) {
@@ -148,14 +157,13 @@ const AddressForm = ({ address, addressType, onSuccess, onCancel }) => {
 
   return (
     <form onSubmit={handleSubmit} className="address-form">
-      <div className="form-row">
-        {renderField("first_name", "Имя", "text", { required: true })}
-        {renderField("last_name", "Фамилия", "text", { required: true })}
-      </div>
-
       {renderField("address_line1", "Адрес", "text", {
         required: true,
         placeholder: "Улица, номер дома"
+      })}
+
+      {renderField("address_line2", "Квартира/Офис", "text", {
+        placeholder: "Квартира, офис, подъезд"
       })}
 
       <div className="form-row">
@@ -168,10 +176,6 @@ const AddressForm = ({ address, addressType, onSuccess, onCancel }) => {
           placeholder: "123456"
         })}
       </div>
-
-      {renderField("phone", "Телефон", "tel", {
-        placeholder: "+7 (999) 123-45-67"
-      })}
 
       <div className="form-group">
         <label className="checkbox-label">

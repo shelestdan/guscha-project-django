@@ -29,7 +29,7 @@ class OrderModelTest(TestCase):
             name='Test Product',
             slug='test-product',
             price=100.00,
-            stock=10,
+            stock_quantity=10,
             category=self.category
         )
     
@@ -59,7 +59,7 @@ class OrderModelTest(TestCase):
     
     def test_order_str_method(self):
         """Тест строкового представления заказа"""
-        order = Order.objects.create(user=self.user)
+        order = Order.objects.create(user=self.user, email=self.user.email)
         expected_str = f"Заказ #{order.id} - {self.user.email}"
         self.assertEqual(str(order), expected_str)
 
@@ -82,7 +82,7 @@ class OrderItemModelTest(TestCase):
             name='Test Product',
             slug='test-product',
             price=100.00,
-            stock=10,
+            stock_quantity=10,
             category=self.category
         )
         self.order = Order.objects.create(user=self.user)
@@ -136,7 +136,7 @@ class OrderAPITest(APITestCase):
             name='Test Product',
             slug='test-product',
             price=100.00,
-            stock=10,
+            stock_quantity=10,
             category=self.category
         )
         self.order = Order.objects.create(user=self.user)
@@ -146,6 +146,9 @@ class OrderAPITest(APITestCase):
         self.client.force_authenticate(user=self.user)
         url = reverse('order-list')
         data = {
+            'email': self.user.email,
+            'subtotal': 200.00,
+            'total': 200.00,
             'items': [
                 {
                     'product': self.product.id,
@@ -154,6 +157,9 @@ class OrderAPITest(APITestCase):
             ]
         }
         response = self.client.post(url, data, format='json')
+        if response.status_code != status.HTTP_201_CREATED:
+            print(f"Response status: {response.status_code}")
+            print(f"Response data: {response.data}")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
     
     def test_create_order_unauthenticated(self):

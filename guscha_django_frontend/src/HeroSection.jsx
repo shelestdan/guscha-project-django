@@ -38,7 +38,6 @@ const HeroSection = () => {
   const scrollPosition = hookResult.scrollPosition;
   const [backgrounds, setBackgrounds] = useState([]);
   const [currentBackgroundIndex, setCurrentBackgroundIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
   
   // Логика анимации стрелки: показываем в самом верху, плавно скрываем при скролле
   const showArrow = scrollPosition < 150;
@@ -47,7 +46,6 @@ const HeroSection = () => {
   useEffect(() => {
     const fetchBackgrounds = async () => {
       try {
-        setLoading(true);
         const response = await fetch('/api/public/active-background');
         if (!response.ok) {
           throw new Error('Не удалось загрузить фоны');
@@ -58,8 +56,6 @@ const HeroSection = () => {
         }
       } catch (error) {
         console.error('Ошибка при загрузке фонов:', error);
-      } finally {
-        setLoading(false);
       }
     };
     

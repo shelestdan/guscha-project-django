@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils.text import slugify
 import uuid
+from djmoney.models.fields import MoneyField
 from apps.accounts.models import User
 from apps.products.models import Product, ProductSize, Preorder, PreorderSize
 from apps.addresses.models import Address
@@ -44,16 +45,16 @@ class Order(models.Model):
                                        default='unfulfilled', verbose_name=_('Статус выполнения'))
     
     # Суммы
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0, 
-                                 verbose_name=_('Промежуточная сумма'))
-    tax = models.DecimalField(max_digits=10, decimal_places=2, default=0, 
-                            verbose_name=_('Налог'))
-    shipping = models.DecimalField(max_digits=10, decimal_places=2, default=0, 
-                                 verbose_name=_('Стоимость доставки'))
-    discount = models.DecimalField(max_digits=10, decimal_places=2, default=0, 
-                                 verbose_name=_('Скидка'))
-    total = models.DecimalField(max_digits=10, decimal_places=2, default=0, 
-                              verbose_name=_('Общая сумма'))
+    subtotal = MoneyField(max_digits=10, decimal_places=2, default_currency='RUB', 
+                        default=0, verbose_name=_('Промежуточная сумма'))
+    tax = MoneyField(max_digits=10, decimal_places=2, default_currency='RUB', 
+                   default=0, verbose_name=_('Налог'))
+    shipping = MoneyField(max_digits=10, decimal_places=2, default_currency='RUB', 
+                        default=0, verbose_name=_('Стоимость доставки'))
+    discount = MoneyField(max_digits=10, decimal_places=2, default_currency='RUB', 
+                        default=0, verbose_name=_('Скидка'))
+    total = MoneyField(max_digits=10, decimal_places=2, default_currency='RUB', 
+                     default=0, verbose_name=_('Общая сумма'))
     
     # Адреса - новые поля для связи с моделью Address
     billing_address_obj = models.ForeignKey(
@@ -104,7 +105,7 @@ class Order(models.Model):
         ordering = ['-created_at']
     
     def __str__(self):
-        return f"Заказ #{self.order_number}"
+        return f"Заказ #{self.id} - {self.email}"
     
     def save(self, *args, **kwargs):
         if not self.order_number:
@@ -143,11 +144,11 @@ class Order(models.Model):
             'status': self.status,
             'payment_status': self.payment_status,
             'fulfillment_status': self.fulfillment_status,
-            'subtotal': float(self.subtotal),
-            'tax': float(self.tax),
-            'shipping': float(self.shipping),
-            'discount': float(self.discount),
-            'total': float(self.total),
+            'subtotal': float(self.subtotal.amount),
+            'tax': float(self.tax.amount),
+            'shipping': float(self.shipping.amount),
+            'discount': float(self.discount.amount),
+            'total': float(self.total.amount),
             'billing_address': self.get_billing_address_display(),
             'shipping_address': self.get_shipping_address_display(),
             'billing_address_obj': self.billing_address_obj.to_dict() if self.billing_address_obj else null,
@@ -178,9 +179,13 @@ class OrderItem(models.Model):
     name = models.CharField(max_length=255, verbose_name=_('Название'))
     size = models.CharField(max_length=50, null=True, blank=True, verbose_name=_('Размер'))
     quantity = models.PositiveIntegerField(default=1, verbose_name=_('Количество'))
-    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name=_('Цена'))
+    price = MoneyField(max_digits=10, decimal_places=2, default_currency='RUB', 
+                      verbose_name=_('Цена'))
     item_type = models.CharField(max_length=20, choices=ITEM_TYPES, default='product', 
                                verbose_name=_('Тип элемента'))
+    reservation = models.OneToOneField('cart.Reservation', on_delete=models.SET_NULL,
+                                     null=True, blank=True, 
+                                     verbose_name=_('Резервирование'))
     
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_('Дата создания'))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_('Дата обновления'))
@@ -196,7 +201,7 @@ class OrderItem(models.Model):
     @property
     def total(self):
         """Расчет общей стоимости элемента заказа"""
-        return self.price * self.quantity
+        return self.price.amount * self.quantity
     
     def to_dict(self):
         """Преобразование элемента заказа в словарь"""
@@ -205,7 +210,7 @@ class OrderItem(models.Model):
             'name': self.name,
             'size': self.size,
             'quantity': self.quantity,
-            'price': float(self.price),
+            'price': float(self.price.amount),
             'total': float(self.total),
             'item_type': self.item_type,
         }

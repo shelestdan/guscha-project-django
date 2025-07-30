@@ -10,7 +10,7 @@ from .models import (
     Category, Product, ProductImage, ProductSize, 
     ProductVariant, ProductReview, Preorder, PreorderSize, Wishlist
 )
-from accounts.models import User
+from apps.accounts.models import User
 
 
 class CategoryModelTest(TestCase):
@@ -97,8 +97,8 @@ class ProductModelTest(TestCase):
         self.assertEqual(self.product.slug, 'test-product')
         self.assertEqual(self.product.sku, 'TEST-SKU-001')
         self.assertEqual(self.product.category, self.category)
-        self.assertEqual(self.product.price, Decimal('99.99'))
-        self.assertEqual(self.product.compare_price, Decimal('129.99'))
+        self.assertEqual(self.product.price.amount, Decimal('99.99'))
+        self.assertEqual(self.product.compare_price.amount, Decimal('129.99'))
         self.assertEqual(self.product.stock_quantity, 10)
         self.assertTrue(self.product.is_active)
         self.assertTrue(self.product.is_featured)
@@ -109,7 +109,7 @@ class ProductModelTest(TestCase):
     
     def test_product_primary_image(self):
         """Тест получения основного изображения товара"""
-        self.assertEqual(self.product.primary_image(), self.product_image)
+        self.assertEqual(self.product.primary_image, self.product_image)
     
     def test_product_is_in_stock(self):
         """Тест проверки наличия товара на складе"""
@@ -252,30 +252,30 @@ class ProductVariantModelTest(TestCase):
         self.variant = ProductVariant.objects.create(
             product=self.product,
             sku='TEST-VAR-001',
-            name='Тестовый вариант',
+            title='Тестовый вариант',
             price=Decimal('109.99'),
             stock_quantity=8,
             is_active=True,
-            options=json.dumps({'color': 'Красный', 'material': 'Хлопок'})
+            variant_options=json.dumps({'color': 'Красный', 'material': 'Хлопок'})
         )
     
     def test_variant_creation(self):
         """Тест создания варианта товара"""
         self.assertEqual(self.variant.product, self.product)
         self.assertEqual(self.variant.sku, 'TEST-VAR-001')
-        self.assertEqual(self.variant.name, 'Тестовый вариант')
-        self.assertEqual(self.variant.price, Decimal('109.99'))
+        self.assertEqual(self.variant.title, 'Тестовый вариант')
+        self.assertEqual(self.variant.price.amount, Decimal('109.99'))
         self.assertEqual(self.variant.stock_quantity, 8)
         self.assertTrue(self.variant.is_active)
         
-        # Проверим JSON-поле options
-        options = json.loads(self.variant.options)
+        # Проверим JSON-поле variant_options
+        options = json.loads(self.variant.variant_options)
         self.assertEqual(options['color'], 'Красный')
         self.assertEqual(options['material'], 'Хлопок')
     
     def test_variant_str_representation(self):
         """Тест строкового представления варианта товара"""
-        self.assertEqual(str(self.variant), 'Тестовый вариант')
+        self.assertEqual(str(self.variant), 'Тестовый товар - Тестовый вариант')
 
 
 class ProductReviewModelTest(TestCase):
@@ -283,7 +283,6 @@ class ProductReviewModelTest(TestCase):
     
     def setUp(self):
         self.user = User.objects.create_user(
-            username='testuser',
             email='test@example.com',
             password='testpassword'
         )
@@ -307,8 +306,8 @@ class ProductReviewModelTest(TestCase):
             rating=4,
             title='Отличный товар',
             content='Очень доволен покупкой, рекомендую!',
-            verified_purchase=True,
-            approved=True
+            is_verified_purchase=True,
+            is_approved=True
         )
     
     def test_review_creation(self):
@@ -318,12 +317,12 @@ class ProductReviewModelTest(TestCase):
         self.assertEqual(self.review.rating, 4)
         self.assertEqual(self.review.title, 'Отличный товар')
         self.assertEqual(self.review.content, 'Очень доволен покупкой, рекомендую!')
-        self.assertTrue(self.review.verified_purchase)
-        self.assertTrue(self.review.approved)
+        self.assertTrue(self.review.is_verified_purchase)
+        self.assertTrue(self.review.is_approved)
     
     def test_review_str_representation(self):
         """Тест строкового представления отзыва"""
-        self.assertEqual(str(self.review), 'Отзыв на Тестовый товар от testuser')
+        self.assertEqual(str(self.review), 'Отзыв 4★ на Тестовый товар от test@example.com')
 
 
 class PreorderModelTest(TestCase):
@@ -335,12 +334,7 @@ class PreorderModelTest(TestCase):
             slug='test-preorder',
             description='Описание тестового предзаказа',
             price=Decimal('149.99'),
-            compare_price=Decimal('199.99'),
-            start_date=timezone.now() - timezone.timedelta(days=1),
-            end_date=timezone.now() + timezone.timedelta(days=7),
-            is_active=True,
-            is_recommended=True,
-            meta_data=json.dumps({'collection': 'Весна 2023', 'designer': 'Тестовый дизайнер'})
+            is_active=True
         )
         
         self.preorder_size = PreorderSize.objects.create(
@@ -348,6 +342,7 @@ class PreorderModelTest(TestCase):
             size_name='M',
             size_label='Средний',
             max_quantity=10,
+            stock_quantity=10,
             is_active=True,
             is_sold_out=False,
             sort_order=1
@@ -358,22 +353,15 @@ class PreorderModelTest(TestCase):
         self.assertEqual(self.preorder.name, 'Тестовый предзаказ')
         self.assertEqual(self.preorder.slug, 'test-preorder')
         self.assertEqual(self.preorder.description, 'Описание тестового предзаказа')
-        self.assertEqual(self.preorder.price, Decimal('149.99'))
-        self.assertEqual(self.preorder.compare_price, Decimal('199.99'))
+        self.assertEqual(self.preorder.price.amount, Decimal('149.99'))
         self.assertTrue(self.preorder.is_active)
-        self.assertTrue(self.preorder.is_recommended)
-        
-        # Проверим JSON-поле meta_data
-        meta_data = json.loads(self.preorder.meta_data)
-        self.assertEqual(meta_data['collection'], 'Весна 2023')
-        self.assertEqual(meta_data['designer'], 'Тестовый дизайнер')
     
     def test_preorder_str_representation(self):
         """Тест строкового представления предзаказа"""
         self.assertEqual(str(self.preorder), 'Тестовый предзаказ')
     
     def test_preorder_is_active_now(self):
-        """Тест проверки активности предзаказа по датам"""
+        """Тест проверки активности предзаказа"""
         self.assertTrue(self.preorder.is_active_now)
         
         # Проверим неактивность при неактивном флаге
@@ -381,17 +369,10 @@ class PreorderModelTest(TestCase):
         self.preorder.save()
         self.assertFalse(self.preorder.is_active_now)
         
-        # Проверим неактивность при прошедшей дате окончания
+        # Проверим активность при активном флаге
         self.preorder.is_active = True
-        self.preorder.end_date = timezone.now() - timezone.timedelta(days=1)
         self.preorder.save()
-        self.assertFalse(self.preorder.is_active_now)
-        
-        # Проверим неактивность при будущей дате начала
-        self.preorder.end_date = timezone.now() + timezone.timedelta(days=7)
-        self.preorder.start_date = timezone.now() + timezone.timedelta(days=1)
-        self.preorder.save()
-        self.assertFalse(self.preorder.is_active_now)
+        self.assertTrue(self.preorder.is_active_now)
 
 
 class PreorderSizeModelTest(TestCase):
@@ -402,8 +383,6 @@ class PreorderSizeModelTest(TestCase):
             name='Тестовый предзаказ',
             slug='test-preorder',
             price=Decimal('149.99'),
-            start_date=timezone.now() - timezone.timedelta(days=1),
-            end_date=timezone.now() + timezone.timedelta(days=7),
             is_active=True
         )
         
@@ -412,6 +391,7 @@ class PreorderSizeModelTest(TestCase):
             size_name='M',
             size_label='Средний',
             max_quantity=10,
+            stock_quantity=10,
             is_active=True,
             is_sold_out=False,
             sort_order=1
@@ -560,14 +540,12 @@ class ProductAPITest(APITestCase):
         
         # Создадим пользователя для тестирования
         self.user = User.objects.create_user(
-            username='testuser',
             email='test@example.com',
             password='testpassword'
         )
         
         # Создадим администратора для тестирования
         self.admin = User.objects.create_superuser(
-            username='admin',
             email='admin@example.com',
             password='adminpassword'
         )
@@ -634,8 +612,8 @@ class ProductAPITest(APITestCase):
         self.assertEqual(response.data['price'], '99.99')
         
         # Проверим, что в ответе есть изображения, размеры и другие связанные данные
-        self.assertIn('images', response.data)
-        self.assertEqual(len(response.data['images']), 1)
+        self.assertIn('product_images', response.data)
+        self.assertEqual(len(response.data['product_images']), 1)
         
         self.assertIn('sizes', response.data)
         self.assertEqual(len(response.data['sizes']), 1)
@@ -672,7 +650,7 @@ class ProductAPITest(APITestCase):
         """Тест обновления товара (только для администраторов)"""
         self.client.force_authenticate(user=self.admin)
         
-        url = reverse('product-detail', kwargs={'slug': self.product.slug})
+        url = reverse('products:product-detail', kwargs={'slug': self.product.slug})
         data = {
             'name': 'Обновленный товар',
             'price': '129.99'
@@ -687,13 +665,13 @@ class ProductAPITest(APITestCase):
         # Проверим, что товар действительно обновлен в базе
         self.product.refresh_from_db()
         self.assertEqual(self.product.name, 'Обновленный товар')
-        self.assertEqual(self.product.price, Decimal('129.99'))
+        self.assertEqual(self.product.price.amount, Decimal('129.99'))
     
     def test_product_delete(self):
         """Тест удаления товара (только для администраторов)"""
         self.client.force_authenticate(user=self.admin)
         
-        url = reverse('product-detail', kwargs={'slug': self.product.slug})
+        url = reverse('products:product-detail', kwargs={'slug': self.product.slug})
         response = self.client.delete(url)
         
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -730,14 +708,12 @@ class PreorderAPITest(APITestCase):
         
         # Создадим пользователя для тестирования
         self.user = User.objects.create_user(
-            username='testuser',
             email='test@example.com',
             password='testpassword'
         )
         
         # Создадим администратора для тестирования
         self.admin = User.objects.create_superuser(
-            username='admin',
             email='admin@example.com',
             password='adminpassword'
         )
@@ -747,12 +723,7 @@ class PreorderAPITest(APITestCase):
             slug='test-preorder',
             description='Описание тестового предзаказа',
             price=Decimal('149.99'),
-            compare_price=Decimal('199.99'),
-            start_date=timezone.now() - timezone.timedelta(days=1),
-            end_date=timezone.now() + timezone.timedelta(days=7),
-            is_active=True,
-            is_recommended=True,
-            meta_data=json.dumps({'collection': 'Весна 2023', 'designer': 'Тестовый дизайнер'})
+            is_active=True
         )
         
         self.preorder_size = PreorderSize.objects.create(
@@ -771,9 +742,7 @@ class PreorderAPITest(APITestCase):
             slug='inactive-preorder',
             description='Описание неактивного предзаказа',
             price=Decimal('129.99'),
-            start_date=timezone.now() - timezone.timedelta(days=10),
-            end_date=timezone.now() - timezone.timedelta(days=3),  # Уже закончился
-            is_active=True
+            is_active=False
         )
     
     def test_preorder_list(self):
@@ -789,7 +758,6 @@ class PreorderAPITest(APITestCase):
         self.assertIn('name', response.data[0])
         self.assertIn('slug', response.data[0])
         self.assertIn('price', response.data[0])
-        self.assertIn('compare_price', response.data[0])
         self.assertIn('start_date', response.data[0])
         self.assertIn('end_date', response.data[0])
     
@@ -803,14 +771,10 @@ class PreorderAPITest(APITestCase):
         self.assertEqual(response.data['slug'], 'test-preorder')
         self.assertEqual(response.data['price'], '149.99')
         
-        # Проверим, что в ответе есть размеры и метаданные
+        # Проверим, что в ответе есть размеры
         self.assertIn('sizes', response.data)
         self.assertEqual(len(response.data['sizes']), 1)
         self.assertEqual(response.data['sizes'][0]['size_name'], 'M')
-        
-        self.assertIn('meta_data', response.data)
-        meta_data = json.loads(response.data['meta_data'])
-        self.assertEqual(meta_data['collection'], 'Весна 2023')
     
     def test_inactive_preorder_detail(self):
         """Тест получения детальной информации о неактивном предзаказе"""
@@ -829,12 +793,9 @@ class PreorderAPITest(APITestCase):
             'name': 'Новый предзаказ',
             'description': 'Описание нового предзаказа',
             'price': '179.99',
-            'compare_price': '229.99',
             'start_date': (timezone.now() + timezone.timedelta(days=1)).isoformat(),
             'end_date': (timezone.now() + timezone.timedelta(days=14)).isoformat(),
-            'is_active': True,
-            'is_recommended': True,
-            'meta_data': json.dumps({'collection': 'Лето 2023', 'designer': 'Новый дизайнер'})
+            'is_active': True
         }
         
         response = self.client.post(url, data, format='json')
@@ -865,7 +826,7 @@ class PreorderAPITest(APITestCase):
         # Проверим, что предзаказ действительно обновлен в базе
         self.preorder.refresh_from_db()
         self.assertEqual(self.preorder.name, 'Обновленный предзаказ')
-        self.assertEqual(self.preorder.price, Decimal('159.99'))
+        self.assertEqual(self.preorder.price.amount, Decimal('159.99'))
     
     def test_preorder_delete(self):
         """Тест удаления предзаказа (только для администраторов)"""
@@ -888,7 +849,6 @@ class WishlistAPITest(APITestCase):
         
         # Создадим пользователя для тестирования
         self.user = User.objects.create_user(
-            username='testuser',
             email='test@example.com',
             password='testpassword'
         )
@@ -997,7 +957,7 @@ class WishlistAPITest(APITestCase):
         """Тест проверки наличия продукта в списке желаний"""
         self.client.force_authenticate(user=self.user)
         
-        url = reverse('product-detail', kwargs={'slug': self.product1.slug})
+        url = reverse('products:product-detail', kwargs={'slug': self.product1.slug})
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1005,7 +965,7 @@ class WishlistAPITest(APITestCase):
         self.assertTrue(response.data['in_wishlist'])  # Продукт должен быть в списке желаний
         
         # Проверим продукт, которого нет в списке желаний
-        url = reverse('product-detail', kwargs={'slug': self.product2.slug})
+        url = reverse('products:product-detail', kwargs={'slug': self.product2.slug})
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)

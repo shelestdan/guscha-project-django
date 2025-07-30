@@ -65,7 +65,7 @@ const SizesSection = ({
                 <input
                   type="number"
                   placeholder="Без ограничений"
-                  min="0"
+                  min="1"
                   value={size.max_quantity || ''}
                   onChange={(e) => handleSizeChange(index, 'max_quantity', e.target.value ? parseInt(e.target.value) : null)}
                   disabled={saving}
