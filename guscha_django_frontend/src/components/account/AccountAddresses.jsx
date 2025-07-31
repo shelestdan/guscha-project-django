@@ -83,6 +83,18 @@ const AccountAddresses = ({ user }) => {
   };
 
   const handleEditAddress = (address) => {
+    console.log('🏠 AccountAddresses: клик по кнопке редактирования, address:', address);
+    console.log('🏠 AccountAddresses: поля адреса:', {
+      id: address.id,
+      first_name: address.first_name,
+      last_name: address.last_name,
+      address_line1: address.address_line1,
+      address_line2: address.address_line2,
+      city: address.city,
+      postal_code: address.postal_code,
+      phone: address.phone,
+      is_default: address.is_default
+    });
     setEditingAddress(address);
     setShowAddressModal(true);
     setTimeout(() => setIsAnimating(true), 10); // Небольшая задержка для анимации
@@ -194,7 +206,7 @@ const AccountAddresses = ({ user }) => {
 
       {/* Модальное окно для добавления/редактирования адреса */}
       {showAddressModal && (
-        <div className="modal-overlay" onClick={handleAddressModalClose}>
+        <div className="modal-overlay">
           <div className={`modal-slide ${isAnimating ? 'modal-slide-enter' : 'modal-slide-exit'}`} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>

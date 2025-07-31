@@ -2,12 +2,22 @@ import React, { useState, useEffect } from 'react';
 import AdvancedRegistration from './AdvancedRegistration';
 import TelegramVerification from './TelegramVerification';
 import QRCodeVerification from './QRCodeVerification';
+import TelegramLoginModal from './TelegramLoginModal';
 import { FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
 import { FcGoogle } from 'react-icons/fc';
+import { SiTelegram } from 'react-icons/si';
 import '../styles/AdvancedAuth.css';
 // import { PasswordSecurityBadge } from './SecurityIndicator';
 
-const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onClose }) => {
+const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onClose }) => {
+  // Функция для получения CSRF токена
+  const getCSRFToken = () => {
+    const cookieValue = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('csrftoken='))
+      ?.split('=')[1];
+    return cookieValue;
+  };
   const [mode, setMode] = useState('login'); // 'login', 'register', 'telegram-verify', 'qr-verify'
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
@@ -15,6 +25,9 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onClose }) => {
   const [error, setError] = useState('');
   const [registrationResult, setRegistrationResult] = useState(null);
   const [originalRegistrationData, setOriginalRegistrationData] = useState(null);
+  const [showTelegramModal, setShowTelegramModal] = useState(false);
+  const [telegramLoginLoading, setTelegramLoginLoading] = useState(false);
+  const [telegramStatusInterval, setTelegramStatusInterval] = useState(null);
 
   // Обработка Google OAuth callback при загрузке компонента
   useEffect(() => {
@@ -166,6 +179,167 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onClose }) => {
       setIsLoading(false);
     }
   };
+
+  const handleTelegramLogin = async () => {
+    try {
+      console.log('🔵 Открываем модальное окно Telegram входа');
+      setError('');
+      setShowTelegramModal(true);
+    } catch (error) {
+      console.error('❌ Ошибка открытия Telegram модального окна:', error);
+      setError(`Ошибка: ${error.message}`);
+    }
+  };
+
+  const handleTelegramPhoneSubmit = async (phoneNumber) => {
+    try {
+      console.log('🔵 Отправляем номер телефона для Telegram входа:', phoneNumber);
+      setTelegramLoginLoading(true);
+      
+      // Получаем CSRF токен
+      const csrfToken = getCSRFToken();
+      
+      // Отправляем запрос на бэкенд для инициации входа через Telegram
+      const response = await fetch('/api/accounts/telegram/login/initiate/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken,
+        },
+        body: JSON.stringify({
+          phone_number: phoneNumber,
+          verification_type: 'login'
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.detail || data.message || 'Ошибка отправки запроса');
+      }
+      
+      // Закрываем модальное окно
+      setShowTelegramModal(false);
+      
+      // Запускаем проверку статуса входа
+      startTelegramLoginStatusCheck(phoneNumber);
+      
+      // Открываем Telegram клиент в новом окне
+      if (data.telegram_link) {
+        window.open(data.telegram_link, '_blank');
+      }
+
+    } catch (error) {
+      console.error('❌ Ошибка отправки номера телефона:', error);
+      throw error; // Пробрасываем ошибку в модальное окно
+    } finally {
+      setTelegramLoginLoading(false);
+    }
+  };
+
+  const handleCloseTelegramModal = () => {
+    setShowTelegramModal(false);
+    setTelegramLoginLoading(false);
+    // Очищаем интервал проверки статуса при закрытии модального окна
+    if (telegramStatusInterval) {
+      clearInterval(telegramStatusInterval);
+      setTelegramStatusInterval(null);
+    }
+  };
+
+  // Функция для проверки статуса входа через Telegram
+  const checkTelegramLoginStatus = async (phoneNumber) => {
+    try {
+      // Получаем CSRF токен
+      const csrfToken = getCSRFToken();
+      
+      const response = await fetch('/api/accounts/telegram/login/status/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken,
+        },
+        body: JSON.stringify({
+          phone_number: phoneNumber
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success && data.authenticated) {
+        // Пользователь успешно авторизован через Telegram
+        console.log('✅ Успешный вход через Telegram:', data);
+        
+        // Сохраняем токены
+        if (data.access_token) {
+          localStorage.setItem('token', data.access_token);
+        }
+        if (data.refresh_token) {
+          localStorage.setItem('refreshToken', data.refresh_token);
+        }
+        
+        // Очищаем интервал
+        if (telegramStatusInterval) {
+          clearInterval(telegramStatusInterval);
+          setTelegramStatusInterval(null);
+        }
+        
+        // Закрываем модальное окно и очищаем состояние
+         setShowTelegramModal(false);
+         setTelegramLoginLoading(false);
+         
+         // Вызываем callback для обновления состояния пользователя
+         if (onLogin && typeof onLogin === 'function') {
+           onLogin(data.user);
+         }
+        
+        return true; // Авторизация завершена
+      }
+      
+      return false; // Еще ожидаем подтверждения
+    } catch (error) {
+      console.error('❌ Ошибка проверки статуса входа через Telegram:', error);
+      return false;
+    }
+  };
+
+  // Функция для запуска периодической проверки статуса
+  const startTelegramLoginStatusCheck = (phoneNumber) => {
+    // Очищаем предыдущий интервал, если он есть
+    if (telegramStatusInterval) {
+      clearInterval(telegramStatusInterval);
+    }
+    
+    let attempts = 0;
+    const maxAttempts = 60; // Максимум 5 минут (60 * 5 секунд)
+    
+    const interval = setInterval(async () => {
+      attempts++;
+      
+      const isAuthenticated = await checkTelegramLoginStatus(phoneNumber);
+      
+      if (isAuthenticated || attempts >= maxAttempts) {
+        clearInterval(interval);
+        setTelegramStatusInterval(null);
+        
+        if (attempts >= maxAttempts && !isAuthenticated) {
+          console.log('⏰ Время ожидания входа через Telegram истекло');
+          alert('Время ожидания истекло. Попробуйте войти снова.');
+        }
+      }
+    }, 5000); // Проверяем каждые 5 секунд
+    
+    setTelegramStatusInterval(interval);
+  };
+
+  // Очистка интервала при размонтировании компонента
+  useEffect(() => {
+    return () => {
+      if (telegramStatusInterval) {
+        clearInterval(telegramStatusInterval);
+      }
+    };
+  }, [telegramStatusInterval]);
 
   // Обработчик callback от Google OAuth
   const handleGoogleCallback = async () => {
@@ -426,14 +600,25 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onClose }) => {
           <span>или</span>
         </div>
 
-        <button
-          className="auth-btn google"
-          onClick={() => handleGoogleLogin()}
-          disabled={isLoading}
-        >
-          <FcGoogle size={20} />
-          Войти через Google
-        </button>
+        <div className="auth-buttons-container">
+          <button
+            className="auth-btn google"
+            onClick={() => handleGoogleLogin()}
+            disabled={isLoading}
+          >
+            <FcGoogle size={20} />
+            Войти через Google
+          </button>
+          
+          <button
+            className="auth-btn telegram"
+            onClick={() => handleTelegramLogin()}
+            disabled={isLoading}
+          >
+            <SiTelegram size={20} />
+            Войти через TG
+          </button>
+        </div>
 
         <div className="auth-footer">
           <p>
@@ -449,6 +634,14 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onClose }) => {
           </p>
         </div>
       </div>
+      
+      {/* Модальное окно для входа через Telegram */}
+      <TelegramLoginModal
+        isOpen={showTelegramModal}
+        onClose={handleCloseTelegramModal}
+        onSubmit={handleTelegramPhoneSubmit}
+        isLoading={telegramLoginLoading}
+      />
     </div>
   );
 };

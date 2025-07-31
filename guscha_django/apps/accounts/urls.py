@@ -53,6 +53,16 @@ urlpatterns = [
          views.telegram_bot_activate, 
          name='telegram_activate'),
     
+    # Инициация входа через Telegram
+    path('telegram/login/initiate/', 
+         views.telegram_login_initiate, 
+         name='telegram_login_initiate'),
+    
+    # Проверка статуса входа через Telegram
+    path('telegram/login/status/', 
+         views.telegram_login_status, 
+         name='telegram_login_status'),
+    
     # Верификация кода
     path('telegram/verify/', 
          views.telegram_verify_code, 

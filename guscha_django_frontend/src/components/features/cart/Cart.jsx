@@ -30,11 +30,9 @@ export const CartSidebar = () => {
   const removeFromCart = useCartStore((state) => state.removeFromCart);
   const toggleCart = useCartStore((state) => state.toggleCart);
 
-  if (!isOpen) return null;
-
   return (
-    <div className="cart-overlay">
-      <div className="cart-sidebar">
+    <div className={`cart-overlay${isOpen ? ' open' : ''}`} onClick={toggleCart}>
+      <div className={`cart-sidebar${isOpen ? ' open' : ''}`} onClick={(e) => e.stopPropagation()}>
         <div className="cart-header">
           <h3>Корзина</h3>
           <button className="cart-close" onClick={toggleCart}>×</button>

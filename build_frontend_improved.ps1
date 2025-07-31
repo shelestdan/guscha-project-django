@@ -3,11 +3,28 @@ param(
     [switch]$SkipBuild,        # Пропустить сборку фронтенда
     [switch]$SkipDocker,       # Пропустить перезапуск Docker
     [switch]$DevMode,          # Режим разработки (без Docker)
+    [switch]$ForceRefresh,     # Полная очистка кэша (остановка и перезапуск контейнеров)
+    [switch]$RestartContainers, # Перезапустить контейнеры (down + up -d)
     [switch]$Verbose           # Подробное логирование
 )
 
 # Улучшенный скрипт для сборки React-приложения с полной интеграцией Docker-контейнеров
 # Обеспечивает бесшовное обновление фронтенда в продакшене
+#
+# Параметры:
+# -SkipBuild: Пропустить сборку фронтенда (использовать существующую)
+# -SkipDocker: Пропустить интеграцию с Docker
+# -DevMode: Режим разработки (без Docker)
+# -ForceRefresh: Полная очистка кэша через остановку и перезапуск всех контейнеров
+# -RestartContainers: Перезапустить контейнеры (down + up -d)
+# -Verbose: Подробное логирование
+#
+# Примеры использования:
+# .\build_frontend_improved.ps1                    # Стандартная сборка
+# .\build_frontend_improved.ps1 -ForceRefresh      # Сборка с полной очисткой кэша
+# .\build_frontend_improved.ps1 -RestartContainers # Сборка с перезапуском контейнеров
+# .\build_frontend_improved.ps1 -DevMode          # Только для разработки
+# .\build_frontend_improved.ps1 -SkipBuild        # Только обновление без сборки
 
 # Определение путей на основе текущей директории скрипта
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -96,6 +113,8 @@ if ($Verbose) {
     Write-ColorLog "  - SkipBuild: $SkipBuild" -ForegroundColor Gray
     Write-ColorLog "  - SkipDocker: $SkipDocker" -ForegroundColor Gray
     Write-ColorLog "  - DevMode: $DevMode" -ForegroundColor Gray
+    Write-ColorLog "  - ForceRefresh: $ForceRefresh" -ForegroundColor Gray
+    Write-ColorLog "  - RestartContainers: $RestartContainers" -ForegroundColor Gray
     Write-ColorLog "  - Verbose: $Verbose" -ForegroundColor Gray
 }
 
@@ -406,22 +425,74 @@ if (-not $DevMode -and -not $SkipDocker) {
         if ($runningContainers) {
             Write-Success "Найдены запущенные контейнеры: $($runningContainers -join ', ')"
             
-            # Выполнение collectstatic в Django контейнере
-            Write-ColorLog "Выполнение collectstatic в Django контейнере..." -ForegroundColor Yellow
-            $collectstaticResult = docker-compose exec -T django python manage.py collectstatic --noinput 2>&1
-            if ($LASTEXITCODE -eq 0) {
-                Write-Success "collectstatic выполнен успешно"
+            if ($RestartContainers) {
+                # Простой перезапуск контейнеров (down + up -d)
+                Write-ColorLog "Перезапуск контейнеров (down + up -d)..." -ForegroundColor Yellow
+                docker-compose down
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Success "Контейнеры остановлены"
+                } else {
+                    Write-Warning "Ошибка остановки контейнеров"
+                }
+                
+                docker-compose up -d
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Success "Контейнеры запущены"
+                    
+                    # Ожидание запуска после перезапуска
+                    if (Wait-ForContainer "guscha-django" 60) {
+                        Start-Sleep -Seconds 5
+                        Write-ColorLog "Выполнение collectstatic после перезапуска..." -ForegroundColor Yellow
+                        docker-compose exec -T django python manage.py collectstatic --noinput
+                        Write-Success "Перезапуск контейнеров завершен"
+                    }
+                } else {
+                    Write-Error "Ошибка запуска контейнеров"
+                }
+            } elseif ($ForceRefresh) {
+                # Полная очистка кэша через остановку и перезапуск контейнеров
+                Write-ColorLog "Выполнение полной очистки кэша (остановка контейнеров)..." -ForegroundColor Yellow
+                docker-compose down
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Success "Все контейнеры остановлены и удалены"
+                } else {
+                    Write-Warning "Ошибка остановки контейнеров"
+                }
+                
+                Write-ColorLog "Перезапуск контейнеров для полной очистки кэша..." -ForegroundColor Yellow
+                docker-compose up -d
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Success "Контейнеры перезапущены"
+                    
+                    # Ожидание запуска после перезапуска
+                    if (Wait-ForContainer "guscha-django" 60) {
+                        Start-Sleep -Seconds 5
+                        Write-ColorLog "Выполнение collectstatic после перезапуска..." -ForegroundColor Yellow
+                        docker-compose exec -T django python manage.py collectstatic --noinput
+                        Write-Success "Полная очистка кэша завершена"
+                    }
+                } else {
+                    Write-Error "Ошибка перезапуска контейнеров"
+                }
             } else {
-                Write-Warning "Ошибка collectstatic: $collectstaticResult"
-            }
-            
-            # Перезапуск nginx для обновления статики
-            Write-ColorLog "Перезапуск nginx для обновления кэша..." -ForegroundColor Yellow
-            docker-compose restart nginx
-            if ($LASTEXITCODE -eq 0) {
-                Write-Success "nginx перезапущен"
-            } else {
-                Write-Warning "Ошибка перезапуска nginx"
+                # Стандартное обновление без полной очистки
+                # Выполнение collectstatic в Django контейнере
+                Write-ColorLog "Выполнение collectstatic в Django контейнере..." -ForegroundColor Yellow
+                $collectstaticResult = docker-compose exec -T django python manage.py collectstatic --noinput 2>&1
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Success "collectstatic выполнен успешно"
+                } else {
+                    Write-Warning "Ошибка collectstatic: $collectstaticResult"
+                }
+                
+                # Перезапуск nginx для обновления статики
+                Write-ColorLog "Перезапуск nginx для обновления кэша..." -ForegroundColor Yellow
+                docker-compose restart nginx
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Success "nginx перезапущен"
+                } else {
+                    Write-Warning "Ошибка перезапуска nginx"
+                }
             }
             
             # Проверка доступности приложения
@@ -495,6 +566,18 @@ if (-not $DevMode -and -not $SkipDocker) {
     Write-ColorLog "\n🔧 Для запуска в продакшене выполните:" -ForegroundColor Cyan
     Write-ColorLog "  cd $DjangoDir" -ForegroundColor Yellow
     Write-ColorLog "  docker-compose up -d" -ForegroundColor Yellow
+}
+
+if ($RestartContainers -and -not $DevMode -and -not $SkipDocker) {
+    Write-ColorLog "\n🔄 Выполнен перезапуск Docker контейнеров" -ForegroundColor Cyan
+    Write-ColorLog "  • Контейнеры были остановлены (docker-compose down)" -ForegroundColor White
+    Write-ColorLog "  • Контейнеры были запущены (docker-compose up -d)" -ForegroundColor White
+    Write-ColorLog "  • Статические файлы обновлены" -ForegroundColor White
+} elseif ($ForceRefresh -and -not $DevMode -and -not $SkipDocker) {
+    Write-ColorLog "\n🔄 Использована полная очистка кэша Docker контейнеров" -ForegroundColor Cyan
+    Write-ColorLog "  • Все контейнеры были остановлены и перезапущены" -ForegroundColor White
+    Write-ColorLog "  • Кэш nginx полностью очищен" -ForegroundColor White
+    Write-ColorLog "  • Статические файлы обновлены принудительно" -ForegroundColor White
 }
 
 Write-ColorLog "\n✨ Бесшовное обновление фронтенда завершено!" -ForegroundColor Magenta

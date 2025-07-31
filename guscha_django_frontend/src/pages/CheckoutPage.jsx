@@ -5,6 +5,7 @@ import { useToast } from '../hooks/useToast';
 import { createOrder } from '../api/ordersApi';
 import { fetchUserProfile } from '../api/profileApi';
 import { createCartReservations } from '../api/cartApi';
+import addressesApi from '../api/addresses';
 import '../styles/CheckoutPage.css';
 import { getProductImageUrl, getProductName } from '../utils/imageUtils';
 
@@ -18,53 +19,56 @@ const CheckoutPage = () => {
   const [loading, setLoading] = useState(false);
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedBillingAddress, setSelectedBillingAddress] = useState('');
-  const [selectedShippingAddress, setSelectedShippingAddress] = useState('');
+
   const [formData, setFormData] = useState({
     billing_address: {
       first_name: '',
       last_name: '',
       email: '',
       phone: '',
-      address: '',
+      address_line1: '',
+      address_line2: '',
       city: '',
       postal_code: '',
       country: 'Россия'
     },
-    shipping_address: {
-      first_name: '',
-      last_name: '',
-      address: '',
-      city: '',
-      postal_code: '',
-      country: 'Россия'
-    },
+
     shipping_method: 'standard',
     payment_method: 'card',
-    notes: '',
-    use_same_address: true
+    notes: ''
   });
 
   // Функция для загрузки сохраненных адресов
   const fetchSavedAddresses = async () => {
+    console.log('🔥 НАЧАЛО fetchSavedAddresses - функция вызвана!');
     try {
-      const token = localStorage.getItem('access_token');
-      if (!token) return;
+      const token = localStorage.getItem('token'); // Исправлено: используем 'token' вместо 'access_token'
+      console.log('🔥 Проверяем токен:', token ? 'найден' : 'НЕ НАЙДЕН');
       
-      const response = await fetch('/api/users/addresses', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
-      });
+      if (!token) {
+        console.log('🏠 Токен не найден, пропускаем загрузку адресов');
+        return;
+      }
       
-      if (response.ok) {
-        const data = await response.json();
-        setSavedAddresses(data.addresses || []);
+      console.log('🏠 Загружаем сохраненные адреса...');
+      const response = await addressesApi.getAddresses();
+      console.log('🔥 Ответ от API:', response);
+      
+      if (response.data) {
+        // API возвращает массив адресов напрямую
+        const addresses = Array.isArray(response.data) ? response.data : response.data.results || [];
+        console.log('🏠 Загружено адресов:', addresses.length, addresses);
+        setSavedAddresses(addresses);
+      } else {
+        console.log('🔥 response.data пустой:', response.data);
       }
     } catch (error) {
-      console.error('Ошибка загрузки адресов:', error);
+      console.error('🔥 ОШИБКА в fetchSavedAddresses:', error);
+      console.error('🔥 Детали ошибки:', error.response?.data);
+      console.error('🔥 Статус ошибки:', error.response?.status);
+      // Не показываем ошибку пользователю, так как это не критично
     }
+    console.log('🔥 КОНЕЦ fetchSavedAddresses');
   };
 
   // Загрузка данных пользователя, если он авторизован
@@ -122,13 +126,18 @@ const CheckoutPage = () => {
 
   // Проверяем, есть ли товары в корзине и загружаем адреса и данные пользователя
   useEffect(() => {
+    console.log('🔥 useEffect ЗАПУЩЕН! items.length:', items.length);
     if (items.length === 0) {
+      console.log('🔥 Корзина пуста, перенаправляем на главную');
       navigate('/');
       showError('Корзина пуста. Добавьте товары перед оформлением заказа.');
     } else {
+      console.log('🔥 Корзина НЕ пуста, загружаем данные...');
       // Создаем резервирования для товаров в корзине
       createReservations();
+      console.log('🔥 Вызываем fetchSavedAddresses...');
       fetchSavedAddresses();
+      console.log('🔥 Вызываем fetchUserData...');
       fetchUserData();
     }
   }, [items.length]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -154,48 +163,94 @@ const CheckoutPage = () => {
   };
 
   // Функция для выбора сохраненного адреса
-  const handleAddressSelect = (addressId, type) => {
+  const handleAddressSelect = (addressId) => {
     const address = savedAddresses.find(addr => addr.id === parseInt(addressId));
     if (!address) return;
 
-    const addressData = {
-      first_name: address.first_name,
-      last_name: address.last_name,
-      email: formData.billing_address.email, // Email остается из формы
-      phone: formData.billing_address.phone, // Телефон остается из формы
-      address: address.address_line2 
-        ? `${address.address_line1}, ${address.address_line2}` 
-        : address.address_line1,
+    console.log('🏠 Выбран адрес:', address);
+    console.log('🏠 full_address:', address.full_address);
+    console.log('🏠 Отдельные поля:', {
+      address_line1: address.address_line1,
+      address_line2: address.address_line2,
       city: address.city,
-      postal_code: address.postal_code,
+      postal_code: address.postal_code
+    });
+
+    // Парсим full_name в first_name и last_name
+    const fullName = address.full_name || `${address.first_name || ''} ${address.last_name || ''}`.trim();
+    const nameParts = fullName.split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+
+    // Парсим full_address или используем отдельные поля
+    let addressData = {
+      first_name: firstName,
+      last_name: lastName,
+      address_line1: address.address_line1 || '',
+      address_line2: address.address_line2 || '', // Используем квартиру из сохраненного адреса
+      city: address.city || '',
+      postal_code: address.postal_code || '',
       country: address.country || 'Россия'
     };
 
-    if (type === 'billing') {
-      setSelectedBillingAddress(addressId);
-      setFormData({
-        ...formData,
-        billing_address: {
-          ...formData.billing_address,
-          ...addressData
-        }
-      });
-    } else {
-      setSelectedShippingAddress(addressId);
-      setFormData({
-        ...formData,
-        shipping_address: addressData
-      });
+    // Если есть full_address, попробуем извлечь из него данные
+    if (address.full_address) {
+      console.log('🏠 Парсим full_address:', address.full_address);
+      
+      // Разделяем по запятым и анализируем структуру
+      const addressParts = address.full_address.split(',').map(part => part.trim());
+      console.log('🏠 Части адреса:', addressParts);
+      
+      // Реальный формат: "Улица дом", "Квартира", "Город", "Индекс", "Страна" (5 частей)
+      // Исправляем логику парсинга согласно фактическому формату
+      if (addressParts.length >= 1) {
+        // Первая часть - улица и номер дома
+        addressData.address_line1 = addressParts[0];
+      }
+      if (addressParts.length >= 2) {
+        // Вторая часть - квартира
+        addressData.address_line2 = addressParts[1];
+      }
+      if (addressParts.length >= 3) {
+        // Третья часть - город
+        addressData.city = addressParts[2];
+      }
+      if (addressParts.length >= 4) {
+        // Четвертая часть - почтовый индекс
+        addressData.postal_code = addressParts[3];
+      }
+      if (addressParts.length >= 5) {
+        // Пятая часть - страна
+        addressData.country = addressParts[4];
+      }
+      
+      console.log('🏠 Результат парсинга:', addressData);
     }
-  };
 
-  const handleCheckboxChange = (e) => {
-    const { name, checked } = e.target;
+    setSelectedBillingAddress(addressId);
     setFormData({
       ...formData,
-      [name]: checked
+      billing_address: {
+        ...formData.billing_address,
+        ...addressData,
+        // Email и phone берем из адреса, если есть, иначе оставляем из профиля
+        email: formData.billing_address.email, // Email остается из профиля пользователя
+        phone: address.phone || formData.billing_address.phone // Phone из адреса или профиля
+      }
+    });
+    
+    console.log('🏠 Финальные данные формы:', {
+      ...formData,
+      billing_address: {
+        ...formData.billing_address,
+        ...addressData,
+        email: formData.billing_address.email,
+        phone: address.phone || formData.billing_address.phone
+      }
     });
   };
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -215,15 +270,9 @@ const CheckoutPage = () => {
         notes: formData.notes
       };
       
-      // Если выбраны сохраненные адреса, добавляем их ID
+      // Если выбран сохраненный адрес, добавляем его ID
       if (selectedBillingAddress) {
         checkoutData.billing_address_id = parseInt(selectedBillingAddress);
-      }
-      
-      if (!formData.use_same_address && selectedShippingAddress) {
-        checkoutData.shipping_address_id = parseInt(selectedShippingAddress);
-      } else if (formData.use_same_address && selectedBillingAddress) {
-        checkoutData.shipping_address_id = parseInt(selectedBillingAddress);
       }
       
       console.log('Отправляем данные заказа:', checkoutData);
@@ -254,24 +303,25 @@ const CheckoutPage = () => {
           <div className="form-section">
             <h2>Информация о плательщике</h2>
             
-            {savedAddresses.length > 0 && (
-              <div className="form-group">
-                <label htmlFor="billing_address_select">Выберите сохраненный адрес</label>
-                <select
-                  id="billing_address_select"
-                  value={selectedBillingAddress}
-                  onChange={(e) => handleAddressSelect(e.target.value, 'billing')}
-                >
-                  <option value="">Ввести новый адрес</option>
-                  {savedAddresses.map((address) => (
-                    <option key={address.id} value={address.id}>
-                      {address.first_name} {address.last_name}, {address.city}, {address.address_line1}
-                      {address.address_line2 && `, ${address.address_line2}`}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+            <div className="form-group">
+              <label htmlFor="billing_address_select">Сохранённые адреса</label>
+              <select
+                id="billing_address_select"
+                value={selectedBillingAddress}
+                onChange={(e) => handleAddressSelect(e.target.value)}
+                className="address-select"
+              >
+                <option value="">-- Выберите адрес или введите новый --</option>
+                {savedAddresses.map((address) => (
+                  <option key={address.id} value={address.id}>
+                    {address.full_name || `${address.first_name || ''} ${address.last_name || ''}`.trim()} | 
+                    {address.full_address || (
+                      `${address.address_line1 || ''}${address.address_line2 ? `, ${address.address_line2}` : ''}, ${address.city || ''}, ${address.postal_code || ''}`
+                    )}
+                  </option>
+                ))}
+              </select>
+            </div>
             
             <div className="form-row">
               <div className="form-group">
@@ -324,14 +374,27 @@ const CheckoutPage = () => {
             </div>
             
             <div className="form-group">
-              <label htmlFor="billing_address">Адрес*</label>
+              <label htmlFor="billing_address_line1">Адрес*</label>
               <input
                 type="text"
-                id="billing_address"
-                name="billing_address.address"
-                value={formData.billing_address.address}
+                id="billing_address_line1"
+                name="billing_address.address_line1"
+                value={formData.billing_address.address_line1}
                 onChange={handleChange}
+                placeholder="Улица, номер дома"
                 required
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="billing_address_line2">Квартира/Офис</label>
+              <input
+                type="text"
+                id="billing_address_line2"
+                name="billing_address.address_line2"
+                value={formData.billing_address.address_line2}
+                onChange={handleChange}
+                placeholder="Квартира, офис, подъезд"
               />
             </div>
             
@@ -360,104 +423,6 @@ const CheckoutPage = () => {
               </div>
             </div>
           </div>
-          
-          <div className="form-group checkbox-group">
-            <input
-              type="checkbox"
-              id="use_same_address"
-              name="use_same_address"
-              checked={formData.use_same_address}
-              onChange={handleCheckboxChange}
-            />
-            <label htmlFor="use_same_address">Адрес доставки совпадает с адресом плательщика</label>
-          </div>
-          
-          {!formData.use_same_address && (
-            <div className="form-section">
-              <h2>Адрес доставки</h2>
-              
-              {savedAddresses.length > 0 && (
-                <div className="form-group">
-                  <label htmlFor="shipping_address_select">Выберите сохраненный адрес</label>
-                  <select
-                    id="shipping_address_select"
-                    value={selectedShippingAddress}
-                    onChange={(e) => handleAddressSelect(e.target.value, 'shipping')}
-                  >
-                    <option value="">Ввести новый адрес</option>
-                    {savedAddresses.map((address) => (
-                      <option key={address.id} value={address.id}>
-                        {address.first_name} {address.last_name}, {address.city}, {address.address_line1}
-                        {address.address_line2 && `, ${address.address_line2}`}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-              
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="shipping_first_name">Имя*</label>
-                  <input
-                    type="text"
-                    id="shipping_first_name"
-                    name="shipping_address.first_name"
-                    value={formData.shipping_address.first_name}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="shipping_last_name">Фамилия*</label>
-                  <input
-                    type="text"
-                    id="shipping_last_name"
-                    name="shipping_address.last_name"
-                    value={formData.shipping_address.last_name}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="shipping_address">Адрес*</label>
-                <input
-                  type="text"
-                  id="shipping_address"
-                  name="shipping_address.address"
-                  value={formData.shipping_address.address}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="shipping_city">Город*</label>
-                  <input
-                    type="text"
-                    id="shipping_city"
-                    name="shipping_address.city"
-                    value={formData.shipping_address.city}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="shipping_postal_code">Почтовый индекс*</label>
-                  <input
-                    type="text"
-                    id="shipping_postal_code"
-                    name="shipping_address.postal_code"
-                    value={formData.shipping_address.postal_code}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-          )}
           
           <div className="form-section">
             <h2>Способ доставки</h2>

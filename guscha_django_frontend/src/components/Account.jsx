@@ -124,6 +124,16 @@ const Account = () => {
             setUserWithLogin(data.user);
             showSuccess('Вход через Google выполнен успешно!');
           }}
+          onTelegramLogin={async (data) => {
+            // Обработка входа через Telegram
+            console.log('Telegram login data:', data);
+            if (data && data.user) {
+              setUserWithLogin(data.user);
+              showSuccess('Вход через Telegram выполнен успешно!');
+            } else {
+              showError('Ошибка входа через Telegram');
+            }
+          }}
           onClose={() => navigate('/')} // Переход на главную при закрытии
         />
       </div>

@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 # Глобальная переменная для хранения экземпляра бота
 _bot_instance = None
+_bot_application = None
 
 
 class TelegramBot:
@@ -63,8 +64,16 @@ class TelegramBot:
         
         # Получаем verification_id из параметров команды
         verification_id = None
+        is_login = False
+        
         if context.args:
-            verification_id = context.args[0]
+            param = context.args[0]
+            # Проверяем, это логин или обычная верификация
+            if param.startswith('login_'):
+                verification_id = param[6:]  # Убираем префикс 'login_'
+                is_login = True
+            else:
+                verification_id = param
         
         # Проверяем, есть ли активный код верификации
         verification_code = None
@@ -88,11 +97,16 @@ class TelegramBot:
                         await self.mark_qr_bot_started(verification_code.code)
                     
                     # Обновляем пользователя (только если это не регистрация)
-                    if verification_code.user:
-                        verification_code.user.telegram_chat_id = str(chat_id)
-                        if user.username:
-                            verification_code.user.telegram_username = user.username
-                        await sync_to_async(verification_code.user.save)()
+                    try:
+                        user_obj = await sync_to_async(lambda: verification_code.user)()
+                        if user_obj:
+                            user_obj.telegram_chat_id = str(chat_id)
+                            if user.username:
+                                user_obj.telegram_username = user.username
+                            await sync_to_async(user_obj.save)()
+                    except Exception as e:
+                        # Если пользователь не связан - это нормально для некоторых типов верификации
+                        logger.debug(f"Пользователь не связан с кодом верификации {verification_id}: {e}")
                     
                     logger.info(f"Связан пользователь {chat_id} с кодом верификации {verification_id}")
                 else:
@@ -171,12 +185,30 @@ class TelegramBot:
         
         try:
             # Ищем активный код верификации для этого chat_id
+            # Сначала пробуем найти по chat_id (для обычной регистрации)
             verification_code = await sync_to_async(
                 TelegramVerificationCode.objects.filter(
                     telegram_chat_id=str(chat_id),
                     is_used=False
                 ).order_by('-created_at').first
             )()
+            
+            # Если не найден, ищем код входа для пользователя с этим chat_id
+            if not verification_code:
+                # Ищем пользователя с этим chat_id
+                user_with_chat_id = await sync_to_async(
+                    User.objects.filter(telegram_chat_id=str(chat_id)).first
+                )()
+                
+                if user_with_chat_id:
+                    # Ищем активный код входа для этого пользователя
+                    verification_code = await sync_to_async(
+                        TelegramVerificationCode.objects.filter(
+                            user=user_with_chat_id,
+                            verification_type='login',
+                            is_used=False
+                        ).order_by('-created_at').first
+                    )()
             
             if not verification_code:
                 await query.edit_message_text(
@@ -250,6 +282,50 @@ class TelegramBot:
             logger.error(f"Ошибка при отправке кода верификации: {e}")
             return None
     
+    async def send_login_request(self, chat_id: str, phone_number: str, verification_code: str) -> bool:
+        """Отправляет запрос на вход через Telegram"""
+        try:
+            if not chat_id:
+                logger.warning(f"Пустой chat_id для запроса входа с номером {phone_number}")
+                return False
+            
+            if not self.application or not self.application.bot:
+                logger.error("Telegram бот не инициализирован")
+                return False
+            
+            logger.info(f"Отправка запроса на вход: chat_id={chat_id}, phone={phone_number}, code={verification_code}")
+            
+            # Создаем клавиатуру с кнопкой для запроса номера телефона
+            keyboard = [
+                [KeyboardButton("📱 Поделиться номером телефона", request_contact=True)]
+            ]
+            reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
+            
+            # Отправляем сообщение с запросом на вход
+            login_text = (
+                f"🔐 Запрос на вход через Telegram\n\n"
+                f"📱 Номер телефона с сайта: {phone_number}\n\n"
+                f"Для подтверждения входа поделитесь своим номером телефона, "
+                f"нажав кнопку ниже\. Мы сверим его с номером, указанным на сайте\."
+            )
+            
+            await self.application.bot.send_message(
+                chat_id=int(chat_id),
+                text=login_text,
+                parse_mode='MarkdownV2',
+                reply_markup=reply_markup
+            )
+            
+            logger.info(f"Запрос на вход успешно отправлен в chat_id {chat_id} для номера {phone_number}")
+            return True
+            
+        except ValueError as e:
+            logger.error(f"Неверный chat_id '{chat_id}': {e}")
+            return False
+        except Exception as e:
+            logger.error(f"Ошибка при отправке запроса на вход в chat_id {chat_id}: {e}")
+            return False
+    
     async def handle_contact(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Обработчик получения контакта пользователя"""
         contact = update.message.contact
@@ -266,15 +342,34 @@ class TelegramBot:
             verification_code = await sync_to_async(
                 TelegramVerificationCode.objects.filter(
                     telegram_chat_id=str(chat_id),
-                    is_used=False
+                    is_used=False,
+                    expires_at__gt=timezone.now()
                 ).order_by('-created_at').first
             )()
+            
+            # Также ищем коды для входа по chat_id из пользователя
+            if not verification_code:
+                # Ищем пользователя с этим chat_id
+                user = await sync_to_async(
+                    User.objects.filter(telegram_chat_id=str(chat_id)).first
+                )()
+                
+                if user:
+                    # Ищем активный код входа для этого пользователя
+                    verification_code = await sync_to_async(
+                        TelegramVerificationCode.objects.filter(
+                            user=user,
+                            verification_type='login',
+                            is_used=False,
+                            expires_at__gt=timezone.now()
+                        ).order_by('-created_at').first
+                    )()
             
             if not verification_code:
                 logger.warning(f"Активный код верификации не найден для chat_id {chat_id}")
                 await update.message.reply_text(
-                    "❌ Активный код верификации не найден.\n\n"
-                    "Пожалуйста, сначала зарегистрируйтесь на сайте."
+                    "❌ Активный код верификации не найден.\n"
+                    "Пожалуйста, сначала зарегистрируйтесь на сайте или инициируйте вход."
                 )
                 return
                 
@@ -294,6 +389,52 @@ class TelegramBot:
             pending_registration = await sync_to_async(lambda: verification_code.pending_registration)()
             verification_type = await sync_to_async(lambda: verification_code.verification_type)()
 
+            # Специальная обработка для входа через Telegram
+            if verification_type == 'login':
+                # Для входа проверяем номер телефона пользователя
+                if not user:
+                    logger.warning(f"Пользователь не найден для кода входа {verification_code.id}")
+                    await update.message.reply_text(
+                        "❌ Ошибка: пользователь не найден.\n\n"
+                        "Пожалуйста, повторите процесс входа на сайте."
+                    )
+                    return
+                
+                # Получаем номер телефона пользователя
+                user_phone = self.normalize_phone_number(user.phone or "")
+                
+                if not user_phone:
+                    logger.warning(f"У пользователя {user.id} не указан номер телефона")
+                    await update.message.reply_text(
+                        "❌ В вашем профиле не указан номер телефона.\n\n"
+                        "Пожалуйста, добавьте номер телефона в настройках профиля."
+                    )
+                    return
+                
+                # Проверяем совпадение номеров
+                if telegram_phone != user_phone:
+                    await update.message.reply_text(
+                        f"❌ Номер телефона не совпадает!\n\n"
+                        f"Номер в Telegram: {telegram_phone}\n"
+                        f"Номер в профиле: {user_phone}\n\n"
+                        "Пожалуйста, используйте тот же номер телефона, что указан в профиле."
+                    )
+                    return
+                
+                # Номера совпадают - помечаем код как использованный
+                verification_code.is_used = True
+                verification_code.telegram_phone = telegram_phone
+                await sync_to_async(verification_code.save)()
+                
+                # Отправляем подтверждение успешного входа
+                await update.message.reply_text(
+                    "✅ Вход через Telegram подтвержден!\n\n"
+                    "Вы можете вернуться на сайт - вход выполнен автоматически."
+                )
+                
+                logger.info(f"Успешный вход через Telegram для пользователя {user.id}")
+                return
+            
             # Специальная обработка для QR-регистрации
             if verification_type == 'qr_registration':
                 # Для QR-регистрации пользователь и pending_registration могут отсутствовать
@@ -418,6 +559,35 @@ class TelegramBot:
         except Exception as e:
             logger.error(f"Ошибка при отметке запуска бота для QR-кода: {e}")
     
+    async def send_login_request(self, chat_id: str, phone_number: str, verification_code: str):
+        """Отправка запроса на вход через Telegram"""
+        try:
+            # Сообщение для отправки
+            message = (
+                f"🔗 Запрос на вход через Telegram\n\n"
+                f"Ваш номер: {phone_number}\n"
+                f"Код подтверждения: {verification_code}\n\n"
+                "Пожалуйста, подтвердите вход, нажав кнопку ниже."
+            )
+            
+            # Кнопка подтверждения
+            keyboard = [
+                [InlineKeyboardButton("✅ Подтвердить вход", callback_data=f"login_{verification_code}")]
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
+            # Отправка сообщения
+            await self.application.bot.send_message(
+                chat_id=chat_id,
+                text=message,
+                reply_markup=reply_markup
+            )
+            
+            logger.info(f"Запрос на вход отправлен в Telegram для пользователя с телефоном {phone_number}")
+        except Exception as e:
+            logger.error(f"Ошибка при отправке запроса на вход в Telegram: {e}")
+
+        
     def setup_handlers(self):
         """Настройка обработчиков команд"""
         self.application.add_handler(CommandHandler("start", self.start_command))
@@ -426,9 +596,6 @@ class TelegramBot:
 
 
 # Глобальный экземпляр бота
-bot_instance = None
-
-
 def get_bot_instance():
     """Получение экземпляра бота (singleton)"""
     global _bot_instance
@@ -445,6 +612,46 @@ def get_bot_instance():
 
 
 async def send_verification_code_to_telegram(chat_id: str, verification_type: str = 'registration'):
-    """Функция для отправки кода верификации из Django views"""
+    """Функция для отправки кода верификации через бота"""
     bot = get_bot_instance()
     return await bot.send_verification_code(chat_id, verification_type)
+
+
+async def send_login_request_to_telegram(chat_id: str, phone_number: str, verification_code: str):
+    """Функция для отправки запроса на вход через Telegram"""
+    try:
+        import telegram
+        bot_token = getattr(settings, 'TELEGRAM_BOT_TOKEN', None)
+        if not bot_token:
+            logger.error("Ошибка: TELEGRAM_BOT_TOKEN не настроен")
+            return False
+            
+        # Создаем отдельный экземпляр бота для отправки сообщений
+        bot = telegram.Bot(token=bot_token)
+        
+        # Создаем клавиатуру с кнопкой для запроса номера телефона
+        keyboard = [
+            [KeyboardButton("📱 Поделиться номером телефона", request_contact=True)]
+        ]
+        reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
+        
+        # Отправляем сообщение с запросом на вход
+        login_text = (
+            f"🔐 Запрос на вход через Telegram\n\n"
+            f"📱 Номер телефона с сайта: {phone_number}\n\n"
+            f"Для подтверждения входа поделитесь своим номером телефона, "
+            f"нажав кнопку ниже. Мы сверим его с номером, указанным на сайте."
+        )
+        
+        await bot.send_message(
+            chat_id=int(chat_id),
+            text=login_text,
+            reply_markup=reply_markup
+        )
+        
+        logger.info(f"Запрос на вход успешно отправлен в chat_id {chat_id} для номера {phone_number}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Ошибка при отправке запроса на вход через Telegram: {e}")
+        return False

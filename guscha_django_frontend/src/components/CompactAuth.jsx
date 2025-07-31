@@ -3,7 +3,7 @@ import AdvancedAuth from './AdvancedAuth';
 import { FiX, FiUser, FiUserPlus } from 'react-icons/fi';
 import '../styles/CompactAuth.css';
 
-const CompactAuth = ({ onLogin, onRegister, onGoogleLogin, onClose }) => {
+const CompactAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onClose }) => {
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState('login'); // 'login' или 'register'
 
@@ -69,6 +69,12 @@ const CompactAuth = ({ onLogin, onRegister, onGoogleLogin, onClose }) => {
           onGoogleLogin={async () => {
             await onGoogleLogin();
             handleClose();
+          }}
+          onTelegramLogin={async () => {
+            if (onTelegramLogin) {
+              await onTelegramLogin();
+              handleClose();
+            }
           }}
           onClose={handleClose}
         />

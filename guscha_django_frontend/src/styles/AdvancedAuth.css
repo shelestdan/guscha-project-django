@@ -217,6 +217,28 @@
   background: #f9f9f9;
 }
 
+.auth-btn.telegram {
+  background: #0088cc;
+  border: 1px solid #0088cc;
+  color: #ffffff;
+}
+
+.auth-btn.telegram:hover:not(:disabled) {
+  background: #006699;
+  border-color: #006699;
+}
+
+/* Контейнер для кнопок входа через соцсети */
+.auth-buttons-container {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.auth-buttons-container .auth-btn {
+  flex: 1;
+}
+
 .auth-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;

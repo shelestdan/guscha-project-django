@@ -2,11 +2,13 @@ from django.db import transaction
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
+from django.conf import settings
 from datetime import timedelta
 from typing import Optional, Dict, Any, Tuple
 import logging
 import random
 import string
+from asgiref.sync import async_to_sync
 
 from ..models import TelegramVerificationCode, PendingUserRegistration, User
 from ..validators import TelegramValidator
@@ -496,13 +498,51 @@ class TelegramService:
         """Получение статистики Telegram-интеграции"""
         return self.telegram_repository.get_telegram_statistics()
     
+    def initiate_telegram_login(self, user: User, phone_number: str) -> Dict[str, Any]:
+        """Инициация входа через Telegram"""
+        try:
+            # Проверяем, привязан ли Telegram к аккаунту пользователя
+            if not user.telegram_chat_id:
+                logger.warning(f"Пользователь {user.id} не имеет привязанного Telegram аккаунта")
+                return {
+                    'success': False,
+                    'error': 'Telegram не привязан к аккаунту. Сначала привяжите Telegram в настройках профиля.'
+                }
+            
+            # Создание кода верификации для входа
+            verification_code = self.create_verification_code(
+                telegram_chat_id='',  # Пустой для веб-инициации
+                verification_type='login',
+                user=user,
+                telegram_phone=phone_number
+            )
+            
+            # Генерируем deep link для Telegram бота
+            telegram_bot_username = getattr(settings, 'TELEGRAM_BOT_USERNAME', 'GuschaBot')
+            telegram_deep_link = f"https://t.me/{telegram_bot_username}?start=login_{verification_code.code}"
+            
+            logger.info(f"Код верификации для входа создан для пользователя {user.id} (code: {verification_code.code})")
+            
+            return {
+                'success': True,
+                'message': 'Код верификации создан. Перейдите в Telegram бот для завершения входа.',
+                'verification_code': verification_code.code,
+                'telegram_link': telegram_deep_link
+            }
+                
+        except Exception as e:
+            logger.error(f"Ошибка при инициации входа через Telegram: {e}")
+            return {
+                'success': False,
+                'error': 'Ошибка инициации входа через Telegram'
+            }
+    
     def cleanup_expired_codes(self) -> int:
         """Очистка истекших кодов верификации"""
         try:
-            deleted_count = self.telegram_repository.cleanup_expired_codes()
-            logger.info(f"Удалено истекших кодов верификации: {deleted_count}")
-            return deleted_count
-            
+            count = self.telegram_repository.cleanup_expired_codes()
+            logger.info(f"Удалено {count} истекших кодов верификации")
+            return count
         except Exception as e:
             logger.error(f"Ошибка при очистке истекших кодов: {e}")
             raise

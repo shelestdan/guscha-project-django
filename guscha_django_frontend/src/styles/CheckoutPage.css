@@ -50,6 +50,30 @@
   margin-bottom: 1rem;
 }
 
+/* Стили для выпадающих списков адресов */
+.address-select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  background-color: #f8f9fa;
+  transition: all 0.3s ease;
+  margin-bottom: 1rem;
+}
+
+.address-select:focus {
+  outline: none;
+  border-color: #007bff;
+  background-color: #fff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.address-select option {
+  padding: 0.5rem;
+  font-size: 0.95rem;
+}
+
 .form-group {
   margin-bottom: 1rem;
 }

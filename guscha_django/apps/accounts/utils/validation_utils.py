@@ -198,6 +198,35 @@ class ValidationUtils:
             }
     
     @staticmethod
+    def normalize_phone_number(phone: str) -> str:
+        """Нормализация номера телефона для сравнения"""
+        if not phone:
+            return ""
+        
+        # Удаляем все символы кроме цифр и знака +
+        normalized = re.sub(r'[^\d+]', '', phone)
+        
+        # Если номер начинается с 8, заменяем на +7 (для российских номеров)
+        if normalized.startswith('8') and len(normalized) == 11:
+            normalized = '+7' + normalized[1:]
+        
+        # Если номер начинается с 7 без +, добавляем +
+        elif normalized.startswith('7') and len(normalized) == 11:
+            normalized = '+' + normalized
+            
+        # Если номер не содержит код страны, пытаемся определить его через phonenumbers
+        if not normalized.startswith('+'):
+            try:
+                parsed = phonenumbers.parse(normalized, 'RU')
+                normalized = phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
+            except:
+                # Если не удалось распарсить, возвращаем как есть
+                pass
+                
+        return normalized
+    
+
+    @staticmethod
     def validate_telegram_username(username: str) -> Dict[str, Any]:
         """Валидация Telegram имени пользователя"""
         if not username:

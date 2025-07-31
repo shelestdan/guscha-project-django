@@ -16,10 +16,17 @@ const AddressForm = ({ address, addressType, onSuccess, onCancel }) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Загружаем данные пользователя для автозаполнения
+  // Загружаем данные пользователя для автозаполнения только если не редактируем существующий адрес
   useEffect(() => {
     const fetchUserData = async () => {
+      // Не загружаем данные пользователя, если редактируем существующий адрес
+      if (address) {
+        console.log('🏠 AddressForm: пропускаем загрузку данных пользователя, так как редактируем адрес');
+        return;
+      }
+      
       try {
+        console.log('🏠 AddressForm: загружаем данные пользователя для новой формы');
         const token = localStorage.getItem("token");
         if (token) {
           const response = await fetch(
@@ -32,6 +39,7 @@ const AddressForm = ({ address, addressType, onSuccess, onCancel }) => {
           );
           if (response.ok) {
             const userData = await response.json();
+            console.log('🏠 AddressForm: данные пользователя загружены:', userData);
             setFormData((prev) => ({
               ...prev,
               first_name: userData.first_name || "",
@@ -46,23 +54,62 @@ const AddressForm = ({ address, addressType, onSuccess, onCancel }) => {
     };
 
     fetchUserData();
-  }, []);
+  }, [address]);
 
   useEffect(() => {
+    console.log('🏠 AddressForm: получен объект address для редактирования:', address);
     if (address) {
-      setFormData({
-        address_type: address.address_type || addressType || "shipping",
-        first_name: address.first_name || "",
-        last_name: address.last_name || "",
-        address_line1: address.address_line1 || "",
-        address_line2: address.address_line2 || "",
-        city: address.city || "",
-        postal_code: address.postal_code || "",
-        phone: address.phone || "",
-        is_default: address.is_default || false
-      });
+      // Проверяем, есть ли все необходимые поля в объекте address
+      const hasCompleteData = address.address_line1 && address.city && address.postal_code;
+      
+      if (hasCompleteData) {
+        console.log('🏠 AddressForm: заполняем форму полными данными:', address);
+        setFormData({
+          address_type: address.address_type || addressType || "shipping",
+          first_name: address.first_name || "",
+          last_name: address.last_name || "",
+          address_line1: address.address_line1 || "",
+          address_line2: address.address_line2 || "",
+          city: address.city || "",
+          postal_code: address.postal_code || "",
+          phone: address.phone || "",
+          is_default: address.is_default || false
+        });
+      } else if (address.id) {
+        // Если данные неполные, но есть ID, загружаем полные данные с сервера
+        console.log('🏠 AddressForm: данные неполные, загружаем с сервера по ID:', address.id);
+        fetchAddressById(address.id);
+      }
+    } else {
+      console.log('🏠 AddressForm: address не передан, используем пустую форму');
     }
   }, [address, addressType]);
+
+  const fetchAddressById = async (addressId) => {
+    try {
+      setLoading(true);
+      console.log('🏠 AddressForm: загружаем адрес по ID:', addressId);
+      const response = await addressesApi.getAddress(addressId);
+      const addressData = response.data;
+      
+      console.log('🏠 AddressForm: получены полные данные адреса:', addressData);
+      setFormData({
+        address_type: addressData.address_type || addressType || "shipping",
+        first_name: addressData.first_name || "",
+        last_name: addressData.last_name || "",
+        address_line1: addressData.address_line1 || "",
+        address_line2: addressData.address_line2 || "",
+        city: addressData.city || "",
+        postal_code: addressData.postal_code || "",
+        phone: addressData.phone || "",
+        is_default: addressData.is_default || false
+      });
+    } catch (error) {
+      console.error('❌ Ошибка загрузки адреса:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -175,18 +222,6 @@ const AddressForm = ({ address, addressType, onSuccess, onCancel }) => {
           required: true,
           placeholder: "123456"
         })}
-      </div>
-
-      <div className="form-group">
-        <label className="checkbox-label">
-          <input
-            type="checkbox"
-            name="is_default"
-            checked={formData.is_default}
-            onChange={handleInputChange}
-          />
-          Установить как адрес по умолчанию
-        </label>
       </div>
 
       <div className="form-actions">
