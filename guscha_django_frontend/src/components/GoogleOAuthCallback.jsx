@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
+import axios from '../api/axiosInstance';
 
 const GoogleOAuthCallback = () => {
   const [isProcessing, setIsProcessing] = useState(true);
@@ -86,9 +87,6 @@ const GoogleOAuthCallback = () => {
         console.log('🔵 Отправляем код на Django сервер...');
         setProcessingStep('Обмен кода на токен доступа...');
         
-        const endpoint = `${baseURL}/api/accounts/users/google_login/`;
-        console.log('🔵 Endpoint:', endpoint);
-        
         const requestBody = {
           code: code,
           redirect_uri: `${window.location.origin}/auth/google/callback`
@@ -102,59 +100,20 @@ const GoogleOAuthCallback = () => {
         const currentAbortController = new AbortController();
         abortController.current = currentAbortController;
         
-        // Создаем Promise с timeout
-        const fetchWithTimeout = (url, options, timeout = 10000) => {
-          return Promise.race([
-            fetch(url, options),
-            new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Request timeout')), timeout)
-            )
-          ]);
-        };
-        
-        const apiResponse = await fetchWithTimeout(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestBody),
-          signal: currentAbortController.signal
-        }, 10000);
+        // Используем axios instance с автоматическим добавлением CSRF токена
+        const apiResponse = await axios.post('/api/accounts/users/google_login/', requestBody, {
+          signal: currentAbortController.signal,
+          timeout: 10000
+        });
 
         console.log('🔵 Ответ Django сервера:', {
           status: apiResponse.status,
           statusText: apiResponse.statusText,
-          ok: apiResponse.ok,
-          headers: Object.fromEntries(apiResponse.headers.entries())
+          data: apiResponse.data
         });
         
-        if (!apiResponse.ok) {
-          const errorText = await apiResponse.text();
-          console.error('🔴 Ошибка Django сервера:', errorText);
-          
-          let errorData;
-          try {
-            errorData = JSON.parse(errorText);
-            console.error('🔴 Ошибка сервера (JSON):', errorData);
-          } catch (parseError) {
-            console.error('🔴 Не удалось распарсить ошибку как JSON:', parseError);
-            errorData = { error: errorText };
-          }
-          
-          throw new Error(errorData.error || `Ошибка сервера: ${apiResponse.status}`);
-        }
-
-        const responseText = await apiResponse.text();
-        console.log('🔵 Ответ Django сервера (текст):', responseText);
-        
-        let data;
-        try {
-          data = JSON.parse(responseText);
-          console.log('🟢 Успешный ответ Django сервера:', data);
-        } catch (parseError) {
-          console.error('🔴 Не удалось распарсить ответ как JSON:', parseError);
-          throw new Error('Неверный формат ответа сервера');
-        }
+        const data = apiResponse.data;
+        console.log('🟢 Успешный ответ Django сервера:', data);
         
         // Помечаем код как обработанный
         sessionStorage.setItem('oauth_processed_code', code);

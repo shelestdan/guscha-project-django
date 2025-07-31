@@ -324,7 +324,21 @@ SIMPLE_JWT = {
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
-CORS_ALLOW_HEADERS = ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Session-ID']
+CORS_ALLOW_HEADERS = ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-CSRFToken', 'X-Session-ID']
+
+# Настройки CSRF
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://localhost:80",
+    "http://localhost",
+    "http://127.0.0.1:80",
+    "http://127.0.0.1",
+]
+CSRF_COOKIE_NAME = 'csrftoken'
+CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
 
 # Дополнительные настройки CORS для разработки
 CORS_ALLOWED_ORIGINS = [
@@ -470,6 +484,7 @@ UNFOLD = {
     "SITE_SYMBOL": "speed",  # Иконка Material Design
     "SHOW_HISTORY": True,  # Показывать историю изменений
     "SHOW_VIEW_ON_SITE": True,  # Показывать ссылку "Посмотреть на сайте"
+    "SHOW_SAVE_AND_CONTINUE": True,  # Показывать кнопку "Сохранить и продолжить"
     "ENVIRONMENT": "guscha_project.settings.environment_callback",
     "DASHBOARD_CALLBACK": "guscha_project.settings.dashboard_callback",
     "LOGIN": {

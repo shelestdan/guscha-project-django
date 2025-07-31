@@ -239,18 +239,10 @@ class PreorderAdmin(BaseProductAdmin):
                 'Добавьте размеры для корректного отображения в каталоге.'
             )
     
-    def response_add(self, request, obj, post_url_continue=None):
-        """Переопределяем поведение после добавления предзаказа"""
-        return HttpResponseRedirect(reverse('admin:products_preorder_changelist'))
-    
-    def response_change(self, request, obj):
-        """Переопределяем поведение после изменения предзаказа"""
-        return HttpResponseRedirect(reverse('admin:products_preorder_changelist'))
-    
+
     def render_change_form(self, request, context, add=False, change=False, form_url='', obj=None):
-        """Убираем кнопки 'Сохранить и добавить другой объект' и 'Сохранить и продолжить редактирование'"""
+        """Убираем кнопку 'Сохранить и добавить другой объект'"""
         context['show_save_and_add_another'] = False
-        context['show_save_and_continue'] = False
         return super().render_change_form(request, context, add, change, form_url, obj)
 
 

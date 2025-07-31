@@ -7,9 +7,10 @@ from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.http import HttpResponseRedirect, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
 from django.core.exceptions import ValidationError
+from django.utils.decorators import method_decorator
 from typing import Dict, Any
 import logging
 
@@ -296,6 +297,7 @@ class UserViewSet(BaseViewMixin, viewsets.ModelViewSet):
             return self.handle_error(e, request)
     
     @action(detail=False, methods=['post'])
+    @csrf_exempt
     def google_login(self, request):
         """Аутентификация через Google OAuth"""
         try:
@@ -1035,6 +1037,16 @@ def qr_bot_started(request):
 
 
 # Дополнительные API endpoints
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+@ensure_csrf_cookie
+def get_csrf_token(request):
+    """Получение CSRF токена"""
+    return Response({
+        'csrfToken': request.META.get('CSRF_COOKIE', '')
+    })
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

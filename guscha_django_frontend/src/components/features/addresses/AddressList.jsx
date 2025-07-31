@@ -44,8 +44,16 @@ const AddressList = ({ addressType, onSelectAddress }) => {
   };
 
   const handleDelete = async (addressId) => {
+    // Проверяем, что ID определен
+    if (!addressId || addressId === undefined) {
+      console.error('❌ Ошибка: ID адреса не определен:', addressId);
+      setError('Ошибка: не удалось определить ID адреса');
+      return;
+    }
+
     if (window.confirm("Вы уверены, что хотите удалить этот адрес?")) {
       try {
+        console.log('🗑️ Удаляем адрес с ID:', addressId);
         await addressesApi.deleteAddress(addressId);
         setAddresses(addresses.filter((addr) => addr.id !== addressId));
       } catch (error) {
@@ -89,8 +97,13 @@ const AddressList = ({ addressType, onSelectAddress }) => {
 
   return (
     <div className="address-list">
-      {addresses.map((address) => (
-        <div key={address.id} className="address-card">
+      {addresses.map((address) => {
+        // Отладочная информация
+        console.log('🏠 AddressList рендерим адрес:', address);
+        console.log('🆔 AddressList ID адреса:', address.id);
+        
+        return (
+        <div key={address.id || `address-${Math.random()}`} className="address-card">
           <div className="address-info">
             <div className="address-name">
               {address.first_name} {address.last_name}
@@ -124,13 +137,18 @@ const AddressList = ({ addressType, onSelectAddress }) => {
             )}
             <button
               className="address-delete-btn"
-              onClick={() => handleDelete(address.id)}
+              onClick={() => {
+                console.log('🗑️ AddressList клик по кнопке удаления, address:', address);
+                console.log('🆔 AddressList ID для удаления:', address.id);
+                handleDelete(address.id);
+              }}
             >
               Удалить
             </button>
           </div>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 };

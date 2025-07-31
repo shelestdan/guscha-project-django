@@ -95,8 +95,16 @@ const AccountAddresses = ({ user }) => {
   };
 
   const handleDeleteAddress = async (addressId) => {
+    // Проверяем, что ID определен
+    if (!addressId || addressId === undefined) {
+      console.error('❌ Ошибка: ID адреса не определен:', addressId);
+      showError('Ошибка: не удалось определить ID адреса');
+      return;
+    }
+
     if (window.confirm('Вы уверены, что хотите удалить этот адрес?')) {
       try {
+        console.log('🗑️ Удаляем адрес с ID:', addressId);
         await addressesApi.deleteAddress(addressId);
         setAddresses(prev => prev.filter(addr => addr.id !== addressId));
         showSuccess('Адрес успешно удален!');
@@ -119,8 +127,13 @@ const AccountAddresses = ({ user }) => {
             {loading ? (
               <p>Загрузка адресов...</p>
             ) : addresses.length > 0 ? (
-              addresses.map((address) => (
-                <div key={address.id} className="address-item">
+              addresses.map((address) => {
+                // Отладочная информация
+                console.log('🏠 Рендерим адрес:', address);
+                console.log('🆔 ID адреса:', address.id);
+                
+                return (
+                <div key={address.id || `address-${Math.random()}`} className="address-item">
                   <div className="address-content">
                     <strong>{address.full_name || `${address.first_name} ${address.last_name}`}</strong>
                     <br />
@@ -154,13 +167,18 @@ const AccountAddresses = ({ user }) => {
                     </button>
                     <button
                       className="address-edit-btn address-delete-btn"
-                      onClick={() => handleDeleteAddress(address.id)}
+                      onClick={() => {
+                        console.log('🗑️ Клик по кнопке удаления, address:', address);
+                        console.log('🆔 ID для удаления:', address.id);
+                        handleDeleteAddress(address.id);
+                      }}
                     >
                       УДАЛИТЬ
                     </button>
                   </div>
                 </div>
-              ))
+                );
+              })
             ) : (
               <p>У вас пока нет сохраненных адресов</p>
             )}

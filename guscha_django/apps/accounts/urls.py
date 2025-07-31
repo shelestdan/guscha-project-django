@@ -19,6 +19,9 @@ urlpatterns = [
     path('', include(router.urls)),
     
     # === Аутентификация ===
+    # CSRF токен
+    path('csrf/', views.get_csrf_token, name='get_csrf_token'),
+    
     # JWT токены
     path('auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),

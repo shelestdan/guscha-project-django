@@ -33,6 +33,18 @@ class AddressViewSet(viewsets.ModelViewSet):
         """Установка пользователя при создании адреса"""
         serializer.save(user=self.request.user)
     
+    def create(self, request, *args, **kwargs):
+        """Создание адреса с возвратом полного объекта включая ID"""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        
+        # Возвращаем полный объект с ID через AddressSerializer
+        instance = serializer.instance
+        response_serializer = AddressSerializer(instance, context={'request': request})
+        headers = self.get_success_headers(response_serializer.data)
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    
     def perform_destroy(self, instance):
         """Мягкое удаление адреса (деактивация)"""
         instance.is_active = False
