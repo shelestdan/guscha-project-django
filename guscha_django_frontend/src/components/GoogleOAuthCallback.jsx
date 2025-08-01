@@ -58,26 +58,13 @@ const GoogleOAuthCallback = () => {
 
         // Определяем base URL для API
         const getBaseURL = () => {
-          const currentHost = window.location.host;
-          const currentProtocol = window.location.protocol;
-          
-          // Если мы на порту 8000 (прямое обращение к Django)
-          if (currentHost.includes(':8000')) {
-            return `${currentProtocol}//${currentHost}`;
+          // Проверяем переменную окружения
+          if (process.env.REACT_APP_API_URL) {
+            return process.env.REACT_APP_API_URL;
           }
           
-          // Если мы на порту 3000 (React dev server)
-          if (currentHost.includes(':3000')) {
-            return 'http://localhost:8000';
-          }
-          
-          // Если мы на localhost без порта или на порту 80 (Nginx)
-          if (currentHost === 'localhost' || currentHost.includes(':80') || !currentHost.includes(':')) {
-            return `${currentProtocol}//${currentHost.split(':')[0]}`;
-          }
-          
-          // Fallback
-          return 'http://localhost:8000';
+          // Для контейнеризованного развертывания с nginx используем текущий origin
+          return window.location.origin;
         };
 
         const baseURL = getBaseURL();

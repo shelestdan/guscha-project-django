@@ -2,23 +2,16 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { getCartSessionId } from '../utils/cartSession';
 
-// Автоматическое определение baseURL в зависимости от того, откуда загружен фронтенд
+// Автоматическое определение baseURL для работы с nginx в контейнере
 const getBaseURL = () => {
-  const currentHost = window.location.host;
-  const currentProtocol = window.location.protocol;
-  
-  // Если фронтенд загружен с Django-сервера (порт 8000), используем его же для API
-  if (currentHost.includes(':8000')) {
-    return `${currentProtocol}//${currentHost}`;
+  // Проверяем переменную окружения
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
   }
   
-  // Если фронтенд на development сервере (порт 3000), используем Nginx на 80
-  if (currentHost.includes(':3000')) {
-    return 'http://localhost';
-  }
-  
-  // По умолчанию используем localhost (Nginx на порту 80)
-  return 'http://localhost';
+  // Для контейнеризованного развертывания с nginx используем текущий origin
+  // Это работает как для разработки, так и для продакшена
+  return window.location.origin;
 };
 
 const instance = axios.create({

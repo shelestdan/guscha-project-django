@@ -18,25 +18,13 @@ interface AppConfig {
 }
 
 const getBaseURL = (): string => {
-  const currentHost = window.location.host;
-  const currentProtocol = window.location.protocol;
-  
   // Environment variable takes precedence
   if (process.env.REACT_APP_API_URL) {
     return process.env.REACT_APP_API_URL;
   }
   
-  // If frontend loaded from Django server (port 8000), use it for API
-  if (currentHost.includes(':8000')) {
-    return `${currentProtocol}//${currentHost}`;
-  }
-  
-  // If frontend on development server (port 3000), use Nginx on 80
-  if (currentHost.includes(':3000')) {
-    return process.env.REACT_APP_API_URL || 'http://localhost';
-  }
-  
-  // Default to current origin
+  // For containerized deployment with nginx, use current origin
+  // This works for both development and production environments
   return window.location.origin;
 };
 
