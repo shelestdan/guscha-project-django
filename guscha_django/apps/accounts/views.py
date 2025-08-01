@@ -999,6 +999,7 @@ def telegram_password_reset_confirm(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@csrf_exempt
 def create_qr_code(request):
     """Создание QR кода"""
     try:
@@ -1024,8 +1025,11 @@ def create_qr_code(request):
             )
         
         qr_service = QRService()
-        # Создаем QR код с правильным base_url для nginx (порт 80)
-        base_url = 'http://localhost'
+        # Динамически определяем base_url на основе запроса
+        scheme = 'https' if request.is_secure() else 'http'
+        host = request.get_host()
+        base_url = f'{scheme}://{host}'
+        
         result = qr_service.create_qr_code(
             base_url=base_url,
             pending_registration_id=pending_registration_id

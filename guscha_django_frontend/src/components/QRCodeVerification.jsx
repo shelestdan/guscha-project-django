@@ -3,6 +3,7 @@ import { FiMessageCircle, FiCheck, FiX, FiRefreshCw } from 'react-icons/fi';
 import { QRCodeSVG } from 'qrcode.react';
 import { useToast } from '../hooks/useToast';
 import { useAuth } from '../hooks/useAuth';
+import axiosInstance from '../api/axiosInstance';
 import '../styles/QRCodeVerification.css';
 
 const QRCodeVerification = ({ onVerificationComplete, onBack, userData }) => {
@@ -35,8 +36,8 @@ const QRCodeVerification = ({ onVerificationComplete, onBack, userData }) => {
     if (step === 'waiting' && qrData?.qr_id) {
       statusCheckRef.current = setInterval(async () => {
         try {
-          const response = await fetch(`/api/accounts/qr/status/${qrData.qr_id}/`);
-          const status = await response.json();
+          const response = await axiosInstance.get(`/api/accounts/qr/status/${qrData.qr_id}/`);
+          const status = response.data;
           
           // Проверяем новое поле verification_code_ready
           if (status.qr_data?.verification_code_ready) {
@@ -89,23 +90,13 @@ const QRCodeVerification = ({ onVerificationComplete, onBack, userData }) => {
     setStep('loading');
     
     try {
-      const response = await fetch('/api/accounts/qr/create/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type: 'qr_registration',
-          description: 'QR код для регистрации',
-          pending_registration_id: userData?.verification_id
-        }),
+      const response = await axiosInstance.post('/api/accounts/qr/create/', {
+        type: 'qr_registration',
+        description: 'QR код для регистрации',
+        pending_registration_id: userData?.verification_id
       });
       
-      if (!response.ok) {
-        throw new Error('Ошибка создания QR-кода');
-      }
-      
-      const data = await response.json();
+      const data = response.data;
       // Сохраняем данные QR-кода
       setQrData({
         qr_id: data.qr_code,
