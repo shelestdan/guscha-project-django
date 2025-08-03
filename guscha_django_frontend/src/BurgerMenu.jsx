@@ -83,7 +83,7 @@ const BurgerMenu = ({ black = false, menuLabelVisible = true }) => {
       />
       <aside className={`burger-panel${isOpen ? ' open' : ''}`}> 
         <nav className="burger-nav">
-          <Link to="/" onClick={closeMenu}>Коллекция</Link>
+          <Link to="/collections" onClick={closeMenu}>Коллекции</Link>
           <Link to="/account" onClick={closeMenu}>Аккаунт</Link>
           <button 
             className="burger-nav-button" 

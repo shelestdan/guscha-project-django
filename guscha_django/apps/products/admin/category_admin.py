@@ -10,6 +10,8 @@ from django.contrib import admin
 from django.urls import reverse
 from django.http import HttpResponseRedirect
 from django.utils.translation import gettext_lazy as _
+from django.db import models
+from unfold.contrib.forms.widgets import WysiwygWidget
 
 from .base_admin import BaseProductAdmin
 from ..models import Category
@@ -31,6 +33,11 @@ class CategoryAdmin(BaseProductAdmin):
     prepopulated_fields = {'slug': ('name',)}
     list_editable = ['is_active', 'sort_order']
     readonly_fields = ['created_at', 'updated_at']
+    
+    # Настройки формы
+    formfield_overrides = {
+        models.TextField: {'widget': WysiwygWidget()},
+    }
     
     # Используем вкладки django-unfold с обводкой как у пользователей
     fieldsets = (

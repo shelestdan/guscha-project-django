@@ -33,6 +33,7 @@ urlpatterns = [
     path('api/orders/', include('apps.orders.urls')),
     path('api/cart/', include('apps.cart.urls')),
     path('api/addresses/', include('apps.addresses.urls')),
+    path('api/collections/', include('apps.collections.urls')),
     path('api/auth/', include('allauth.urls')),
 
     path('api/admin/', include('apps.core.urls')),  # API для админки

@@ -41,11 +41,11 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    'unfold',  # Django Unfold должен быть первым
+    'unfold',  # Django Unfold для красивой админки
     'unfold.contrib.filters',  # Опциональные фильтры
     'unfold.contrib.forms',  # Опциональные формы
-    # 'unfold.contrib.import_export',  # Временно отключено для отладки
-    # 'unfold.contrib.simple_history',  # Временно отключено для отладки
+    'unfold.contrib.import_export',  # Импорт/экспорт для Unfold
+    'unfold.contrib.simple_history',  # История для Unfold
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -83,6 +83,7 @@ INSTALLED_APPS = [
     'apps.cart.apps.CartConfig',
     'apps.core.apps.CoreConfig',
     'apps.addresses.apps.AddressesConfig',
+    'apps.collections.apps.CollectionsConfig',
     'telegram_bot',
 
 ]

@@ -71,6 +71,46 @@ class ImageProcessor:
         except Exception:
             return (None, None)
     
+    def get_image_metadata(self, image_file):
+        """
+        Получает метаданные изображения.
+        
+        Args:
+            image_file: Файл изображения (Django FieldFile или путь)
+            
+        Returns:
+            dict: Словарь с метаданными изображения или None при ошибке
+        """
+        try:
+            from PIL import Image
+            
+            # Определяем путь к файлу
+            if hasattr(image_file, 'path'):
+                image_path = image_file.path
+            elif hasattr(image_file, 'file'):
+                image_path = image_file.file.name
+            else:
+                image_path = str(image_file)
+            
+            # Получаем размер файла
+            file_size = None
+            if hasattr(image_file, 'size'):
+                file_size = image_file.size
+            elif os.path.exists(image_path):
+                file_size = os.path.getsize(image_path)
+            
+            # Открываем изображение и получаем размеры
+            with Image.open(image_path) as img:
+                return {
+                    'width': img.width,
+                    'height': img.height,
+                    'file_size': file_size,
+                    'format': img.format,
+                    'mode': img.mode
+                }
+        except Exception:
+            return None
+    
     def optimize_image(self, image_path, max_width=1920, max_height=1080, quality=85):
         """
         Оптимизирует изображение для веб-использования.

@@ -428,6 +428,7 @@
 .form-group select {
   width: 100%;
   padding: 0.75rem;
+  padding-left: 2.5rem;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 1rem;

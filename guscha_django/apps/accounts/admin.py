@@ -5,8 +5,10 @@ from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.db.models import Count, Q
+from django.db import models
 from django.utils import timezone
 from datetime import timedelta
+from unfold.contrib.forms.widgets import WysiwygWidget
 import logging
 
 from .models import (
@@ -60,6 +62,11 @@ class UserAdmin(BaseUserAdmin):
         'telegram_chat_id', 'is_telegram_verified',
         'security_info', 'account_statistics'
     )
+    
+    # Настройки формы
+    formfield_overrides = {
+        models.TextField: {'widget': WysiwygWidget()},
+    }
     
     # Группировка полей
     fieldsets = (
@@ -294,7 +301,12 @@ class UserAdmin(BaseUserAdmin):
 
 @admin.register(PendingUserRegistration)
 class PendingUserRegistrationAdmin(admin.ModelAdmin):
-    """Административная панель для ожидающих регистрации"""
+    """Административная панель для ожидающих регистрации пользователей"""
+    
+    # Настройки формы
+    formfield_overrides = {
+        models.TextField: {'widget': WysiwygWidget()},
+    }
     
     list_display = ('email', 'full_name', 'created_at', 'expires_at', 'is_expired', 'action_buttons')
     list_filter = ('created_at', 'expires_at')

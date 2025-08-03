@@ -13,6 +13,8 @@ from django.urls import reverse
 from django.http import HttpResponseRedirect
 from django.contrib import messages
 from django.db import transaction
+from django.db import models
+from unfold.contrib.forms.widgets import WysiwygWidget
 
 from .base_admin import BaseProductAdmin, BaseImageInline, BaseSizeInline
 from ..models import Product, ProductSize, ProductImage
@@ -182,6 +184,11 @@ class ProductAdmin(BaseProductAdmin):
     
     # Размеры и изображения управляются через inline-формы в отдельных вкладках
     inlines = [ProductSizeInline, ProductImageInline]
+    
+    # Настройки формы
+    formfield_overrides = {
+        models.TextField: {'widget': WysiwygWidget()},
+    }
     
     def image_preview(self, obj):
         """Предварительный просмотр изображения товара"""

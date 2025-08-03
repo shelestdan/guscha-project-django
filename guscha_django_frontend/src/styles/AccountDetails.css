@@ -243,3 +243,13 @@
     max-width: 100vw;
   }
 }
+
+/* Стили для PhoneInput селектора страны */
+.PhoneInputCountrySelect {
+  padding-left: 3rem;
+}
+
+/* Отступ для контейнера флага */
+.PhoneInputCountry {
+  margin-left: 0.75rem;
+}

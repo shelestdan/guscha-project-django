@@ -15,6 +15,8 @@ const PreorderDetailPage = lazy(() => import('./pages/PreorderDetailPage'));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
 const OrderConfirmationPage = lazy(() => import('./pages/OrderConfirmationPage'));
 const AddressesPage = lazy(() => import('./pages/AddressesPage'));
+const CollectionsPage = lazy(() => import('./pages/CollectionsPage'));
+const CollectionDetailPage = lazy(() => import('./pages/CollectionDetailPage'));
 const PasswordResetConfirm = lazy(() => import('./components/PasswordResetConfirm'));
 const GoogleOAuthCallback = lazy(() => import('./components/GoogleOAuthCallback'));
 
@@ -65,6 +67,8 @@ function AppContent() {
             <Route path="/" element={<HomePage />} />
             <Route path="/products/:slug" element={<ProductDetailPage />} />
             <Route path="/preorders/:id" element={<PreorderDetailPage />} />
+            <Route path="/collections" element={<CollectionsPage />} />
+            <Route path="/collections/:slug" element={<CollectionDetailPage />} />
             <Route path="/account" element={<Account />} />
             <Route path="/addresses" element={<AddressesPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />

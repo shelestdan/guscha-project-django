@@ -94,7 +94,7 @@
 
 /* Инпуты */
 .form-input {
-  padding: 0.875rem 1rem;
+  padding: 0.875rem 1rem 0.875rem 2.5rem;
   border: 1px solid #e0e0e0;
   border-radius: 6px;
   font-size: 0.95rem;
@@ -167,6 +167,15 @@
 .phone-input-wrapper .phone-input:focus-within {
   border-color: #000000;
   box-shadow: none;
+}
+
+.phone-input-wrapper .phone-input .PhoneInputCountrySelect {
+  padding-left: 3rem;
+}
+
+/* Отступ для контейнера флага */
+.phone-input-wrapper .phone-input .PhoneInputCountry {
+  margin-left: 0.75rem;
 }
 
 /* Контейнер пароля */

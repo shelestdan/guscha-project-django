@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { FaTimes, FaTelegram } from 'react-icons/fa';
-import { SiTelegram } from 'react-icons/si';
+import { FaTimes } from 'react-icons/fa';
+import { ReactComponent as TelegramIcon } from '../assets/TelegramIcon.svg';
 import '../styles/TelegramLoginModal.css';
 
 const TelegramLoginModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
@@ -86,7 +86,7 @@ const TelegramLoginModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
       <div className="telegram-modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="telegram-modal-header">
           <div className="telegram-modal-title">
-            <SiTelegram className="telegram-icon" />
+            <TelegramIcon className="telegram-icon" />
             <h2>Вход через Telegram</h2>
           </div>
           <button 
@@ -134,7 +134,7 @@ const TelegramLoginModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
                 </>
               ) : (
                 <>
-                  <FaTelegram />
+                  <TelegramIcon />
                   Войти через Telegram
                 </>
               )}
