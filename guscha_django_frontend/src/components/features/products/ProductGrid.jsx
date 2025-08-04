@@ -56,6 +56,9 @@ export default function ProductGrid() {
                     alt={product.name} 
                     loading="lazy"
                     className="product-image"
+                    onContextMenu={(e) => e.preventDefault()}
+                    onDragStart={(e) => e.preventDefault()}
+                    draggable="false"
                   />
                 </div>
                 

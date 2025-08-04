@@ -53,7 +53,7 @@ const Account = () => {
                 onClick={() => setActiveTab("details")}
                 type="button"
               >
-                ACCOUNT DETAILS
+                ДЕТАЛИ АККАУНТА
               </button>
               <button
                 className={`account-figma-menu-item account-menu-item-nowrap${activeTab === "addresses" ? " account-figma-menu-item-active" : ""}`}
@@ -67,7 +67,7 @@ const Account = () => {
                 onClick={() => setActiveTab("orders")}
                 type="button"
               >
-                ORDER HISTORY
+                ИСТОРИЯ ЗАКАЗОВ
               </button>
               <button
                 className={`account-figma-menu-item account-menu-item-nowrap${activeTab === "password-reset" ? " account-figma-menu-item-active" : ""}`}
@@ -81,7 +81,7 @@ const Account = () => {
                 onClick={handleLogout}
                 type="button"
               >
-                LOGOUT
+                ВЫХОД
               </button>
             </div>
           </div>

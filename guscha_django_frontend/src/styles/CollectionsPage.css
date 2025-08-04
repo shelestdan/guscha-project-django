@@ -9,59 +9,61 @@
   min-height: 100vh;
 }
 
-/* Левая панель - минималистичная */
+/* Левая панель - точная копия стилей аккаунта */
 .collections-sidebar {
-  width: 250px;
-  background: #ffffff;
-  border-right: 1px solid #000000;
-  padding: 0;
+  width: 320px;
+  background: #fff;
+  border-right: 1px solid #e5e5e5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 48px 0 0 48px;
   position: fixed;
   height: 100vh;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .collections-sidebar h3 {
-  font-size: 1rem;
-  font-weight: 400;
-  color: #000000;
-  margin: 0;
-  padding: 1.5rem 1rem 1rem 1rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  border-bottom: none;
+  display: none;
 }
 
 .collections-list {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 32px;
+  align-items: flex-start;
+  margin-top: 0;
 }
 
 .collection-item {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  padding: 1rem;
+  font-size: 24px;
+  color: #bdbdbd;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: color 0.2s;
+  user-select: none;
+  background: none;
   border: none;
-  border-bottom: 1px solid #f0f0f0;
+  outline: none;
+  padding: 0;
+  white-space: nowrap;
 }
 
 .collection-item:hover {
-  background: #f8f8f8;
+  color: #888;
 }
 
 .collection-item.active {
-  background: #000000;
-  color: #ffffff;
+  color: #222;
 }
 
 .collection-name {
-  font-weight: 400;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: 24px;
+  color: inherit;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: none;
 }
 
 .collection-count {
@@ -80,7 +82,7 @@
 /* Основная область - минималистичная */
 .collections-main {
   flex: 1;
-  margin-left: 250px;
+  margin-left: 320px;
   padding: 0;
   background: #ffffff;
 }
@@ -372,47 +374,47 @@
   color: #000000;
 }
 
-/* Адаптивность - минималистичная */
-@media (max-width: 768px) {
-  .collections-sidebar {
-    width: 200px;
-  }
-  
+/* Адаптивность - соответствует панели аккаунта */
+@media (max-width: 900px) {
   .collections-main {
-    margin-left: 200px;
-    padding: 0;
+    padding: 32px 0 0 0;
+    margin-left: 160px;
   }
-  
-  .collection-header h1 {
-    font-size: 1.2rem;
-    letter-spacing: 1px;
-  }
-  
-  .placeholder-content h2 {
-    font-size: 1rem;
-    letter-spacing: 2px;
-  }
-  
-  .collection-content-area {
-    padding: 2rem 1rem;
+  .collections-sidebar {
+    padding-left: 16px;
+    width: 160px;
   }
 }
 
-@media (max-width: 576px) {
-  .collections-layout {
-    flex-direction: column;
-  }
-  
+@media (max-width: 600px) {
   .collections-sidebar {
     position: relative;
     width: 100%;
     height: auto;
+    padding: 16px;
     border-right: none;
-    border-bottom: 1px solid #000000;
+    border-bottom: 1px solid #e5e5e5;
   }
-  
+
   .collections-main {
     margin-left: 0;
+    height: auto;
+    overflow-y: visible;
+  }
+
+  .collections-layout {
+    flex-direction: column;
+  }
+
+  .collections-list {
+    flex-direction: row;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 0;
+  }
+
+  .collection-item {
+    font-size: 18px;
   }
   
   .collection-header {

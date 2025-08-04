@@ -9,7 +9,8 @@ export default function ProductShowcase() {
   const [current, setCurrent] = useState(0);
   const [animating, setAnimating] = useState(false);
   const [nextIndex, setNextIndex] = useState(null);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 900);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 1200);
+  const [preloadedImages, setPreloadedImages] = useState(new Set());
   
   useEffect(() => {
     setStatus('loading');
@@ -31,10 +32,33 @@ export default function ProductShowcase() {
   }, []);
 
   useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth <= 900);
+    const onResize = () => setIsMobile(window.innerWidth <= 1200);
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
+
+  // Предзагрузка изображений
+  useEffect(() => {
+    if (products.length > 0) {
+      const preloadImage = (src) => {
+        if (src && !preloadedImages.has(src)) {
+          const img = new Image();
+          img.src = src;
+          img.onload = () => {
+            setPreloadedImages(prev => new Set([...prev, src]));
+          };
+        }
+      };
+
+      // Предзагружаем изображения следующего товара
+      const nextIdx = (current + 1) % products.length;
+      const nextProduct = products[nextIdx];
+      if (nextProduct) {
+        preloadImage(nextProduct.model_image || nextProduct.image_url);
+        preloadImage(nextProduct.product_image || nextProduct.image_url);
+      }
+    }
+  }, [current, products, preloadedImages]);
 
   const nextProductHandler = () => {
     if (animating || products.length <= 1) return;
@@ -73,23 +97,19 @@ export default function ProductShowcase() {
             <>
               {!isMobile && (
                 <div className="product-showcase-left product-anim-in">
-                  <div className="product-showcase-model">
                   {(product.model_image || product.image_url) ? (
                     <img src={product.model_image || product.image_url} alt={product.name} loading="lazy" />
                   ) : (
                     <div className="placeholder-image">Нет изображения</div>
                   )}
-                  </div>
                 </div>
               )}
               <div className="product-showcase-center product-anim-in">
-                <div className="product-showcase-product">
-                  {(product.product_image || product.image_url) ? (
-                    <img src={product.product_image || product.image_url} alt={product.name} loading="lazy" />
-                  ) : (
-                    <div className="placeholder-image">Нет изображения</div>
-                  )}
-                </div>
+                {(product.product_image || product.image_url) ? (
+                  <img src={product.product_image || product.image_url} alt={product.name} loading="lazy" />
+                ) : (
+                  <div className="placeholder-image">Нет изображения</div>
+                )}
               </div>
             </>
           )}
@@ -99,45 +119,37 @@ export default function ProductShowcase() {
               <div className="product-showcase-overlay">
                 {!isMobile && (
                   <div className="product-showcase-left product-anim-out">
-                    <div className="product-showcase-model">
-                      {(product.model_image || product.image_url) ? (
-                        <img src={product.model_image || product.image_url} alt={product.name} loading="lazy" />
-                      ) : (
-                        <div className="placeholder-image">Нет изображения</div>
-                      )}
-                    </div>
-                  </div>
-                )}
-                <div className="product-showcase-center product-anim-out">
-                  <div className="product-showcase-product">
-                    {(product.product_image || product.image_url) ? (
-                      <img src={product.product_image || product.image_url} alt={product.name} loading="lazy" />
+                    {(product.model_image || product.image_url) ? (
+                      <img src={product.model_image || product.image_url} alt={product.name} loading="lazy" />
                     ) : (
                       <div className="placeholder-image">Нет изображения</div>
                     )}
                   </div>
+                )}
+                <div className="product-showcase-center product-anim-out">
+                  {(product.product_image || product.image_url) ? (
+                    <img src={product.product_image || product.image_url} alt={product.name} loading="lazy" />
+                  ) : (
+                    <div className="placeholder-image">Нет изображения</div>
+                  )}
                 </div>
               </div>
               {/* Новый комплект */}
               {!isMobile && (
                 <div className="product-showcase-left product-anim-in product-anim-new">
-                  <div className="product-showcase-model">
-                    {(nextProduct.model_image || nextProduct.image_url) ? (
-                      <img src={nextProduct.model_image || nextProduct.image_url} alt={nextProduct.name} loading="lazy" />
-                    ) : (
-                      <div className="placeholder-image">Нет изображения</div>
-                    )}
-                  </div>
-                </div>
-              )}
-              <div className="product-showcase-center product-anim-in product-anim-new">
-                <div className="product-showcase-product">
-                  {(nextProduct.product_image || nextProduct.image_url) ? (
-                    <img src={nextProduct.product_image || nextProduct.image_url} alt={nextProduct.name} loading="lazy" />
+                  {(nextProduct.model_image || nextProduct.image_url) ? (
+                    <img src={nextProduct.model_image || nextProduct.image_url} alt={nextProduct.name} loading="lazy" />
                   ) : (
                     <div className="placeholder-image">Нет изображения</div>
                   )}
                 </div>
+              )}
+              <div className="product-showcase-center product-anim-in product-anim-new">
+                {(nextProduct.product_image || nextProduct.image_url) ? (
+                  <img src={nextProduct.product_image || nextProduct.image_url} alt={nextProduct.name} loading="lazy" />
+                ) : (
+                  <div className="placeholder-image">Нет изображения</div>
+                )}
               </div>
             </>
           )}
