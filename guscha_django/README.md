@@ -4,7 +4,24 @@
 
 ## 🚀 Быстрый запуск
 
-### Локальная разработка
+### Telegram Bot с Ngrok (Рекомендуется)
+
+Для корректной работы Telegram Bot с inline кнопками:
+
+#### Windows (PowerShell)
+```powershell
+.\setup_ngrok.ps1
+```
+
+#### Ручная настройка
+1. Получите authtoken на [ngrok.com](https://dashboard.ngrok.com/get-started/your-authtoken)
+2. Скопируйте `.env.example` в `.env`
+3. Установите `NGROK_AUTHTOKEN=ваш_токен` в `.env`
+4. Запустите: `docker-compose up --build`
+
+📖 **Подробная инструкция**: [NGROK_SETUP.md](NGROK_SETUP.md)
+
+### Локальная разработка (без Telegram Bot)
 
 #### Windows (PowerShell)
 ```powershell

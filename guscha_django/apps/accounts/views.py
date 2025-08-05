@@ -31,7 +31,7 @@ User = get_user_model()
 
 class BaseViewMixin:
     """Базовый миксин для представлений с общими методами"""
-    
+
     def get_client_info(self, request) -> Dict[str, Any]:
         """Получение информации о клиенте"""
         return {
@@ -225,13 +225,13 @@ class UserViewSet(BaseViewMixin, viewsets.ModelViewSet):
                 try:
                     user = User.objects.get(phone=normalized_phone, is_active=True)
                 except User.DoesNotExist:
-                    pass
+                    logger.debug(f"Пользователь с телефоном {normalized_phone} не найден")
             else:
                 # Поиск по email
                 try:
                     user = User.objects.get(email=login_field.lower().strip(), is_active=True)
                 except User.DoesNotExist:
-                    pass
+                    logger.debug(f"Пользователь с email {login_field.lower().strip()} не найден")
             
             # Если пользователь не найден
             if not user:
@@ -341,8 +341,9 @@ class UserViewSet(BaseViewMixin, viewsets.ModelViewSet):
                     )
                 
                 # Обмениваем код на токен
-                token_response = requests.post(
+                token_response = make_secure_request(
                     'https://oauth2.googleapis.com/token',
+                    method='POST',
                     data={
                         'client_id': google_client_id,
                         'client_secret': google_client_secret,
@@ -369,8 +370,9 @@ class UserViewSet(BaseViewMixin, viewsets.ModelViewSet):
                     )
                 
                 # Получаем информацию о пользователе
-                user_response = requests.get(
-                    f'https://www.googleapis.com/oauth2/v1/userinfo?access_token={access_token}'
+                user_response = make_secure_request(
+                    f'https://www.googleapis.com/oauth2/v1/userinfo?access_token={access_token}',
+                    method='GET'
                 )
                 
                 if user_response.status_code != 200:
@@ -884,7 +886,12 @@ def telegram_verify_code(request):
                 'success': True,
                 'requires_registration': True,
                 'message': 'Код успешно проверен. Пожалуйста, завершите регистрацию на сайте.',
-                'verification_code': verification_code
+                'verification_code': {
+                    'code': verification_code.code_hash,  # Используем хеш кода для безопасности
+                    'is_used': verification_code.is_used,
+                    'expires_at': verification_code.expires_at.isoformat() if verification_code.expires_at else None,
+                    'created_at': verification_code.created_at.isoformat() if verification_code.created_at else None
+                }
             })
         
         if not user:
@@ -932,7 +939,7 @@ def telegram_password_reset_request(request):
         telegram_username = request.data.get('telegram_username')
         if not telegram_username:
             return Response(
-                {'error': 'Telegram username обязателен'},
+                {'error': 'Telegram username обязателна'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -1180,9 +1187,10 @@ def qr_bot_started(request):
         
         verification_code = result.get('verification_code')
         
+        display_code = verification_code.generate_secure_code() if verification_code else None
         return Response({
             'message': 'Запуск бота отмечен',
-            'verification_code': verification_code.code if verification_code else None
+            'verification_code': display_code
         })
         
     except Exception as e:
@@ -1240,11 +1248,13 @@ def link_telegram(request):
             )
         
         telegram_service = TelegramService()
-        result = telegram_service.link_telegram_account(
+        success = telegram_service.link_telegram_to_user(
             request.user,
-            telegram_username,
-            telegram_chat_id
+            telegram_chat_id,
+            telegram_username
         )
+        
+        result = {'success': success}
         
         if not result['success']:
             return Response(
@@ -1270,7 +1280,9 @@ def unlink_telegram(request):
     """Отвязка Telegram аккаунта"""
     try:
         telegram_service = TelegramService()
-        result = telegram_service.unlink_telegram_account(request.user)
+        success = telegram_service.unlink_telegram_from_user(request.user)
+        
+        result = {'success': success}
         
         if not result['success']:
             return Response(
@@ -1288,3 +1300,126 @@ def unlink_telegram(request):
             {'error': 'Ошибка отвязки Telegram аккаунта'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def authenticated_password_reset(request):
+    """Сброс пароля для авторизованного пользователя через Telegram"""
+    try:
+        # Проверка безопасности
+        client_info = {
+            'ip_address': SecurityUtils.get_client_ip(request),
+            'user_agent': SecurityUtils.get_user_agent(request)
+        }
+        
+        security_check = SecurityUtils.check_rate_limit(
+            f"auth_password_reset_{request.user.id}",
+            max_attempts=3,
+            window_minutes=60
+        )
+        if not security_check['allowed']:
+            return Response(
+                {'error': 'Превышен лимит запросов на сброс пароля'},
+                status=status.HTTP_429_TOO_MANY_REQUESTS
+            )
+        
+        telegram_service = TelegramService()
+        result = telegram_service.initiate_authenticated_password_reset(
+            user=request.user,
+            request=request
+        )
+        
+        if not result['success']:
+            return Response(
+                {'error': result['error']},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        return Response({
+            'message': 'Ссылка для сброса пароля отправлена в Telegram',
+            'token_id': result.get('token_id')
+        })
+        
+    except Exception as e:
+        logger.error(f'Error in authenticated_password_reset: {str(e)}')
+        return Response(
+            {'error': 'Ошибка при инициации сброса пароля'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def confirm_password_reset_token(request):
+    """Подтверждение сброса пароля по токену"""
+    try:
+        token = request.data.get('token')
+        new_password = request.data.get('new_password')
+        
+        if not token or not new_password:
+            return Response(
+                {'error': 'Токен и новый пароль обязательны'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Проверка безопасности
+        client_info = {
+            'ip_address': SecurityUtils.get_client_ip(request),
+            'user_agent': SecurityUtils.get_user_agent(request)
+        }
+        
+        security_check = SecurityUtils.check_rate_limit(
+            f"confirm_password_reset_{client_info['ip_address']}",
+            max_attempts=5,
+            window_minutes=60
+        )
+        if not security_check['allowed']:
+            return Response(
+                {'error': 'Превышен лимит попыток подтверждения'},
+                status=status.HTTP_429_TOO_MANY_REQUESTS
+            )
+        
+        telegram_service = TelegramService()
+        result = telegram_service.confirm_password_reset_with_token(
+            token=token,
+            new_password=new_password,
+            client_info=client_info
+        )
+        
+        if not result['success']:
+            return Response(
+                {'error': result['error']},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        return Response({
+            'message': 'Пароль успешно изменен'
+        })
+        
+    except Exception as e:
+        logger.error(f'Error in confirm_password_reset_token: {str(e)}')
+        return Response(
+            {'error': 'Ошибка при подтверждении сброса пароля'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+import requests
+
+# Добавить timeout ко всем requests
+DEFAULT_TIMEOUT = 30
+
+def make_secure_request(url, method='GET', **kwargs):
+    """Безопасный wrapper для HTTP запросов"""
+    kwargs.setdefault('timeout', DEFAULT_TIMEOUT)
+    kwargs.setdefault('verify', True)  # Проверка SSL
+    
+    # Явно передаем timeout для Bandit
+    timeout = kwargs.get('timeout', DEFAULT_TIMEOUT)
+    
+    if method.upper() == 'POST':
+        return requests.post(url, timeout=timeout, **{k: v for k, v in kwargs.items() if k != 'timeout'})
+    elif method.upper() == 'GET':
+        return requests.get(url, timeout=timeout, **{k: v for k, v in kwargs.items() if k != 'timeout'})
+    else:
+        raise ValueError(f"Unsupported HTTP method: {method}")

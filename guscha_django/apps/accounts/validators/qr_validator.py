@@ -495,10 +495,10 @@ class QRValidator:
             return qr_uuid[:length].upper()
         else:
             # Если UUID короче нужной длины, дополняем случайными символами
-            import random
+            import secrets
             import string
             additional_chars = ''.join(
-                random.choice(string.ascii_uppercase + string.digits) 
+                secrets.choice(string.ascii_uppercase + string.digits) 
                 for _ in range(length - len(qr_uuid))
             )
             return (qr_uuid + additional_chars).upper()

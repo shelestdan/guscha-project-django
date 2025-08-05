@@ -240,21 +240,34 @@ class UserCreateSerializer(BaseSerializer, serializers.ModelSerializer):
     
     def create(self, validated_data):
         """Создание pending регистрации"""
+        from django.contrib.auth.hashers import make_password
+        from django.utils import timezone
+        from datetime import timedelta
+        import logging
+        
+        logger = logging.getLogger(__name__)
+        
         # Удаляем поля, которые не нужны для модели
         validated_data.pop('password_confirm', None)
         validated_data.pop('terms_accepted', None)
         
-        # Удаляем предыдущие незавершённые pending регистрации для этого email
-        PendingUserRegistration.objects.filter(email=validated_data['email']).delete()
-        
-        # Создаем pending регистрацию
-        from django.contrib.auth.hashers import make_password
-        
         password = validated_data.pop('password')
-        pending_registration = PendingUserRegistration.objects.create(
-            **validated_data,
-            password_hash=make_password(password)
+        email = validated_data['email']
+        
+        logger.info(f"Создание/обновление PendingUserRegistration для email: {email}")
+        
+        # Используем update_or_create для избежания race condition
+        pending_registration, created = PendingUserRegistration.objects.update_or_create(
+            email=email,
+            defaults={
+                **validated_data,
+                'password_hash': make_password(password),
+                'expires_at': timezone.now() + timedelta(minutes=20)
+            }
         )
+        
+        action = "создан" if created else "обновлен"
+        logger.info(f"PendingUserRegistration {action}: ID={pending_registration.id}, email={email}, expires_at={pending_registration.expires_at}")
         
         # Возвращаем объект с ID pending регистрации для дальнейшего использования
         user_data = validated_data.copy()

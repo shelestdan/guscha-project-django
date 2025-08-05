@@ -84,6 +84,15 @@ urlpatterns = [
          views.unlink_telegram, 
          name='telegram_unlink'),
     
+    # Авторизованный сброс пароля через Telegram
+    path('telegram/authenticated-password-reset/', 
+         views.authenticated_password_reset, 
+         name='authenticated_password_reset'),
+    path('password-reset/confirm-token/', 
+         views.confirm_password_reset_token, 
+         name='confirm_password_reset_token'),
+
+    
     # === QR коды ===
     # Создание QR кода
     path('qr/create/', 

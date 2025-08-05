@@ -6,11 +6,11 @@ from django.conf import settings
 from datetime import timedelta
 from typing import Optional, Dict, Any, Tuple
 import logging
-import random
+import secrets
 import string
 from asgiref.sync import async_to_sync
 
-from ..models import TelegramVerificationCode, PendingUserRegistration, User
+from ..models import TelegramVerificationCode, PendingUserRegistration, User, PasswordResetToken
 from ..validators import TelegramValidator
 from ..repositories import TelegramRepository, UserRepository
 from telegram_bot.bot import send_verification_code_to_telegram
@@ -26,6 +26,20 @@ class TelegramService:
         self.user_repository = UserRepository()
         self.telegram_validator = TelegramValidator()
     
+    def _normalize_phone(self, phone: Optional[str]) -> Optional[str]:
+        """Нормализация номера телефона"""
+        if not phone:
+            return None
+        # Удаляем все нецифровые символы
+        normalized = ''.join(filter(str.isdigit, phone))
+        # Если номер начинается с 8, заменяем на 7
+        if normalized.startswith('8') and len(normalized) == 11:
+            normalized = '7' + normalized[1:]
+        # Добавляем + в начало
+        if normalized and not normalized.startswith('+'):
+            normalized = '+' + normalized
+        return normalized
+    
     def generate_verification_code_for_user(self, email: str) -> Dict[str, Any]:
         """Генерация кода верификации для пользователя по email"""
         try:
@@ -39,15 +53,16 @@ class TelegramService:
             
             # Создание кода верификации с номером телефона пользователя
             verification_code = self.create_verification_code(
-                telegram_chat_id='',  # Пустой для веб-регистрации
+                telegram_chat_id=None,  # Пустой для веб-регистрации
                 verification_type='qr_registration',
                 user=user,
                 telegram_phone=user.phone
             )
             
+            display_code = verification_code.generate_secure_code()
             return {
                 'success': True,
-                'verification_code': verification_code.code
+                'verification_code': display_code
             }
             
         except Exception as e:
@@ -59,11 +74,11 @@ class TelegramService:
     
     def generate_verification_code(self) -> str:
         """Простая генерация 6-значного кода"""
-        return ''.join(random.choices(string.digits, k=6))
+        return ''.join(secrets.choice(string.digits) for _ in range(6))
     
     def create_verification_code(
         self, 
-        telegram_chat_id: str, 
+        telegram_chat_id: Optional[str], 
         verification_type: str = 'registration',
         user: Optional[User] = None,
         pending_registration: Optional[PendingUserRegistration] = None,
@@ -77,14 +92,19 @@ class TelegramService:
             self.telegram_validator.validate_verification_type(verification_type)
             
             with transaction.atomic():
-                # Деактивация старых кодов
-                self.telegram_repository.deactivate_old_codes(
-                    telegram_chat_id, verification_type
-                )
-                
                 # Создание нового кода
                 code = self.generate_verification_code()  # Без параметров возвращает строку
-                expires_at = timezone.now() + timedelta(minutes=10)
+                
+                # Устанавливаем разное время жизни в зависимости от типа верификации
+                current_time = timezone.now()
+                if verification_type == 'qr_registration':
+                    expires_at = current_time + timedelta(minutes=20)  # 20 минут для QR-регистрации
+                    logger.info(f"Установлено время истечения для QR-регистрации: {expires_at} (через 20 минут от {current_time})")
+                else:
+                    expires_at = current_time + timedelta(minutes=5)   # 5 минут для обычной регистрации
+                    logger.info(f"Установлено время истечения для обычной регистрации: {expires_at} (через 5 минут от {current_time})")
+                
+                logger.info(f"Создание кода верификации с параметрами: code={code}, chat_id='{telegram_chat_id}', expires_at={expires_at}, type={verification_type}")
                 
                 verification_code = self.telegram_repository.create_verification_code(
                     code=code,
@@ -96,7 +116,12 @@ class TelegramService:
                     telegram_phone=telegram_phone
                 )
                 
-                logger.info(f"Создан код верификации: {code} для chat_id: '{telegram_chat_id}', type: {verification_type}, user: {user.id if user else None}, phone: {telegram_phone}")
+                # Деактивация старых кодов, исключая только что созданный
+                self.telegram_repository.deactivate_old_codes(
+                    telegram_chat_id, verification_type, exclude_code_id=verification_code.id
+                )
+                
+                logger.info(f"Код верификации создан успешно: ID={verification_code.id}, code={code}, expires_at={verification_code.expires_at}, chat_id='{telegram_chat_id}', type={verification_type}, user={user.id if user else None}, phone={telegram_phone}")
                 return verification_code
                 
         except ValidationError as e:
@@ -122,9 +147,10 @@ class TelegramService:
             )
             
             # Отправка кода через Telegram бота
-            success = send_verification_code_to_telegram(
+            display_code = verification_code.generate_secure_code()
+            success = async_to_sync(send_verification_code_to_telegram)(
                 telegram_chat_id, 
-                verification_code.code
+                display_code
             )
             
             if success:
@@ -146,9 +172,10 @@ class TelegramService:
         """Отправка существующего кода верификации в Telegram"""
         try:
             # Отправка кода через Telegram бота
-            success = send_verification_code_to_telegram(
+            display_code = verification_code.generate_secure_code()
+            success = async_to_sync(send_verification_code_to_telegram)(
                 telegram_chat_id, 
-                verification_code.code
+                display_code
             )
             
             if success:
@@ -228,12 +255,18 @@ class TelegramService:
             # Для QR-регистрации сначала ищем код без привязки к пользователю
             if verification_type == 'qr_registration':
                 logger.info(f"Этап 1: Поиск кода без привязки к пользователю")
-                code_obj = TelegramVerificationCode.objects.filter(
-                    code=verification_code,
+                codes = TelegramVerificationCode.objects.filter(
                     verification_type=verification_type,
                     is_used=False,
                     expires_at__gt=timezone.now()
-                ).first()
+                )
+                # Проверяем каждый код с помощью check_code_match
+                for code_candidate in codes:
+                    logger.info(f"Этап 1: Проверяем код {code_candidate.id}: user={code_candidate.user_id}, pending_registration={code_candidate.pending_registration_id}, phone={code_candidate.pending_registration.phone if code_candidate.pending_registration else 'None'}, telegram_phone={code_candidate.telegram_phone}, chat_id={code_candidate.telegram_chat_id}")
+                    if code_candidate.check_code_match(verification_code):
+                        code_obj = code_candidate
+                        logger.info(f"Этап 1: Найден подходящий код {code_candidate.id}")
+                        break
                 logger.info(f"Этап 1 результат: {'найден' if code_obj else 'не найден'}")
             
             # Если код не найден и указан номер телефона, ищем по пользователю
@@ -243,38 +276,80 @@ class TelegramService:
                 user = self.user_repository.get_by_phone(phone_number)
                 logger.info(f"Пользователь найден: {user.id if user else 'не найден'}")
                 if user:
-                    code_obj = TelegramVerificationCode.objects.filter(
-                        code=verification_code,
+                    codes = TelegramVerificationCode.objects.filter(
                         verification_type=verification_type,
                         is_used=False,
                         expires_at__gt=timezone.now(),
                         user=user
-                    ).first()
+                    )
+                    # Проверяем каждый код с помощью check_code_match
+                    for code_candidate in codes:
+                        logger.info(f"Этап 2: Проверяем код {code_candidate.id}: user={code_candidate.user_id}, pending_registration={code_candidate.pending_registration_id}, phone={code_candidate.pending_registration.phone if code_candidate.pending_registration else 'None'}, telegram_phone={code_candidate.telegram_phone}, chat_id={code_candidate.telegram_chat_id}")
+                        if code_candidate.check_code_match(verification_code):
+                            # Дополнительная проверка для QR-регистрации
+                            if verification_type == 'qr_registration' and code_candidate.pending_registration:
+                                pr_phone = self._normalize_phone(code_candidate.pending_registration.phone)
+                                if pr_phone and pr_phone != phone_number:
+                                    logger.warning(f"Этап 2: Номер телефона не совпадает - pending_registration.phone: {pr_phone}, запрошенный: {phone_number}")
+                                    continue
+                            code_obj = code_candidate
+                            logger.info(f"Этап 2: Найден подходящий код {code_candidate.id}")
+                            break
                     logger.info(f"Этап 2 результат: {'найден' if code_obj else 'не найден'}")
                 
                 # Если не найден по пользователю, ищем по telegram_phone в коде
                 if not code_obj:
                     logger.info(f"Этап 3: Поиск по telegram_phone: {phone_number}")
-                    code_obj = TelegramVerificationCode.objects.filter(
-                        code=verification_code,
+                    codes = TelegramVerificationCode.objects.filter(
                         verification_type=verification_type,
                         is_used=False,
                         expires_at__gt=timezone.now(),
                         telegram_phone=phone_number
-                    ).first()
-                    logger.info(f"Этап 3 результат: {'найден' if code_obj else 'не найден'}")
+                    )
+                    # Проверяем каждый код с помощью check_code_match
+                for code_candidate in codes:
+                    logger.info(f"Этап 3: Проверяем код {code_candidate.id}: user={code_candidate.user_id}, pending_registration={code_candidate.pending_registration_id}, phone={code_candidate.pending_registration.phone if code_candidate.pending_registration else 'None'}, telegram_phone={code_candidate.telegram_phone}, chat_id={code_candidate.telegram_chat_id}")
+                    if code_candidate.check_code_match(verification_code):
+                        code_obj = code_candidate
+                        logger.info(f"Этап 3: Найден подходящий код {code_candidate.id}")
+                        break
+                logger.info(f"Этап 3 результат: {'найден' if code_obj else 'не найден'}")
             
             # Если код все еще не найден, ищем по pending_registration
             if not code_obj:
                 logger.info(f"Этап 4: Поиск по pending_registration")
-                code_obj = TelegramVerificationCode.objects.filter(
-                    code=verification_code,
+                codes = TelegramVerificationCode.objects.filter(
                     verification_type=verification_type,
                     is_used=False,
                     expires_at__gt=timezone.now(),
                     pending_registration__isnull=False
-                ).first()
+                )
+                # Проверяем каждый код с помощью check_code_match
+                for code_candidate in codes:
+                    logger.info(f"Этап 4: Проверяем код {code_candidate.id}: user={code_candidate.user_id}, pending_registration={code_candidate.pending_registration_id}, phone={code_candidate.pending_registration.phone if code_candidate.pending_registration else 'None'}, telegram_phone={code_candidate.telegram_phone}, chat_id={code_candidate.telegram_chat_id}")
+                    if code_candidate.check_code_match(verification_code):
+                        code_obj = code_candidate
+                        logger.info(f"Этап 4: Найден подходящий код {code_candidate.id}")
+                        break
                 logger.info(f"Этап 4 результат: {'найден' if code_obj else 'не найден'}")
+                
+                # Если не найден и указан номер телефона, ищем по pending_registration.phone
+                if not code_obj and phone_number:
+                    logger.info(f"Этап 5: Поиск по pending_registration.phone: {phone_number}")
+                    codes = TelegramVerificationCode.objects.filter(
+                        verification_type=verification_type,
+                        is_used=False,
+                        expires_at__gt=timezone.now(),
+                        pending_registration__phone=phone_number
+                    )
+                    # Проверяем каждый код с помощью check_code_match
+                    for code_candidate in codes:
+                        logger.info(f"Этап 5: Проверяем код {code_candidate.id}: user={code_candidate.user_id}, pending_registration={code_candidate.pending_registration_id}, phone={code_candidate.pending_registration.phone if code_candidate.pending_registration else 'None'}, telegram_phone={code_candidate.telegram_phone}, chat_id={code_candidate.telegram_chat_id}")
+                        if code_candidate.check_code_match(verification_code):
+                            code_obj = code_candidate
+                            logger.info(f"Этап 5: Найден подходящий код {code_candidate.id}")
+                            break
+                    logger.info(f"Этап 5 результат: {'найден' if code_obj else 'не найден'}")
 
             if not code_obj:
                 logger.warning(f"Код верификации не найден или недействителен: {verification_code}")
@@ -309,26 +384,22 @@ class TelegramService:
                 # возвращаем успешный результат без пользователя
                 logger.info(f"Код верификации успешно проверен для QR-регистрации: {verification_code}")
                 requires_registration = True
-                
-                # Отметка кода как использованного только после успешной обработки
-                with transaction.atomic():
-                    code_obj.is_used = True
-                    code_obj.used_at = timezone.now()
-                    code_obj.save()
-                
-                return {
-                    'success': True,
-                    'user': None,
-                    'verification_code': code_obj,
-                    'requires_registration': True
-                }
+            
+            # Финальная пометка кода как использованного - делаем ПОСЛЕ обработки pending_registration
+            # чтобы избежать ошибки "save() prohibited to prevent data loss"
+            code_obj.verify_code(verification_code)
             
             logger.info(f"Код верификации успешно проверен: {verification_code}")
             
             result = {
                 'success': True,
                 'user': user,
-                'verification_code': code_obj
+                'verification_code': {
+                    'code': code_obj.code_hash,
+                    'is_used': code_obj.is_used,
+                    'expires_at': code_obj.expires_at.isoformat() if code_obj.expires_at else None,
+                    'created_at': code_obj.created_at.isoformat() if code_obj.created_at else None
+                }
             }
             
             # Добавляем requires_registration только если это необходимо
@@ -412,18 +483,19 @@ class TelegramService:
                     user.telegram_username = telegram_username
                     user.is_telegram_verified = True
                 else:
-                    # Для QR-регистрации без telegram_chat_id
-                    user.is_telegram_verified = False
+                    # Для QR-регистрации пользователь верифицирован через Telegram-бота
+                    # даже если telegram_chat_id не сохраняется
+                    user.is_telegram_verified = True
                 user.save()
                 
                 # Деактивация всех кодов верификации (только если есть telegram_chat_id)
                 if telegram_chat_id:
                     self.telegram_repository.deactivate_old_codes(
-                        telegram_chat_id, 'registration'
+                        telegram_chat_id, 'registration', exclude_code_id=None
                     )
                 # Для QR-регистрации деактивируем коды по пользователю
                 else:
-                    # Отмечаем коды как использованные и сохраняем их до удаления pending_registration
+                    # Отмечаем коды как использованные и обнуляем связь с pending_registration перед его удалением
                     verification_codes = TelegramVerificationCode.objects.filter(
                         pending_registration=pending_registration,
                         verification_type='qr_registration'
@@ -431,6 +503,8 @@ class TelegramService:
                     for code in verification_codes:
                         code.is_used = True
                         code.used_at = timezone.now()
+                        code.user = user  # Связываем с созданным пользователем
+                        code.pending_registration = None  # Обнуляем связь с pending_registration
                         code.save()
                 
                 # Удаление ожидающей записи
@@ -511,22 +585,23 @@ class TelegramService:
             
             # Создание кода верификации для входа
             verification_code = self.create_verification_code(
-                telegram_chat_id='',  # Пустой для веб-инициации
+                telegram_chat_id=user.telegram_chat_id,  # Используем chat_id пользователя
                 verification_type='login',
                 user=user,
                 telegram_phone=phone_number
             )
             
             # Генерируем deep link для Telegram бота
+            display_code = verification_code.generate_secure_code()
             telegram_bot_username = getattr(settings, 'TELEGRAM_BOT_USERNAME', 'GuschaBot')
-            telegram_deep_link = f"https://t.me/{telegram_bot_username}?start=login_{verification_code.code}"
+            telegram_deep_link = f"https://t.me/{telegram_bot_username}?start=login_{display_code}"
             
-            logger.info(f"Код верификации для входа создан для пользователя {user.id} (code: {verification_code.code})")
+            logger.info(f"Код верификации для входа создан для пользователя {user.id} (code: {display_code})")
             
             return {
                 'success': True,
                 'message': 'Код верификации создан. Перейдите в Telegram бот для завершения входа.',
-                'verification_code': verification_code.code,
+                'verification_code': display_code,
                 'telegram_link': telegram_deep_link
             }
                 
@@ -535,6 +610,102 @@ class TelegramService:
             return {
                 'success': False,
                 'error': 'Ошибка инициации входа через Telegram'
+            }
+    
+    def initiate_authenticated_password_reset(self, user: User, request) -> Dict[str, Any]:
+        """Инициация сброса пароля для авторизованного пользователя"""
+        try:
+            # Проверяем, привязан ли Telegram к аккаунту
+            if not user.telegram_chat_id:
+                return {
+                    'success': False,
+                    'error': 'Telegram не привязан к аккаунту. Сначала привяжите Telegram в настройках профиля.'
+                }
+            
+            # Получаем информацию о запросе
+            from ..utils import SecurityUtils
+            request_ip = SecurityUtils.get_client_ip(request) if request else ''
+            user_agent = SecurityUtils.get_user_agent(request) if request else ''
+            
+            # Создаем токен сброса пароля
+            reset_token = PasswordResetToken.objects.create(
+                user=user,
+                ip_address=request_ip,
+                user_agent=user_agent
+            )
+            
+            # Генерируем безопасную ссылку на React приложение
+            frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost')
+            reset_url = f"{frontend_url}/telegram-reset-password?token={reset_token.token}"
+            
+            # Отправляем ссылку через Telegram
+            from telegram_bot.bot import send_password_reset_link_to_telegram
+            success = async_to_sync(send_password_reset_link_to_telegram)(
+                user.telegram_chat_id,
+                reset_url,
+                user.first_name or user.email
+            )
+            
+            if success:
+                logger.info(f"Ссылка сброса пароля отправлена пользователю {user.email} через Telegram")
+                return {
+                    'success': True,
+                    'message': 'Ссылка для сброса пароля отправлена в ваш Telegram',
+                    'token_id': str(reset_token.id)
+                }
+            else:
+                # Если не удалось отправить, удаляем токен
+                reset_token.delete()
+                return {
+                    'success': False,
+                    'error': 'Ошибка отправки ссылки в Telegram'
+                }
+                
+        except Exception as e:
+            logger.error(f"Ошибка при инициации сброса пароля для пользователя {user.email}: {e}")
+            return {
+                'success': False,
+                'error': 'Ошибка инициации сброса пароля'
+            }
+    
+    def confirm_password_reset_with_token(self, token: str, new_password: str) -> Dict[str, Any]:
+        """Подтверждение сброса пароля по токену"""
+        try:
+            # Поиск токена
+            try:
+                reset_token = PasswordResetToken.objects.get(token=token)
+            except PasswordResetToken.DoesNotExist:
+                return {
+                    'success': False,
+                    'error': 'Недействительная ссылка для сброса пароля'
+                }
+            
+            # Проверка валидности токена
+            if not reset_token.is_valid():
+                return {
+                    'success': False,
+                    'error': 'Ссылка для сброса пароля истекла или уже была использована'
+                }
+            
+            # Установка нового пароля
+            user = reset_token.user
+            user.set_password(new_password)
+            user.save()
+            
+            # Отмечаем токен как использованный
+            reset_token.mark_as_used()
+            
+            logger.info(f"Пароль успешно сброшен для пользователя {user.email} по токену")
+            return {
+                'success': True,
+                'message': 'Пароль успешно изменен'
+            }
+            
+        except Exception as e:
+            logger.error(f"Ошибка при сбросе пароля по токену {token}: {e}")
+            return {
+                'success': False,
+                'error': 'Ошибка при смене пароля'
             }
     
     def cleanup_expired_codes(self) -> int:

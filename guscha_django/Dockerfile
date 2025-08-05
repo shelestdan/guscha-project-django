@@ -27,9 +27,6 @@ COPY *.py .
 # Убеждаемся, что static_root и logs существуют
 RUN mkdir -p /app/static_root /app/logs
 
-# Собираем статические файлы Django (включая уже скопированные файлы фронтенда)
-RUN python manage.py collectstatic --noinput
-
 # Создание пользователя для безопасности
 RUN useradd --create-home --shell /bin/bash app \
     && chown -R app:app /app
@@ -38,5 +35,9 @@ USER app
 # Открываем порт
 EXPOSE 8000
 
-# Запускаем сервер
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Создаем скрипт запуска
+COPY --chown=app:app start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
+# Запускаем через скрипт
+CMD ["/app/start.sh"]

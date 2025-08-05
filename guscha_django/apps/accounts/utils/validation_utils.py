@@ -219,9 +219,9 @@ class ValidationUtils:
             try:
                 parsed = phonenumbers.parse(normalized, 'RU')
                 normalized = phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
-            except:
+            except Exception as e:
                 # Если не удалось распарсить, возвращаем как есть
-                pass
+                logger.debug(f"Не удалось нормализовать номер телефона {phone}: {e}")
                 
         return normalized
     

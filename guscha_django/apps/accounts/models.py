@@ -3,10 +3,12 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from datetime import timedelta
-import random
+import secrets  # Заменяем random на secrets
 import string
 import uuid
 from simple_history.models import HistoricalRecords
+import hashlib
+from django.core.exceptions import ValidationError
 
 
 class UserManager(BaseUserManager):
@@ -37,27 +39,89 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractUser):
-    """Пользовательская модель User"""
-    username = None  # Отключаем поле username
-    email = models.EmailField(_('email address'), unique=True)
-    phone = models.CharField(_('phone number'), max_length=15, blank=True, null=True)
-    address = models.TextField(_('address'), blank=True, null=True)
-    telegram_chat_id = models.CharField(_('Telegram Chat ID'), max_length=50, blank=True, null=True)
-    telegram_username = models.CharField(_('Telegram Username'), max_length=50, blank=True, null=True)
-    is_telegram_verified = models.BooleanField(_('Telegram Verified'), default=False)
+    """Расширенная модель пользователя с Telegram интеграцией"""
+    
+    username = None  # Убираем username, используем email
+    email = models.EmailField(
+        _('Адрес электронной почты'),
+        unique=True,
+        help_text=_('Обязательное поле. Введите действующий email адрес.')
+    )
+    
+    # Основная информация
+    first_name = models.CharField(
+        _('Имя'), 
+        max_length=150, 
+        blank=True,
+        help_text=_('Имя пользователя')
+    )
+    last_name = models.CharField(
+        _('Фамилия'), 
+        max_length=150, 
+        blank=True,
+        help_text=_('Фамилия пользователя')
+    )
+    
+    # Контактная информация
+    phone = models.CharField(
+        _('Номер телефона'),
+        max_length=20,
+        blank=True,
+        help_text=_('Номер телефона в международном формате')
+    )
+    address = models.TextField(
+        _('Адрес'),
+        blank=True,
+        help_text=_('Полный почтовый адрес')
+    )
+    
+    # Telegram интеграция
+    telegram_chat_id = models.BigIntegerField(
+        _('Telegram Chat ID'),
+        null=True,
+        blank=True,
+        unique=True,
+        help_text=_('Уникальный ID чата в Telegram')
+    )
+    telegram_username = models.CharField(
+        _('Telegram Username'),
+        max_length=100,
+        blank=True,
+        help_text=_('Username пользователя в Telegram (без @)')
+    )
+    is_telegram_verified = models.BooleanField(
+        _('Telegram верифицирован'),
+        default=False,
+        help_text=_('Подтверждена ли связь с Telegram аккаунтом')
+    )
+    
+    # История изменений
+    history = HistoricalRecords()
     
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
-
+    
     objects = UserManager()
-    history = HistoricalRecords()  # Добавляем отслеживание истории
-
+    
     class Meta:
-        verbose_name = _('user')
-        verbose_name_plural = _('users')
-
+        verbose_name = _('Пользователь')
+        verbose_name_plural = _('Пользователи')
+        indexes = [
+            models.Index(fields=['email', 'is_active']),
+            models.Index(fields=['telegram_chat_id']),
+            models.Index(fields=['is_telegram_verified']),
+        ]
+    
     def __str__(self):
         return self.email
+    
+    def get_full_name(self):
+        """Возвращает полное имя пользователя"""
+        return f"{self.first_name} {self.last_name}".strip() or self.email
+    
+    def get_short_name(self):
+        """Возвращает короткое имя пользователя"""
+        return self.first_name or self.email.split('@')[0]
 
 
 class PendingUserRegistration(models.Model):
@@ -90,61 +154,236 @@ class PendingUserRegistration(models.Model):
 
 
 class TelegramVerificationCode(models.Model):
-    """Модель для хранения кодов подтверждения Telegram"""
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='telegram_codes', null=True, blank=True)
-    pending_registration = models.ForeignKey(PendingUserRegistration, on_delete=models.CASCADE, related_name='telegram_codes', null=True, blank=True)
-    code = models.CharField(_('Verification Code'), max_length=6)
-    telegram_chat_id = models.CharField(_('Telegram Chat ID'), max_length=50, null=True, blank=True)
-    created_at = models.DateTimeField(_('Created At'), auto_now_add=True)
-    expires_at = models.DateTimeField(_('Expires At'))
-    is_used = models.BooleanField(_('Is Used'), default=False)
-    used_at = models.DateTimeField(_('Used At'), null=True, blank=True)
-    telegram_phone = models.CharField(_('Telegram Phone Number'), max_length=20, null=True, blank=True)
+    """Безопасная модель для хранения кодов верификации Telegram"""
+    
+    VERIFICATION_TYPES = [
+        ('registration', _('Регистрация')),
+        ('login', _('Вход в систему')),
+        ('password_reset', _('Сброс пароля')),
+        ('qr_registration', _('QR регистрация')),
+    ]
+    
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='telegram_verification_codes',
+        verbose_name=_('Пользователь'),
+        null=True,
+        blank=True
+    )
+    
+    pending_registration = models.ForeignKey(
+        PendingUserRegistration,
+        on_delete=models.CASCADE,
+        related_name='telegram_verification_codes',
+        null=True,
+        blank=True
+    )
+    
+    # Код верификации (временно для совместимости)
+    code = models.CharField(
+        _('Код верификации'),
+        max_length=6,
+        null=True,
+        blank=True,
+        help_text=_('6-значный код верификации')
+    )
+    
+    # Безопасное хранение кода (только хеш)
+    code_hash = models.CharField(
+        _('Хеш кода'),
+        max_length=64,
+        null=True,
+        blank=True,
+        help_text=_('SHA-256 хеш кода верификации')
+    )
+    
+    # Соль для дополнительной безопасности
+    salt = models.CharField(
+        _('Соль'),
+        max_length=64,
+        null=True,
+        blank=True,
+        help_text=_('Случайная соль для хеширования')
+    )
+    
+    telegram_chat_id = models.BigIntegerField(_('Telegram Chat ID'), null=True, blank=True)
+    
     verification_type = models.CharField(
-        _('Verification Type'),
+        _('Тип верификации'),
         max_length=20,
-        choices=[
-            ('registration', _('Registration')),
-            ('password_reset', _('Password Reset')),
-            ('login', _('Login')),
-            ('qr_registration', _('QR Registration')),
-        ],
+        choices=VERIFICATION_TYPES,
         default='registration'
     )
-
+    
+    created_at = models.DateTimeField(
+        _('Создан'),
+        auto_now_add=True
+    )
+    
+    expires_at = models.DateTimeField(
+        _('Истекает')
+    )
+    
+    is_used = models.BooleanField(
+        _('Использован'),
+        default=False
+    )
+    
+    used_at = models.DateTimeField(_('Использован в'), null=True, blank=True)
+    
+    attempts_count = models.PositiveIntegerField(
+        _('Количество попыток'),
+        default=0
+    )
+    
+    ip_address = models.GenericIPAddressField(
+        _('IP адрес'),
+        null=True,
+        blank=True
+    )
+    
+    telegram_phone = models.CharField(_('Telegram Phone'), max_length=20, blank=True)
+    
     class Meta:
-        verbose_name = _('Telegram Verification Code')
-        verbose_name_plural = _('Telegram Verification Codes')
+        verbose_name = _('Код верификации Telegram')
+        verbose_name_plural = _('Коды верификации Telegram')
         ordering = ['-created_at']
-
+        indexes = [
+            models.Index(fields=['user', 'verification_type']),
+            models.Index(fields=['expires_at']),
+            models.Index(fields=['is_used', 'created_at']),
+        ]
+    
     def save(self, *args, **kwargs):
-        if not self.code:
-            self.code = self.generate_code()
-        if not self.expires_at:
-            self.expires_at = timezone.now() + timedelta(minutes=10)  # Код действует 10 минут
+        # Время жизни кода теперь устанавливается в telegram_service.py
+        # в зависимости от типа верификации
         super().save(*args, **kwargs)
-
+    
+    @classmethod
+    def generate_secure_code(cls, user=None, pending_registration=None, verification_type='registration', ip_address=None):
+        """Генерирует безопасный код верификации"""
+        # Генерируем 6-значный код
+        code = ''.join([str(secrets.randbelow(10)) for _ in range(6)])
+        
+        # Генерируем соль
+        salt = secrets.token_hex(32)
+        
+        # Создаем хеш
+        code_hash = hashlib.sha256((code + salt).encode()).hexdigest()
+        
+        # Создаем запись
+        verification_code = cls.objects.create(
+            user=user,
+            pending_registration=pending_registration,
+            code=code,
+            code_hash=code_hash,
+            salt=salt,
+            verification_type=verification_type,
+            ip_address=ip_address,
+            telegram_chat_id=user.telegram_chat_id if user and hasattr(user, 'telegram_chat_id') and user.telegram_chat_id else None
+        )
+        
+        return code, verification_code
+    
+    def save(self, *args, **kwargs):
+        """Переопределяем save для автоматического хеширования кода"""
+        # Если код есть, но еще не хеширован
+        if self.code and not self.code_hash:
+            # Генерируем salt если его нет
+            if not self.salt:
+                self.salt = secrets.token_hex(32)
+            
+            # Создаем хеш кода
+            self.code_hash = hashlib.sha256((self.code + self.salt).encode()).hexdigest()
+        
+        super().save(*args, **kwargs)
+    
+    def check_code_match(self, input_code):
+        """Проверяет соответствие кода без изменения статуса is_used"""
+        if self.is_used or timezone.now() > self.expires_at:
+            return False
+        
+        # Проверяем и инициализируем salt если он None
+        if not self.salt:
+            return False  # Не можем проверить код без salt
+        
+        # Проверяем хеш
+        input_hash = hashlib.sha256((input_code + self.salt).encode()).hexdigest()
+        return input_hash == self.code_hash
+    
+    def verify_code(self, input_code):
+        """Проверяет введенный код и помечает как использованный при успехе"""
+        if self.is_used or timezone.now() > self.expires_at:
+            return False
+        
+        # Увеличиваем счетчик попыток
+        self.attempts_count += 1
+        # Сохраняем только если нет связанного pending_registration или он еще существует
+        if not self.pending_registration_id or PendingUserRegistration.objects.filter(id=self.pending_registration_id).exists():
+            self.save()
+        
+        # Проверяем максимальное количество попыток
+        if self.attempts_count > 3:
+            return False
+        
+        # Проверяем и инициализируем salt если он None
+        if not self.salt:
+            self.salt = secrets.token_hex(32)
+            # Сохраняем только если нет связанного pending_registration или он еще существует
+            if not self.pending_registration_id or PendingUserRegistration.objects.filter(id=self.pending_registration_id).exists():
+                self.save()
+        
+        # Проверяем хеш
+        input_hash = hashlib.sha256((input_code + self.salt).encode()).hexdigest()
+        
+        if input_hash == self.code_hash:
+            self.is_used = True
+            self.used_at = timezone.now()
+            # Сохраняем только если нет связанного pending_registration или он еще существует
+            if not self.pending_registration_id or PendingUserRegistration.objects.filter(id=self.pending_registration_id).exists():
+                self.save()
+            return True
+        
+        return False
+    
     @staticmethod
     def generate_code():
-        """Генерирует 6-значный код"""
-        return ''.join(random.choices(string.digits, k=6))
-
+        """Генерирует криптографически стойкий 6-значный код (устаревший метод)"""
+        return ''.join(secrets.choice(string.digits) for _ in range(6))
+    
     def is_expired(self):
         """Проверяет, истек ли код"""
         return timezone.now() > self.expires_at
-
+    
+    @property
+    def is_expired_property(self):
+        """Свойство для проверки истечения кода"""
+        return timezone.now() > self.expires_at
+    
     def is_valid(self):
         """Проверяет, действителен ли код"""
         return not self.is_used and not self.is_expired()
+    
+    def generate_secure_code(self):
+        """Возвращает код для отображения пользователю"""
+        if hasattr(self, 'code') and self.code:
+            return self.code
+        else:
+            # Если код не сохранен, генерируем новый и сохраняем
+            code = ''.join([str(secrets.randbelow(10)) for _ in range(6)])
+            self.code = code
+            # Проверяем и инициализируем salt если он None
+            if not self.salt:
+                self.salt = secrets.token_hex(32)
+            # Обновляем хеш с новым кодом
+            self.code_hash = hashlib.sha256((code + self.salt).encode()).hexdigest()
+            self.save()
+            return code
 
     def __str__(self):
-        if self.user:
-            email = self.user.email
-        elif self.pending_registration:
-            email = self.pending_registration.email
-        else:
-            email = 'Unknown'
-        return f'Code {self.code} for {email} ({self.verification_type})'
+        user_info = self.user.email if self.user else f"Pending: {self.pending_registration.email if self.pending_registration else 'Unknown'}"
+        return f"Код для {user_info} ({self.get_verification_type_display()})"
 
 
 class QRCodeScan(models.Model):
@@ -192,11 +431,8 @@ class QRCodeScan(models.Model):
     
     def generate_telegram_url(self, bot_username, verification_id=None):
         """Генерирует ссылку на Telegram-бота"""
-        # Используем код верификации если есть, иначе qr_id
-        if self.verification_code and self.verification_code.code:
-            start_param = self.verification_code.code
-        else:
-            start_param = verification_id or str(self.qr_id)
+        # Используем verification_id или qr_id как параметр запуска
+        start_param = verification_id or str(self.qr_id)
         return f"https://t.me/{bot_username}?start={start_param}"
     
     def mark_scanned(self, ip_address=None, user_agent=None):
@@ -233,3 +469,46 @@ class QRCodeScan(models.Model):
     
     def __str__(self):
         return f'QR {self.qr_id} - Scans: {self.scan_count}, Success: {self.successful_activations}'
+
+
+class PasswordResetToken(models.Model):
+    """Модель для безопасных токенов сброса пароля"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='password_reset_tokens')
+    token = models.UUIDField(_('Reset Token'), default=uuid.uuid4, unique=True, editable=False)
+    created_at = models.DateTimeField(_('Created At'), auto_now_add=True)
+    expires_at = models.DateTimeField(_('Expires At'))
+    is_used = models.BooleanField(_('Is Used'), default=False)
+    used_at = models.DateTimeField(_('Used At'), null=True, blank=True)
+    ip_address = models.GenericIPAddressField(_('IP Address'), null=True, blank=True)
+    user_agent = models.TextField(_('User Agent'), blank=True)
+    
+    class Meta:
+        verbose_name = _('Password Reset Token')
+        verbose_name_plural = _('Password Reset Tokens')
+        ordering = ['-created_at']
+    
+    def save(self, *args, **kwargs):
+        if not self.expires_at:
+            self.expires_at = timezone.now() + timedelta(hours=1)  # Токен действует 1 час
+        super().save(*args, **kwargs)
+    
+    def is_expired(self):
+        """Проверяет, истек ли токен"""
+        return timezone.now() > self.expires_at
+    
+    def is_valid(self):
+        """Проверяет, действителен ли токен"""
+        return not self.is_used and not self.is_expired()
+    
+    def mark_as_used(self, ip_address=None, user_agent=None):
+        """Отмечает токен как использованный"""
+        self.is_used = True
+        self.used_at = timezone.now()
+        if ip_address:
+            self.ip_address = ip_address
+        if user_agent:
+            self.user_agent = user_agent
+        self.save()
+    
+    def __str__(self):
+        return f'Password reset token for {self.user.email} - {self.token}'

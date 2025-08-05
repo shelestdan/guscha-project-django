@@ -30,12 +30,14 @@ load_dotenv(BASE_DIR / '.env')  # Явно указываем путь к .env �
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-!n^wgl5@t22)l0$o9i2!$=tr$78q8%56%hz+6!(r%hr-3828bc')
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY environment variable is required")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = str2bool(os.environ.get('DEBUG', 'True'))
+DEBUG = str2bool(os.environ.get('DEBUG', 'False'))
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 
 # Application definition
@@ -241,17 +243,6 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_USER_MODEL_EMAIL_FIELD = 'email'
 
 # Новый API для методов входа (заменяет ACCOUNT_AUTHENTICATION_METHOD)
-ACCOUNT_LOGIN_METHODS = {'email'}
-
-# Настройки для dj_rest_auth
-REST_AUTH = {
-    'USE_JWT': True,
-    'SESSION_LOGIN': True,
-    'JWT_AUTH_COOKIE': 'jwt-auth',
-    'JWT_AUTH_REFRESH_COOKIE': 'jwt-refresh-token',
-}
-
-# Новые настройки для allauth (исправление deprecated предупреждений)
 # Заменяет ACCOUNT_EMAIL_REQUIRED и ACCOUNT_USERNAME_REQUIRED
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
 
@@ -266,7 +257,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
@@ -283,7 +274,15 @@ REST_FRAMEWORK = {
         'rest_framework.filters.OrderingFilter',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20
+    'PAGE_SIZE': 20,
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',
+        'user': '1000/hour'
+    }
 }
 
 # JWT Settings
@@ -322,7 +321,12 @@ SIMPLE_JWT = {
 }
 
 # Настройки CORS для разработки
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = DEBUG  # Только для разработки
+if not DEBUG:
+    CORS_ALLOWED_ORIGINS = [
+        "https://yourdomain.com",
+        "https://www.yourdomain.com",
+    ]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 CORS_ALLOW_HEADERS = ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-CSRFToken', 'X-Session-ID']
@@ -363,6 +367,20 @@ X_FRAME_OPTIONS = 'SAMEORIGIN'
 # Отключаем HSTS и SSL redirect для локальной разработки
 SECURE_HSTS_SECONDS = 0
 SECURE_SSL_REDIRECT = False
+
+# Исправление 5: Добавить заголовки безопасности для продакшена
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+# Исправление 6: Настройки сессий
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_AGE = 3600  # 1 час
+SESSION_COOKIE_HTTPONLY = True
 
 # Создаем директорию для логов если она не существует
 import os
@@ -759,6 +777,6 @@ PASSWORD_RESET_TIMEOUT = 3600  # 1 час в секундах
 # Настройки Telegram бота
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
 
-
-
-
+# URL фронтенда для генерации ссылок (для статических файлов)
+# Поскольку фронтенд собирается в статические файлы и обслуживается Django
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:8000')

@@ -8,6 +8,7 @@ python-slugify
 python-dotenv
 requests
 urllib3
+requests
 cryptography
 bcrypt
 pyjwt

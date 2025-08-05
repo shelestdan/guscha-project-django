@@ -1,4 +1,7 @@
+import logging
 from django.apps import AppConfig
+
+logger = logging.getLogger(__name__)
 
 
 class CollectionsConfig(AppConfig):
@@ -11,4 +14,4 @@ class CollectionsConfig(AppConfig):
         try:
             import apps.collections.signals  # noqa F401
         except ImportError:
-            pass
+            logger.debug("Модуль signals не найден в apps.collections")

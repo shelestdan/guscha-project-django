@@ -58,7 +58,7 @@ class QRService:
                 # Создание кода верификации для QR-регистрации
                 telegram_phone = pending_registration.phone if pending_registration else None
                 verification_code = self.telegram_service.create_verification_code(
-                    telegram_chat_id='',  # Будет заполнено при старте бота
+                    telegram_chat_id=None,  # Будет заполнено при старте бота
                     verification_type='qr_registration',
                     pending_registration=pending_registration,
                     telegram_phone=telegram_phone
@@ -124,7 +124,7 @@ class QRService:
                     
                     # Создание кода верификации для Telegram только если его нет
                     verification_code = self.telegram_service.create_verification_code(
-                        telegram_chat_id='',  # Будет заполнено при старте бота
+                        telegram_chat_id=None,  # Будет заполнено при старте бота
                         verification_type='qr_registration',
                         pending_registration=qr_code.pending_registration,
                         telegram_phone=telegram_phone
@@ -213,7 +213,13 @@ class QRService:
                     logger.info(f"Бот запущен для QR-кода: {qr_id}")
                     return {
                         'success': True,
-                        'verification_code': verification_code
+                        'verification_code': {
+                            'id': verification_code.id,
+                            'code': verification_code.code,
+                            'is_used': verification_code.is_used,
+                            'is_expired': verification_code.is_expired(),
+                            'telegram_chat_id': verification_code.telegram_chat_id
+                        }
                     }
             
             return {
@@ -248,10 +254,11 @@ class QRService:
             if qr_code.verification_code:
                 verification_code = qr_code.verification_code
                 # Код готов, если он сгенерирован и у него есть telegram_phone
-                if verification_code.code and hasattr(verification_code, 'telegram_phone') and verification_code.telegram_phone:
+                display_code = verification_code.code
+                if display_code and hasattr(verification_code, 'telegram_phone') and verification_code.telegram_phone:
                     verification_code_ready = True
                     verification_code_data = {
-                        'code': verification_code.code,
+                        'code': display_code,
                         'is_used': verification_code.is_used,
                         'is_expired': verification_code.is_expired(),
                         'has_telegram_phone': bool(verification_code.telegram_phone)
@@ -259,13 +266,13 @@ class QRService:
             
             return {
                 'qr_id': str(qr_code.qr_id),
-                'scanned_at': qr_code.scanned_at,
-                'trigger_activated_at': qr_code.trigger_activated_at,
-                'bot_started_at': qr_code.bot_started_at,
+                'scanned_at': qr_code.scanned_at.isoformat() if qr_code.scanned_at else None,
+                'trigger_activated_at': qr_code.trigger_activated_at.isoformat() if qr_code.trigger_activated_at else None,
+                'bot_started_at': qr_code.bot_started_at.isoformat() if qr_code.bot_started_at else None,
                 'scan_count': qr_code.scan_count,
                 'successful_activations': qr_code.successful_activations,
                 'is_complete_flow': qr_code.is_complete_flow(),
-                'created_at': qr_code.created_at,
+                'created_at': qr_code.created_at.isoformat() if qr_code.created_at else None,
                 'has_verification_code': bool(qr_code.verification_code),
                 'verification_code_ready': verification_code_ready,
                 'verification_code_data': verification_code_data,
@@ -308,10 +315,10 @@ class QRService:
                 
                 pending_registration = user_service.create_pending_registration(user_data)
                 
-                # Завершение регистрации через Telegram
+                # Завершение регистрации через QR-код (без привязки Telegram)
                 user = self.telegram_service.complete_telegram_registration(
                     pending_registration,
-                    telegram_chat_id
+                    ''  # Пустой telegram_chat_id для QR-регистрации
                 )
                 
                 # Обновление статистики QR-кода

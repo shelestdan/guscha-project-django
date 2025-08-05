@@ -15,7 +15,7 @@ class TelegramRepository:
     
     def create_verification_code(
         self,
-        telegram_chat_id: str,
+        telegram_chat_id: Optional[str],
         verification_type: str,
         code: str,
         expires_at: datetime,
@@ -24,6 +24,19 @@ class TelegramRepository:
         telegram_phone=None
     ) -> TelegramVerificationCode:
         """Создание кода верификации"""
+        logger.info(f"Начало создания кода верификации: chat_id='{telegram_chat_id}', type={verification_type}, expires_at={expires_at}")
+        
+        # Преобразуем пустую строку в None для nullable поля
+        original_chat_id = telegram_chat_id
+        if telegram_chat_id is None or telegram_chat_id == '' or telegram_chat_id == '0':
+            telegram_chat_id = None
+        elif isinstance(telegram_chat_id, str) and telegram_chat_id.isdigit():
+            telegram_chat_id = int(telegram_chat_id)
+        else:
+            telegram_chat_id = None
+        
+        logger.info(f"Преобразование chat_id: '{original_chat_id}' -> {telegram_chat_id}")
+        
         verification_code = TelegramVerificationCode.objects.create(
             telegram_chat_id=telegram_chat_id,
             verification_type=verification_type,
@@ -33,7 +46,8 @@ class TelegramRepository:
             pending_registration=pending_registration,
             telegram_phone=telegram_phone
         )
-        logger.info(f"Создан код верификации для {telegram_chat_id}: {verification_type}")
+        
+        logger.info(f"Код верификации создан в БД: ID={verification_code.id}, chat_id={verification_code.telegram_chat_id}, expires_at={verification_code.expires_at}, type={verification_code.verification_type}")
         return verification_code
     
     def get_verification_code(
@@ -44,13 +58,18 @@ class TelegramRepository:
     ) -> Optional[TelegramVerificationCode]:
         """Получение кода верификации"""
         try:
-            return TelegramVerificationCode.objects.get(
+            codes = TelegramVerificationCode.objects.filter(
                 telegram_chat_id=telegram_chat_id,
-                code=code,
                 verification_type=verification_type,
                 is_used=False
             )
-        except TelegramVerificationCode.DoesNotExist:
+            # Проверяем каждый код с помощью verify_code
+            for verification_code in codes:
+                if verification_code.verify_code(code):
+                    return verification_code
+            return None
+        except Exception as e:
+            logger.error(f"Ошибка при получении кода верификации: {e}")
             return None
     
     def get_active_verification_code(
@@ -63,21 +82,30 @@ class TelegramRepository:
         try:
             # Для QR-регистрации ищем код без привязки к chat_id
             if verification_type == 'qr_registration':
-                return TelegramVerificationCode.objects.filter(
-                    code=code,
-                    verification_type=verification_type,
-                    is_used=False,
-                    expires_at__gt=timezone.now()
-                ).first()
-            else:
-                return TelegramVerificationCode.objects.get(
-                    telegram_chat_id=telegram_chat_id,
-                    code=code,
+                codes = TelegramVerificationCode.objects.filter(
                     verification_type=verification_type,
                     is_used=False,
                     expires_at__gt=timezone.now()
                 )
-        except TelegramVerificationCode.DoesNotExist:
+                # Проверяем каждый код с помощью verify_code
+                for verification_code in codes:
+                    if verification_code.verify_code(code):
+                        return verification_code
+                return None
+            else:
+                codes = TelegramVerificationCode.objects.filter(
+                    telegram_chat_id=telegram_chat_id,
+                    verification_type=verification_type,
+                    is_used=False,
+                    expires_at__gt=timezone.now()
+                )
+                # Проверяем каждый код с помощью verify_code
+                for verification_code in codes:
+                    if verification_code.verify_code(code):
+                        return verification_code
+                return None
+        except Exception as e:
+            logger.error(f"Ошибка при получении активного кода верификации: {e}")
             return None
     
     def get_latest_verification_code(
@@ -99,7 +127,7 @@ class TelegramRepository:
         verification_code.is_used = True
         verification_code.used_at = timezone.now()
         verification_code.save()
-        logger.info(f"Код верификации отмечен как использованный: {verification_code.code}")
+        logger.info(f"Код верификации отмечен как использованный: ID {verification_code.id}")
         return verification_code
     
     def get_active_codes_for_chat(
@@ -303,7 +331,8 @@ class TelegramRepository:
     def deactivate_old_codes(
         self,
         telegram_chat_id: Optional[str],
-        verification_type: str
+        verification_type: str,
+        exclude_code_id: Optional[int] = None
     ) -> int:
         """Деактивация старых кодов верификации"""
         queryset = TelegramVerificationCode.objects.filter(
@@ -312,14 +341,16 @@ class TelegramRepository:
             expires_at__gt=timezone.now()
         )
         
+        # Исключаем текущий создаваемый код
+        if exclude_code_id:
+            queryset = queryset.exclude(id=exclude_code_id)
+        
         # Для QR-кодов chat_id может быть None или пустым
         if telegram_chat_id:
             queryset = queryset.filter(telegram_chat_id=telegram_chat_id)
         else:
             # Для QR-кодов деактивируем коды с пустым chat_id
-            queryset = queryset.filter(
-                Q(telegram_chat_id__isnull=True) | Q(telegram_chat_id='')
-            )
+            queryset = queryset.filter(telegram_chat_id__isnull=True)
         
         updated_count = queryset.update(
             is_used=True,

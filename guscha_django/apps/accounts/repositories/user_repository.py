@@ -134,7 +134,7 @@ class UserRepository:
     
     def unlink_telegram(self, user: User) -> User:
         """Отвязка Telegram от пользователя"""
-        user.telegram_chat_id = ''
+        user.telegram_chat_id = None
         user.telegram_username = ''
         user.save()
         logger.info(f"Telegram отвязан от пользователя: {user.email}")
@@ -258,7 +258,7 @@ class UserRepository:
             phone=pending_registration.phone,
             address=pending_registration.address,
             is_active=True,
-            is_telegram_verified=True
+            is_telegram_verified=True  # Верифицирован через Telegram при QR-регистрации
         )
         
         # Устанавливаем пароль из хэша

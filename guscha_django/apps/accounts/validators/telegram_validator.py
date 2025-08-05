@@ -459,7 +459,7 @@ class TelegramValidator:
     
     def generate_verification_code(self, length: int = 6) -> str:
         """Генерация кода верификации"""
-        import random
+        import secrets
         import string
         
         if length < self.MIN_VERIFICATION_CODE_LENGTH:
@@ -469,4 +469,4 @@ class TelegramValidator:
         
         # Генерируем код из цифр и заглавных букв
         characters = string.digits + string.ascii_uppercase
-        return ''.join(random.choice(characters) for _ in range(length))
+        return ''.join(secrets.choice(characters) for _ in range(length))

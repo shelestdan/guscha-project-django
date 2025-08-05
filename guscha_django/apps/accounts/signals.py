@@ -110,7 +110,7 @@ def user_pre_save_handler(sender, instance, **kwargs):
                     )
                     
             except User.DoesNotExist:
-                pass  # Новый пользователь
+                logger.debug(f"Новый пользователь создается: {instance.email}")
                 
     except Exception as e:
         logger.error(f"Ошибка в обработчике pre_save для User: {e}")
@@ -138,8 +138,8 @@ def user_post_delete_handler(sender, instance, **kwargs):
                 details=f'Пользователь {instance.email} был удален',
                 severity='warning'
             )
-        except Exception:
-            pass  # Игнорируем ошибки при создании события
+        except Exception as e:
+            logger.error(f"Ошибка при создании события безопасности для удаления пользователя: {e}")
             
     except Exception as e:
         logger.error(f"Ошибка в обработчике post_delete для пользователя: {e}")
@@ -252,7 +252,7 @@ def user_login_failed_handler(sender, credentials, request, **kwargs):
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
-            pass
+            logger.debug(f"Пользователь с email {email} не найден при неудачной попытке входа")
         
         # Создание записи в истории входов
         UserLoginHistory.objects.create(
@@ -301,7 +301,7 @@ def pending_registration_post_save_handler(sender, instance, created, **kwargs):
                 try:
                     from .utils import EmailUtils
                     # Здесь можно добавить логику отправки email активации
-                    pass
+                    logger.info(f"Email активации должен быть отправлен для {instance.email}")
                 except Exception as e:
                     logger.error(f"Ошибка отправки email активации: {e}")
                     
