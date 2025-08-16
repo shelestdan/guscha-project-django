@@ -1,0 +1,41 @@
+* {
+  box-sizing: border-box;
+}
+
+.component1 {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding-right: 58px;
+  padding-bottom: 62px;
+  width: 451px;
+  height: 508px;
+
+  .heyKidsWatchThis {
+    width: 394px;
+    height: 394px;
+    overflow: hidden;
+  }
+
+  .heyKidsWatchThis2 {
+    margin: 7px 0px 0px 58px;
+    width: 143px;
+    height: 19px;
+    line-height: 18px;
+    letter-spacing: -0.15px;
+    color: var(--a24films-com-Black, #000000);
+    font-family: Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Helvetica, sans-serif;
+    font-size: 15px;
+  }
+
+  .a38 {
+    margin: 7px 0px 0px 58px;
+    width: 28px;
+    height: 19px;
+    line-height: 18px;
+    letter-spacing: -1.15px;
+    color: var(--shop-a24films-com-Boulder, #787878);
+    font-family: "Courier New", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+    font-size: 15px;
+  }
+}

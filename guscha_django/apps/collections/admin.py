@@ -12,9 +12,10 @@ from django.utils.safestring import mark_safe
 from django.db import models
 from django.forms import Textarea
 from django.utils.translation import gettext_lazy as _
-from unfold.admin import ModelAdmin, TabularInline
-from unfold.decorators import display
-from unfold.contrib.forms.widgets import WysiwygWidget
+from django.contrib.admin import ModelAdmin, TabularInline
+from unfold.widgets import UnfoldAdminTextInputWidget, UnfoldAdminTextareaWidget
+# from unfold.decorators import display
+# from unfold.contrib.forms.widgets import WysiwygWidget
 from .models import Collection, CollectionImage
 import logging
 
@@ -35,7 +36,6 @@ class CollectionImageInline(TabularInline):
     fields = ['image', 'alt_text', 'is_primary', 'sort_order', 'image_preview']
     readonly_fields = ['image_preview']
     
-    @display(description=_("Превью"))
     def image_preview(self, obj):
         """
         Отображает превью изображения в админке.
@@ -52,6 +52,7 @@ class CollectionImageInline(TabularInline):
                 obj.image.url
             )
         return "Нет изображения"
+    image_preview.short_description = _("Превью")
     
     class Media:
         css = {
@@ -101,7 +102,6 @@ class CollectionAdmin(ModelAdmin):
         'main_image_preview'
     )
     
-    @display(description=_("Изображения"))
     def images_count(self, obj):
         """
         Отображает количество изображений коллекции.
@@ -120,8 +120,8 @@ class CollectionAdmin(ModelAdmin):
                 url, count
             )
         return "0 изображений"
+    images_count.short_description = _("Изображения")
     
-    @display(description=_("Главное изображение"))
     def main_image_preview(self, obj):
         """
         Отображает превью главного изображения коллекции.
@@ -184,7 +184,9 @@ class CollectionAdmin(ModelAdmin):
     
     # Настройки формы
     formfield_overrides = {
-        models.TextField: {'widget': WysiwygWidget()},
+        models.TextField: {'widget': UnfoldAdminTextareaWidget(attrs={'rows': 4})},
+        models.CharField: {'widget': UnfoldAdminTextInputWidget()},
+        models.SlugField: {'widget': UnfoldAdminTextInputWidget()},
     }
     
     def get_queryset(self, request):
@@ -193,7 +195,6 @@ class CollectionAdmin(ModelAdmin):
         """
         return super().get_queryset(request).prefetch_related('images')
     
-    @display(description=_("Статус"), ordering='featured')
     def is_featured_display(self, obj):
         """
         Отображение статуса "рекомендуемое" с иконкой.
@@ -205,12 +206,13 @@ class CollectionAdmin(ModelAdmin):
         return format_html(
             '<span style="color: #6c757d;">☆ Обычное</span>'
         )
+    is_featured_display.short_description = _("Статус")
+    is_featured_display.admin_order_field = 'featured'
     
 
     
 
     
-    @display(description=_("Просмотр"))
     def view_on_site_link(self, obj):
         """
         Ссылка для просмотра коллекции на сайте.
@@ -222,6 +224,7 @@ class CollectionAdmin(ModelAdmin):
                 url
             )
         return "Неактивная коллекция"
+    view_on_site_link.short_description = _("Просмотр")
     
     def save_model(self, request, obj, form, change):
         """
@@ -320,7 +323,6 @@ class CollectionImageAdmin(ModelAdmin):
         })
     )
     
-    @display(description=_("Превью"))
     def image_preview(self, obj):
         """
         Отображает превью изображения в списке.

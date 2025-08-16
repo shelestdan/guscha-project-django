@@ -4,9 +4,11 @@ import './styles/App.css';
 import { Header, Footer } from './components/layout';
 import { HomePage } from './pages';
 import { CartSidebar } from './components/features/cart';
+
 import { useCartStore } from './store/cartStore';
 import { useAuth } from './hooks/useAuth';
 import ToastContainer from './components/ui/ToastContainer';
+import scrollBackgroundToggle from './utils/scrollBackgroundToggle';
 
 // Импортируем крупные страницы лениво
 const Account = lazy(() => import('./components/Account'));
@@ -21,8 +23,10 @@ const PasswordResetConfirm = lazy(() => import('./components/PasswordResetConfir
 const GoogleOAuthCallback = lazy(() => import('./components/GoogleOAuthCallback'));
 
 function AppContent() {
+  console.log('🚀 APP CONTENT RENDERED!');
   const location = useLocation();
   const isHome = location.pathname === '/';
+  console.log('🏠 isHome:', isHome, 'pathname:', location.pathname);
   const fetchCart = useCartStore((state) => state.fetchCart);
   const mainRef = useRef(null);
   
@@ -35,26 +39,43 @@ function AppContent() {
     fetchCart();
   }, [fetchCart]);
 
-  // Показываем загрузку пока проверяется аутентификация
-  if (loading) {
-    return (
-      <div className="App">
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100vh',
-          fontSize: '18px'
-        }}>
-          Загрузка...
-        </div>
-      </div>
-    );
-  }
+  // Инициализируем скрипт управления фоном при прокрутке
+  useEffect(() => {
+    // Скрипт уже инициализируется автоматически при импорте
+    // Но можем принудительно обновить если нужно
+    if (scrollBackgroundToggle && scrollBackgroundToggle.refresh) {
+      scrollBackgroundToggle.refresh();
+    }
+    
+    // Cleanup при размонтировании компонента
+    return () => {
+      if (scrollBackgroundToggle && scrollBackgroundToggle.destroy) {
+        scrollBackgroundToggle.destroy();
+      }
+    };
+  }, []);
+
+  // Временно отключаем экран загрузки для отладки скролла
+  // if (loading) {
+  //   return (
+  //     <div className="App">
+  //       <div style={{
+  //         display: 'flex',
+  //         justifyContent: 'center',
+  //         alignItems: 'center',
+  //         height: '100vh',
+  //         fontSize: '18px'
+  //       }}>
+  //         Загрузка...
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="App">
-      <Header isHome={isHome} scrollContainerRef={mainRef} />
+
+      <Header isHome={isHome} />
       <main ref={mainRef} style={{
         background: isHome ? 'transparent' : '#f1f1f1',
         minHeight: '100vh',

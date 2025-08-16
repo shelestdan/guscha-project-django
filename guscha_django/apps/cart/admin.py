@@ -4,9 +4,9 @@ from django.utils.html import format_html
 from django.utils import timezone
 # Импорты для django-eventstream теперь в tasks.py
 
-from unfold.admin import ModelAdmin
-from unfold.decorators import display
-from unfold.contrib.filters.admin import RangeDateFilter, ChoicesDropdownFilter
+from django.contrib.admin import ModelAdmin
+# from unfold.decorators import display
+# from unfold.contrib.filters.admin import RangeDateFilter, ChoicesDropdownFilter
 from unfold.widgets import UnfoldAdminMoneyWidget
 from djmoney.models.fields import MoneyField
 from .models import CartItem, Reservation
@@ -18,16 +18,16 @@ class CartItemAdmin(ModelAdmin):
     
     # Переопределяем виджеты для MoneyField
     formfield_overrides = {
-        MoneyField: {'widget': UnfoldAdminMoneyWidget},
+        MoneyField: {'widget': UnfoldAdminMoneyWidget()},
     }
     list_display = [
         'user_or_session', 'item_name', 'item_type', 'quantity', 
         'formatted_price', 'formatted_total', 'created_at'
     ]
     list_filter = [
-        ('item_type', ChoicesDropdownFilter),
-        ('created_at', RangeDateFilter),
-        ('updated_at', RangeDateFilter)
+        'item_type',
+        'created_at',
+        'updated_at'
     ]
     search_fields = [
         'user__email', 'user__first_name', 'user__last_name',
@@ -59,7 +59,6 @@ class CartItemAdmin(ModelAdmin):
             'user', 'product', 'product_size', 'preorder', 'preorder_size'
         )
     
-    @display(description=_('Пользователь/Сессия'))
     def user_or_session(self, obj):
         if obj.user:
             return format_html(
@@ -71,8 +70,8 @@ class CartItemAdmin(ModelAdmin):
             '<span style="color: #6c757d;">Сессия: {}</span>',
             obj.session_id[:8] + '...' if obj.session_id else 'N/A'
         )
+    user_or_session.short_description = _('Пользователь/Сессия')
     
-    @display(description=_('Название товара'))
     def item_name(self, obj):
         if obj.item_type == 'product' and obj.product:
             size_info = f' ({obj.product_size.size_name})' if obj.product_size else ''
@@ -89,24 +88,25 @@ class CartItemAdmin(ModelAdmin):
                 size_info
             )
         return _('Не указано')
+    item_name.short_description = _('Название товара')
     
-    @display(description=_('Цена'), ordering='price')
     def formatted_price(self, obj):
         return format_html(
             '<span style="color: #28a745; font-weight: bold;">{} ₽</span>',
             obj.price
         )
+    formatted_price.short_description = _('Цена')
+    formatted_price.admin_order_field = 'price'
     
-    @display(description=_('Общая сумма'))
     def formatted_total(self, obj):
         return format_html(
             '<strong style="color: #007bff; font-size: 1.1em;">{} ₽</strong>',
             obj.total
         )
     
-    @display(description=_('Общая сумма'))
     def total(self, obj):
         return obj.total
+    total.short_description = _('Общая сумма')
 
 
 @admin.register(Reservation)
@@ -118,9 +118,9 @@ class ReservationAdmin(ModelAdmin):
         'expires_at', 'time_remaining', 'created_at'
     ]
     list_filter = [
-        ('status', ChoicesDropdownFilter),
-        ('created_at', RangeDateFilter),
-        ('expires_at', RangeDateFilter),
+        'status',
+        'created_at',
+        'expires_at',
     ]
     search_fields = [
         'product__name', 'preorder__name', 
@@ -160,7 +160,6 @@ class ReservationAdmin(ModelAdmin):
         """Стандартное представление списка резервирований"""
         return super().changelist_view(request, extra_context)
     
-    @display(description=_('Товар/Предзаказ'))
     def item_info(self, obj):
         if obj.product:
             size_info = f' ({obj.product_size.size_name})' if obj.product_size else ''
@@ -177,8 +176,8 @@ class ReservationAdmin(ModelAdmin):
                 size_info
             )
         return _('Не указано')
+    item_info.short_description = _('Товар/Предзаказ')
     
-    @display(description=_('Статус'))
     def status_display(self, obj):
         colors = {
             'active': '#28a745',
@@ -196,8 +195,8 @@ class ReservationAdmin(ModelAdmin):
             '<span style="color: {}; font-weight: bold;">{}</span>',
             color, name
         )
+    status_display.short_description = _('Статус')
     
-    @display(description=_('Осталось времени'))
     def time_remaining(self, obj):
         if obj.status != 'active':
             return '-'
@@ -222,3 +221,4 @@ class ReservationAdmin(ModelAdmin):
             '<span style="color: {}; font-weight: bold;">{}</span>',
             color, time_str
         )
+    time_remaining.short_description = _('Осталось времени')

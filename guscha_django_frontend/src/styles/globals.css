@@ -2,30 +2,284 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&display=swap');
 
-/* Импорт компонентных стилей */
+/* Универсальные стили для корректного расчета размеров */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  box-sizing: border-box;
+  max-width: 100%;
+  width: 100%;
+  min-width: 100%;
+}
+
+/* Стили для скроллбара - делаем его полностью непрозрачным */
+::-webkit-scrollbar {
+  width: 12px;
+  z-index: 99999;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1 !important;
+  opacity: 1 !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888 !important;
+  border-radius: 6px;
+  opacity: 1 !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555 !important;
+}
+
+/* Для Firefox */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+/* Прозрачный скроллбар для WebKit */
+::-webkit-scrollbar {
+  width: 12px;
+  background: transparent;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(136, 136, 136, 0.5);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(85, 85, 85, 0.7);
+}
+
+/* Критическое исправление: все основные блоки контента должны быть поверх скроллбара и растягиваться на всю ширину */
+main, .App, section, .page-content, .main-content, .container, .footer-main, footer,
+.hero-section, .box-office-section, [class*="section"], [class*="page"] {
+  position: relative;
+  z-index: 100 !important;
+  width: 100vw !important;
+  min-width: 100vw !important;
+  max-width: 100vw !important;
+  margin-left: calc(-50vw + 50%) !important;
+  margin-right: calc(-50vw + 50%) !important;
+  background-color: #111111; /* Устанавливаем фон по умолчанию */
+}
+
+/* Исключение для ProductShowcase - он должен иметь свои собственные стили ширины */
+.product-showcase-root {
+  width: 100vw !important;
+  min-width: 100vw !important;
+  max-width: 100vw !important;
+  position: relative !important;
+  z-index: 100 !important;
+  margin-left: calc(-50vw + 50%) !important;
+  margin-right: calc(-50vw + 50%) !important;
+}
+
+/* Исключения для hero-section */
+.hero-section-main {
+  background: transparent !important;
+  z-index: 20 !important;
+}
+
+/* Стили для скрипта управления фоном при прокрутке */
+body {
+  transition: background-image 0.3s ease-out;
+}
+
+/* Класс для скрытия фона при прокрутке */
+body.scrolling-no-bg {
+  background-image: none !important;
+}
+
+/* Дополнительные стили для плавности */
+body.scrolling-no-bg::before {
+  opacity: 0;
+  transition: opacity 0.3s ease-out;
+}
+
+/* Предотвращение горизонтальной прокрутки */
+* {
+  max-width: 100%;
+}
+
+/* Исключения для элементов, которым нужна полная ширина viewport */
+.background-content,
+.box-office-section,
+section[class*="section"],
+.full-width {
+  max-width: 100%;
+  width: 100%;
+}
+
+/* Hero section должен использовать 100vw для параллакс эффекта */
+.hero-section,
+.hero-section-main,
+.hero-section-background {
+  width: 100vw !important;
+  max-width: 100vw !important;
+}
+
+/* Обеспечиваем полную ширину для всех основных контейнеров */
+.App,
+.frame2-root,
+.frame2-content,
+main,
+.main-container,
+.page-container {
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Z-index иерархия - все основные секции должны быть поверх фона */
+.box-office-section {
+  position: relative;
+  z-index: 15;
+  background: #111111; /* Обеспечиваем непрозрачный фон */
+}
+
+.header-container,
+.App-header {
+  z-index: 1000;
+}
+
+.hero-section,
+.hero-content {
+  position: relative;
+  z-index: 20;
+}
+
+section,
+.section,
+[class*="section"] {
+  position: relative;
+  z-index: 15;
+  width: 100%;
+}
+
+/* Исключение для hero-section - убираем белый фон */
+.hero-section,
+.hero-section-main {
+  background: transparent !important;
+}
+
+/* Основные страницы должны иметь полную ширину и быть поверх фона */
+.account-figma-root,
+.collections-page,
+.collection-detail-page,
+.checkout-page {
+  position: relative;
+  z-index: 15;
+  width: 100%;
+  min-width: 100%;
+}
+
+/* Дополнительные селекторы для полного покрытия фона */
+.product-detail-page,
+.cart-page,
+.order-page,
+.profile-page,
+.settings-page,
+.search-page,
+.category-page,
+.brand-page,
+.about-page,
+.contact-page,
+.faq-page,
+.terms-page,
+.privacy-page,
+.shipping-page,
+.returns-page {
+  position: relative;
+  z-index: 15;
+  width: 100%;
+  min-width: 100%;
+  min-height: 100vh;
+}
+
+/* Контейнеры и обертки */
+.page-container,
+.main-container,
+.content-wrapper,
+.page-wrapper {
+  position: relative;
+  z-index: 15;
+  background: #ffffff;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Основной контент */
+main {
+  position: relative;
+  z-index: 5;
+}
+
+/* Навигация и меню */
+nav,
+.navigation,
+.burger-menu {
+  z-index: 100;
+}
+
+/* Импорт существующих CSS файлов */
+/* Основные компоненты */
 @import './Header.css';
-@import './BurgerMenu.css';
 @import './Footer.css';
+@import './BurgerMenu.css';
+@import './ProductShowcase.css';
+
+/* Страницы */
+@import './AccountPage.css';
+@import './AccountDetails.css';
+@import './AddressesPage.css';
+@import './CheckoutPage.css';
+@import './CollectionDetailPage.css';
+@import './CollectionsPage.css';
+@import './OrderConfirmationPage.css';
+@import './OrderHistory.css';
+
+/* Аутентификация */
+@import './Auth.css';
+@import './AdvancedAuth.css';
+@import './AdvancedRegistration.css';
+@import './CompactAuth.css';
+@import './PasswordReset.css';
+@import './PasswordResetConfirm.css';
+@import './TelegramLoginModal.css';
+@import './TelegramVerification.css';
+@import './QRCodeVerification.css';
+
+/* Формы и компоненты */
+@import './AddressForm.css';
+@import './AddressList.css';
+@import './AddressModal.css';
+@import './GoogleAddressAutocomplete.css';
+@import './SecurityIndicator.css';
+@import './SizesSection.css';
+
+/* Основные стили */
+@import './Account.css';
+@import './App.css';
+
+/* Специфичные импорты (временно сохраняем для совместимости) */
 @import '../components/features/cart/Cart.css';
 @import '../components/ui/Toast.css';
-@import './ProductShowcase.css';
-@import './Account.css';
-@import './AccountDetails.css';
-@import './OrderHistory.css';
 @import './csp-compliance.css';
 
-/* Глобальные CSS переменные */
-:root {
-  --primary-color: #111;
-  --secondary-color: #f1f1f1;
-  --accent-color: #007bff;
-  --text-color: #333;
-  --text-light: #666;
-  --border-color: #ddd;
-  --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  --border-radius: 8px;
-  --transition: all 0.3s ease;
-}
+/* Примечание: Глобальные CSS переменные теперь импортируются из base/variables.css через base/index.css */
 
 /* Базовые стили для элементов */
 * {
@@ -35,7 +289,7 @@
 html, body, #root {
   margin: 0;
   padding: 0;
-  width: 100vw;
+  width: 100%;
   overflow-x: hidden;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',

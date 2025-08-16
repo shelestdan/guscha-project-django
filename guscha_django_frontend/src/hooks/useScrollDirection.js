@@ -19,18 +19,18 @@ const useScrollDirection = (containerRef = null) => {
       const scrollY = getScrollY();
       setScrollPosition(scrollY);
       
-      // Вычисляем direction ДО обновления lastScrollY
       if (scrollY > lastScrollY.current) {
         setScrollDirection('down');
       } else if (scrollY < lastScrollY.current) {
         setScrollDirection('up');
       }
       
-      
       lastScrollY.current = scrollY;
     };
+    
     const target = containerRef && containerRef.current ? containerRef.current : window;
-    target.addEventListener('scroll', onScroll);
+    
+    target.addEventListener('scroll', onScroll, { passive: true });
     return () => target.removeEventListener('scroll', onScroll);
   }, [getScrollY, containerRef]);
 

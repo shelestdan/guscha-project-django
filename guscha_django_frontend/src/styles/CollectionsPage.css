@@ -1,7 +1,9 @@
 .collections-page {
   min-height: 100vh;
-  background: #ffffff;
   font-family: 'Arial', sans-serif;
+  width: 100%;
+  position: relative;
+  z-index: 15;
 }
 
 .collections-layout {
@@ -12,7 +14,7 @@
 /* Левая панель - точная копия стилей аккаунта */
 .collections-sidebar {
   width: 320px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.9);
   border-right: 1px solid #e5e5e5;
   display: flex;
   flex-direction: column;
@@ -84,11 +86,9 @@
   flex: 1;
   margin-left: 320px;
   padding: 0;
-  background: #ffffff;
 }
 
 .collection-display {
-  background: #ffffff;
   border-radius: 0;
   box-shadow: none;
   overflow: visible;
@@ -151,7 +151,7 @@
 }
 
 .image-item {
-  background: #fff;
+  background: rgba(255, 255, 255, 0.9);
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -196,13 +196,16 @@
 }
 
 .collection-placeholder-main {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.9);
   border: 1px solid #000000;
   border-radius: 0;
   padding: 6rem 2rem;
   text-align: center;
   margin: 3rem auto;
-  max-width: 500px;
+  max-width: none;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  margin-right: calc(-50vw + 50%);
 }
 
 .placeholder-content h2 {
@@ -215,16 +218,16 @@
 }
 
 .collection-description {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.9);
   padding: 2rem;
   border-radius: 0;
   border: none;
   border-top: 1px solid #e0e0e0;
   margin-top: 3rem;
   text-align: left;
-  max-width: 100%;
-  margin-left: auto;
-  margin-right: auto;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  margin-right: calc(-50vw + 50%);
 }
 
 .collection-description h3 {

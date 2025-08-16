@@ -6,7 +6,6 @@
   justify-content: center;
   background: #111111;
   position: relative;
-  overflow: hidden;
   margin: 0;
   /* Убираем возможные зазоры */
   margin-top: -1px;
@@ -20,6 +19,8 @@
   align-items: center;
   justify-content: center;
   padding: 120px 20px;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .box-office-content {
@@ -30,10 +31,14 @@
   flex-direction: column;
   align-items: center;
   gap: 0.1rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .box-office-text {
-  font-size: clamp(4rem, 8vw, 12rem);
+  font-size: clamp(4rem, 8vw, 10rem);
   font-weight: 400;
   color: #ffffff;
   text-transform: uppercase;
@@ -47,6 +52,13 @@
   
   /* Убираем стандартные font variation settings */
   font-variation-settings: normal;
+  
+  /* Предотвращаем переполнение */
+  max-width: 100%;
+  width: 100%;
+  overflow: hidden;
+  word-break: break-word;
+  box-sizing: border-box;
 }
 
 .box-office-number-container {
@@ -56,7 +68,7 @@
 }
 
 .box-office-number {
-  font-size: clamp(2.5rem, 5vw, 8rem);
+  font-size: clamp(2.5rem, 5vw, 6rem);
   font-weight: 400;
   color: #ffffff;
   text-transform: uppercase;
@@ -70,6 +82,13 @@
   
   /* Убираем стандартные font variation settings */
   font-variation-settings: normal;
+  
+  /* Предотвращаем переполнение */
+  max-width: 100%;
+  width: 100%;
+  overflow: hidden;
+  word-break: break-word;
+  box-sizing: border-box;
 }
 
 /* Эффект подсветки при hover */
@@ -142,4 +161,4 @@
     font-size: clamp(1.2rem, 10vw, 2.5rem);
     letter-spacing: 0.03em;
   }
-} 
+}

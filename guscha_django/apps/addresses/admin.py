@@ -1,8 +1,8 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
-from unfold.admin import ModelAdmin
-from unfold.decorators import display
-from unfold.contrib.filters.admin import RangeDateFilter, ChoicesDropdownFilter
+from django.contrib.admin import ModelAdmin
+# from unfold.decorators import display
+# from unfold.contrib.filters.admin import RangeDateFilter, ChoicesDropdownFilter
 from .models import Address
 
 
@@ -13,11 +13,11 @@ class AddressAdmin(ModelAdmin):
         'postal_code', 'address_type', 'is_default', 'is_active'
     ]
     list_filter = [
-        ('address_type', ChoicesDropdownFilter),
-        ('is_default', ChoicesDropdownFilter),
-        ('is_active', ChoicesDropdownFilter),
+        'address_type',
+        'is_default',
+        'is_active',
         'country',
-        ('created_at', RangeDateFilter)
+        'created_at'
     ]
     search_fields = [
         'first_name', 'last_name', 'address_line1', 

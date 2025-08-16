@@ -4,6 +4,9 @@
   min-height: 80vh;
   background: #ffffff;
   font-family: "Inter", Arial, sans-serif;
+  width: 100%;
+  position: relative;
+  z-index: 15;
 }
 
 .account-figma-sidebar {
@@ -93,7 +96,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  width: 100vw;
+  width: 100%;
   padding: 0;
   box-sizing: border-box;
   margin-top: 32px;

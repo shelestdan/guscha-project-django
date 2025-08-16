@@ -14,7 +14,14 @@ from django.http import HttpResponseRedirect
 from django.contrib import messages
 from django.db import transaction
 from django.db import models
+from django.forms import Textarea
 from unfold.contrib.forms.widgets import WysiwygWidget
+from unfold.widgets import (
+    UnfoldAdminImageFieldWidget,
+    UnfoldAdminTextInputWidget,
+    UnfoldAdminTextareaWidget,
+    UnfoldAdminSelectWidget
+)
 
 from .base_admin import BaseProductAdmin, BaseImageInline, BaseSizeInline
 from ..models import Product, ProductSize, ProductImage
@@ -104,14 +111,14 @@ class ProductSizeInline(BaseSizeInline):
     Для детального управления используйте отдельный раздел "Размеры товаров".
     """
     model = ProductSize
-    # form = ProductSizeForm  # Временно отключаем кастомную форму
+    form = ProductSizeForm  # Кастомная форма с Unfold виджетами
     verbose_name = _("Размер")
     verbose_name_plural = _("Размеры")
     extra = 1  # Показывать одну пустую форму для добавления
     min_num = 0  # Минимальное количество форм
     max_num = 20  # Максимальное количество форм
     tab = True  # Отображать в отдельной вкладке
-    fields = ['size_name', 'stock_quantity', 'limit', 'is_active', 'is_sold_out']
+    fields = ['size_name', 'stock_quantity', 'max_quantity', 'limit', 'is_active', 'is_sold_out']
     show_change_link = True  # Показывать ссылку для редактирования
     can_delete = True  # Разрешить удаление
     
@@ -187,7 +194,7 @@ class ProductAdmin(BaseProductAdmin):
     
     # Настройки формы
     formfield_overrides = {
-        models.TextField: {'widget': WysiwygWidget()},
+        models.TextField: {'widget': UnfoldAdminTextareaWidget(attrs={'rows': 4, 'cols': 40})},
     }
     
     def image_preview(self, obj):

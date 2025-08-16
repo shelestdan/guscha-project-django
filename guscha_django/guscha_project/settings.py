@@ -86,6 +86,7 @@ INSTALLED_APPS = [
     'apps.core.apps.CoreConfig',
     'apps.addresses.apps.AddressesConfig',
     'apps.collections.apps.CollectionsConfig',
+    'apps.background_content.apps.BackgroundContentConfig',
     'telegram_bot',
 
 ]

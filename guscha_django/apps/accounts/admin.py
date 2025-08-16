@@ -11,16 +11,21 @@ from datetime import timedelta
 from django.core.exceptions import ValidationError
 from django.contrib import messages
 
-# Django Unfold imports
-from unfold.admin import ModelAdmin, TabularInline
-from unfold.contrib.filters.admin import (
-    RangeDateFilter,
-    ChoicesDropdownFilter,
-    RelatedDropdownFilter
-)
-# Используем стандартные Django виджеты с Unfold стилизацией
+# Стандартные Django admin импорты
+from django.contrib.admin import ModelAdmin, TabularInline
+# from unfold.contrib.filters.admin import (
+#     RangeDateFilter,
+#     ChoicesDropdownFilter,
+#     RelatedDropdownFilter
+# )
+# Используем стандартные Django виджеты
 from django import forms
-from unfold.decorators import display
+from unfold.widgets import (
+    UnfoldAdminTextInputWidget,
+    UnfoldAdminTextareaWidget,
+    UnfoldAdminSelectWidget
+)
+# from unfold.decorators import display
 
 from .models import (
     User,
@@ -48,8 +53,8 @@ class TelegramVerificationCodeInline(TabularInline):
     def has_add_permission(self, request, obj=None):
         return False
     
-    @display(description='Статус')
     def status_display(self, obj):
+
         """Отображение статуса кода с цветовой индикацией"""
         if obj.is_used:
             return format_html(
@@ -67,6 +72,8 @@ class TelegramVerificationCodeInline(TabularInline):
             return format_html(
                 '<span style="color: blue; font-weight: bold;">⏳ Активен</span>'
             )
+    
+    status_display.short_description = 'Статус'
 
 
 @admin.register(User)
@@ -80,11 +87,11 @@ class UserAdmin(ModelAdmin):
     )
     
     list_filter = (
-        ('date_joined', RangeDateFilter),
-        ('last_login', RangeDateFilter),
-        ('is_active', ChoicesDropdownFilter),
-        ('is_staff', ChoicesDropdownFilter),
-        ('is_telegram_verified', ChoicesDropdownFilter),
+        'date_joined',
+        'last_login',
+        'is_active',
+        'is_staff',
+        'is_telegram_verified',
     )
     
     search_fields = (
@@ -133,13 +140,12 @@ class UserAdmin(ModelAdmin):
     )
     
     # Кастомные методы отображения
-    @display(description='Полное имя')
     def full_name_display(self, obj):
         """Отображение полного имени"""
         full_name = f"{obj.first_name} {obj.last_name}".strip()
         return full_name if full_name else obj.email.split('@')[0]
+    full_name_display.short_description = 'Полное имя'
     
-    @display(description='Telegram статус')
     def telegram_status_display(self, obj):
         """Отображение статуса Telegram с цветовой индикацией"""
         if obj.is_telegram_verified:
@@ -158,25 +164,25 @@ class UserAdmin(ModelAdmin):
             return format_html(
                 '<span style="color: gray;">✗ Не настроен</span>'
             )
+    telegram_status_display.short_description = 'Telegram статус'
     
-    @display(description='Телефон')
     def phone_display(self, obj):
         """Отображение телефона"""
         return obj.phone if obj.phone else '—'
+    phone_display.short_description = 'Телефон'
     
-    @display(description='Дата регистрации')
     def date_joined_display(self, obj):
         """Отображение даты регистрации"""
         return obj.date_joined.strftime('%d.%m.%Y %H:%M')
+    date_joined_display.short_description = 'Дата регистрации'
     
-    @display(description='Последний вход')
     def last_login_display(self, obj):
         """Отображение последнего входа"""
         if obj.last_login:
             return obj.last_login.strftime('%d.%m.%Y %H:%M')
         return 'Никогда'
+    last_login_display.short_description = 'Последний вход'
     
-    @display(description='Информация о Telegram')
     def telegram_info_display(self, obj):
         """Подробная информация о Telegram интеграции"""
         info = []
@@ -196,14 +202,17 @@ class UserAdmin(ModelAdmin):
             )
         
         return format_html('<br>'.join(info)) if info else '—'
+    telegram_info_display.short_description = 'Информация о Telegram'
     
     # Настройка формы с кастомными виджетами
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         """Кастомные виджеты для полей формы"""
         if db_field.name in ['phone']:
-            kwargs['widget'] = forms.TextInput(attrs={'readonly': True, 'class': 'readonly-field'})
+            kwargs['widget'] = UnfoldAdminTextInputWidget(attrs={'readonly': True, 'class': 'readonly-field'})
         elif db_field.name == 'address':
-            kwargs['widget'] = forms.Textarea(attrs={'rows': 3})
+            kwargs['widget'] = UnfoldAdminTextareaWidget(attrs={'rows': 3})
+        elif db_field.name in ['email', 'first_name', 'last_name', 'telegram_username']:
+            kwargs['widget'] = UnfoldAdminTextInputWidget()
         
         return super().formfield_for_dbfield(db_field, request, **kwargs)
     
@@ -224,10 +233,10 @@ class TelegramVerificationCodeAdmin(ModelAdmin):
     )
     
     list_filter = (
-        ('verification_type', ChoicesDropdownFilter),
-        ('is_used', ChoicesDropdownFilter),
-        ('created_at', RangeDateFilter),
-        ('expires_at', RangeDateFilter),
+        'verification_type',
+        'is_used',
+        'created_at',
+        'expires_at',
     )
     
     search_fields = (
@@ -250,7 +259,6 @@ class TelegramVerificationCodeAdmin(ModelAdmin):
         """Запрет изменения кодов"""
         return False
     
-    @display(description='Email пользователя')
     def user_email(self, obj):
         """Email пользователя"""
         if obj.user:
@@ -258,8 +266,8 @@ class TelegramVerificationCodeAdmin(ModelAdmin):
         elif obj.pending_registration:
             return f"{obj.pending_registration.email} (ожидает)"
         return '—'
+    user_email.short_description = 'Email пользователя'
     
-    @display(description='Статус')
     def status_display(self, obj):
         """Отображение статуса кода"""
         if obj.is_used:
@@ -278,6 +286,7 @@ class TelegramVerificationCodeAdmin(ModelAdmin):
             return format_html(
                 '<span style="color: blue; font-weight: bold;">⏳ Активен</span>'
             )
+    status_display.short_description = 'Статус'
 
 
 @admin.register(PendingUserRegistration)
@@ -290,8 +299,8 @@ class PendingUserRegistrationAdmin(ModelAdmin):
     )
     
     list_filter = (
-        ('created_at', RangeDateFilter),
-        ('expires_at', RangeDateFilter),
+        'created_at',
+        'expires_at',
     )
     
     search_fields = ('email', 'first_name', 'last_name')
@@ -311,12 +320,11 @@ class PendingUserRegistrationAdmin(ModelAdmin):
         """Запрет изменения"""
         return False
     
-    @display(description='Полное имя')
     def full_name_display(self, obj):
         """Отображение полного имени"""
         return f"{obj.first_name} {obj.last_name}".strip()
+    full_name_display.short_description = 'Полное имя'
     
-    @display(description='Статус')
     def status_display(self, obj):
         """Отображение статуса регистрации"""
         if obj.is_expired():
@@ -327,3 +335,4 @@ class PendingUserRegistrationAdmin(ModelAdmin):
             return format_html(
                 '<span style="color: green; font-weight: bold;">⏳ Активен</span>'
             )
+    status_display.short_description = 'Статус'

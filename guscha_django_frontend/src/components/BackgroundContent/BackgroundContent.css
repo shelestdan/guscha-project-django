@@ -1,0 +1,473 @@
+.background-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  z-index: -1;
+  pointer-events: none; /* Позволяет событиям мыши проходить сквозь элемент */
+}
+
+.background-content.loading {
+  background: black;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.background-content.error {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh; /* Fallback для старых браузеров */
+  height: 100dvh; /* Динамическая высота viewport для мобильных */
+  background-color: #1a1a1a;
+}
+
+.loading-spinner {
+  font-size: 1.2rem;
+  /* Убрана анимация pulse */
+}
+
+.error-container {
+  position: relative;
+  z-index: 10;
+  max-width: 500px;
+  padding: 2rem;
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.error-message {
+  color: #ff6b6b;
+  font-size: 1.2rem;
+  text-align: center;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.error-details {
+  margin: 1rem 0;
+  padding: 1rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+.error-details p {
+  margin: 0.5rem 0;
+}
+
+.health-status {
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+}
+
+.health-status.healthy {
+  background-color: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+}
+
+.health-status.unhealthy {
+  background-color: rgba(244, 67, 54, 0.2);
+  color: #f44336;
+}
+
+.health-status.checking {
+  background-color: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+}
+
+.health-status.unknown {
+  background-color: rgba(158, 158, 158, 0.2);
+  color: #9e9e9e;
+}
+
+.error-actions {
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
+.retry-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.retry-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.retry-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.fallback-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  opacity: 0.3;
+}
+
+.fallback-pattern {
+  width: 100%;
+  height: 100%;
+  background: 
+    linear-gradient(45deg, transparent 40%, rgba(255, 255, 255, 0.1) 50%, transparent 60%),
+    linear-gradient(-45deg, transparent 40%, rgba(255, 255, 255, 0.05) 50%, transparent 60%);
+  background-size: 60px 60px;
+  animation: fallbackMove 20s linear infinite;
+}
+
+@keyframes fallbackMove {
+  0% {
+    background-position: 0 0, 0 0;
+  }
+  100% {
+    background-position: 60px 60px, -60px 60px;
+  }
+}
+
+/* Фоновые изображения */
+.background-image,
+.background-slideshow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.background-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.slideshow-img {
+  animation: zoomIn 0.8s ease-out, fadeIn 0.3s ease-in;
+  transform-origin: center center;
+  transition: opacity 0.3s ease-out;
+}
+
+.slideshow-img.fading-out {
+  animation: fadeOut 0.3s ease-out;
+  opacity: 0;
+}
+
+/* Индикаторы слайдшоу */
+.slideshow-indicators {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.5rem;
+  z-index: 2;
+}
+
+.indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.indicator:hover {
+  border-color: rgba(255, 255, 255, 0.8);
+  transform: scale(1.1);
+}
+
+.indicator.active {
+  background: white;
+  border-color: white;
+}
+
+.indicator.primary {
+  border-color: #ffd700;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}
+
+.indicator.primary.active {
+  background: #ffd700;
+  border-color: #ffd700;
+}
+
+.indicator.primary::after {
+  content: '★';
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: #ffd700;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.indicator.primary:hover::after {
+  opacity: 1;
+}
+
+/* Информация о слайде */
+.slide-info {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  z-index: 2;
+}
+
+.primary-badge {
+  background: rgba(255, 215, 0, 0.9);
+  color: #000;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.primary-badge::before {
+  content: '★';
+  font-size: 1rem;
+}
+
+/* Основное изображение */
+.primary-image {
+  position: relative;
+}
+
+.primary-image::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  box-shadow: inset 0 0 0 3px rgba(255, 215, 0, 0.6);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Фоновое видео */
+.background-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.background-video-player {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.background-video-element {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.background-video-embed {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.background-iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Защита от YouTube UI */
+.youtube-iframe {
+  pointer-events: none;
+  width: 120%;
+  height: 120%;
+  top: -10%;
+  left: -10%;
+  transform: scale(0.833);
+  transform-origin: center;
+}
+
+/* Дополнительная защита для YouTube embed */
+.background-video-embed {
+  overflow: hidden;
+  position: relative;
+}
+
+.background-video-embed::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Оверлей с контентом */
+.background-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.background-info {
+  text-align: center;
+  color: white;
+  max-width: 800px;
+  padding: 2rem;
+}
+
+.background-title {
+  font-size: 3.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  line-height: 1.2;
+}
+
+.background-description {
+  font-size: 1.3rem;
+  line-height: 1.6;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  opacity: 0.9;
+}
+
+/* Анимации */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes zoomIn {
+  0% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1.0);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .background-title {
+    font-size: 2.5rem;
+  }
+  
+  .background-description {
+    font-size: 1.1rem;
+  }
+  
+  .background-info {
+    padding: 1rem;
+  }
+  
+  .slideshow-indicators {
+    bottom: 1rem;
+  }
+  
+  .indicator {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .background-title {
+    font-size: 2rem;
+  }
+  
+  .background-description {
+    font-size: 1rem;
+  }
+}
+
+/* Улучшенная производительность */
+.background-img,
+.background-video-element {
+  will-change: transform;
+}
+
+/* Доступность */
+@media (prefers-reduced-motion: reduce) {
+  .slideshow-img,
+  .loading-spinner {
+    animation: none;
+  }
+  
+  .indicator {
+    transition: none;
+  }
+}

@@ -16,6 +16,7 @@ from django.db import transaction
 
 from .base_admin import BaseProductAdmin, BaseImageInline, BaseSizeInline
 from ..models import Preorder, PreorderSize, PreorderImage
+from ..forms import PreorderSizeForm
 
 
 class PreorderSizeAdmin(admin.ModelAdmin):
@@ -97,6 +98,7 @@ class PreorderSizeInline(BaseSizeInline):
     Для детального управления используйте отдельный раздел "Размеры предзаказов".
     """
     model = PreorderSize
+    form = PreorderSizeForm
     verbose_name = _("Размер")
     verbose_name_plural = _("Размеры")
     extra = 1  # Показывать одну пустую форму для добавления

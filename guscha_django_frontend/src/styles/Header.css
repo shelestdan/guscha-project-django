@@ -7,7 +7,7 @@
   height: 96px;
   z-index: 100;
   pointer-events: none;
-  width: 100vw;
+  width: 100%;
   margin: 0;
   padding: 0;
   font-family: 'Inter', sans-serif;
@@ -172,4 +172,4 @@
   .header-content {
     padding: 0 0.5rem;
   }
-} 
+}

@@ -33,8 +33,8 @@ const HeaderCartIcon = ({ isDark = false }) => {
   );
 };
 
-const Header = ({ isHome, scrollContainerRef }) => {
-  const { scrollDirection, scrollPosition } = useScrollDirection(scrollContainerRef);
+const Header = ({ isHome }) => {
+  const { scrollDirection, scrollPosition } = useScrollDirection();
 
   const isAtTop = scrollPosition < 100;
   const isScrollingDown = scrollDirection === 'down' && scrollPosition > 50;
@@ -47,7 +47,7 @@ const Header = ({ isHome, scrollContainerRef }) => {
     const showLogo = !isScrollingDown;
 
     return (
-      <header className="header-container">
+      <header className={`header-container ${isScrollingDown ? 'header-hidden' : 'header-visible'}`}>
         {/* Белая подложка с анимацией opacity */}
         <div
           className="header-background-layer"
@@ -60,7 +60,7 @@ const Header = ({ isHome, scrollContainerRef }) => {
           <div className="header-left">
             <BurgerMenu black={black} menuLabelVisible={showMenuLabel} />
           </div>
-          <div className={`header-center${showLogo ? '' : ' hide-elements'}`}> 
+          <div className="header-center"> 
             <Logo isVisible={showLogo} black={black} size={64} />
           </div>
           <div className="header-right">

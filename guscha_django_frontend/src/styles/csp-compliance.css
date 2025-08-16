@@ -2,12 +2,14 @@
 
 /* HomePage.jsx inline styles */
 .homepage-divider {
-  width: 100vw;
+  width: 100%;
   height: 2px;
   background: #111;
   margin: 0;
   border: none;
   padding: 0;
+  position: relative;
+  z-index: 15;
 }
 
 /* HeroSection.jsx inline styles */
@@ -16,10 +18,37 @@
   min-height: 100vh;
   position: relative;
   overflow: hidden;
+  width: 100vw;
+  z-index: 1;
+}
+
+/* Критическое исправление: полное покрытие контента поверх скроллбара */
+.page-content,
+.main-content,
+.section-content,
+.container-fluid,
+.full-width-container {
+  position: relative;
+  z-index: 100 !important;
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* Обеспечиваем покрытие для всех div элементов верхнего уровня, кроме hero-section */
+body > div:not(.background-layer):not([class*="background"]):not(.hero-section) {
+  position: relative;
+  z-index: 100 !important;
+  width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .hero-section-main {
-  /* Стили будут добавлены после анализа исходного inline стиля */
+  background-color: transparent;
+  z-index: 20;
+  position: relative;
 }
 
 /* Стили для видео-фона */
@@ -256,6 +285,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  background-color: transparent;
+  z-index: 20;
 }
 
 

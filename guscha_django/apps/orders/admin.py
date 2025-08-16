@@ -3,9 +3,9 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.html import format_html
 from django.db.models import Sum, Count
 from django.contrib.admin import SimpleListFilter
-from unfold.admin import ModelAdmin, TabularInline
-from unfold.decorators import display
-from unfold.contrib.filters.admin import RangeDateFilter, ChoicesDropdownFilter
+from django.contrib.admin import ModelAdmin, TabularInline
+# from unfold.decorators import display
+# from unfold.contrib.filters.admin import RangeDateFilter, ChoicesDropdownFilter
 from unfold.widgets import UnfoldAdminMoneyWidget
 from djmoney.models.fields import MoneyField
 from .models import Order, OrderItem
@@ -23,18 +23,18 @@ class OrderItemInline(TabularInline):
 class OrderAdmin(ModelAdmin):
     # Переопределяем виджеты для MoneyField
     formfield_overrides = {
-        MoneyField: {'widget': UnfoldAdminMoneyWidget},
+        MoneyField: {'widget': UnfoldAdminMoneyWidget()},
     }
     list_display = [
         'order_number', 'user', 'email', 'colored_status', 'colored_payment_status', 
         'colored_fulfillment_status', 'formatted_total', 'items_count', 'created_at'
     ]
     list_filter = [
-        ('status', ChoicesDropdownFilter),
-        ('payment_status', ChoicesDropdownFilter),
-        ('fulfillment_status', ChoicesDropdownFilter),
-        ('created_at', RangeDateFilter),
-        ('updated_at', RangeDateFilter)
+        'status',
+        'payment_status',
+        'fulfillment_status',
+        'created_at',
+        'updated_at'
     ]
     search_fields = [
         'order_number', 'user__email', 'email', 'user__first_name', 
@@ -106,7 +106,6 @@ class OrderAdmin(ModelAdmin):
         ).prefetch_related('items')
     
     # Цветовая индикация статусов
-    @display(description=_('Статус заказа'), ordering='status')
     def colored_status(self, obj):
         colors = {
             'pending': '#ffc107',      # желтый
@@ -122,8 +121,9 @@ class OrderAdmin(ModelAdmin):
             color,
             obj.get_status_display()
         )
+    colored_status.short_description = _('Статус заказа')
+    colored_status.admin_order_field = 'status'
     
-    @display(description=_('Статус оплаты'), ordering='payment_status')
     def colored_payment_status(self, obj):
         colors = {
             'pending': '#ffc107',      # желтый
@@ -137,8 +137,9 @@ class OrderAdmin(ModelAdmin):
             color,
             obj.get_payment_status_display()
         )
+    colored_payment_status.short_description = _('Статус оплаты')
+    colored_payment_status.admin_order_field = 'payment_status'
     
-    @display(description=_('Статус выполнения'), ordering='fulfillment_status')
     def colored_fulfillment_status(self, obj):
         colors = {
             'unfulfilled': '#ffc107',         # желтый
@@ -152,25 +153,28 @@ class OrderAdmin(ModelAdmin):
             color,
             obj.get_fulfillment_status_display()
         )
+    colored_fulfillment_status.short_description = _('Статус выполнения')
+    colored_fulfillment_status.admin_order_field = 'fulfillment_status'
     
     # Статистические методы для отображения сумм
-    @display(description=_('Общая сумма'), ordering='total')
     def formatted_total(self, obj):
         return format_html(
             '<strong style="color: #28a745; font-size: 1.1em;">{} ₽</strong>',
             obj.total
         )
+    formatted_total.short_description = _('Общая сумма')
+    formatted_total.admin_order_field = 'total'
     
-    @display(description=_('Товаров'))
     def items_count(self, obj):
         count = obj.items.count()
         return format_html(
             '<span style="background: #e9ecef; padding: 2px 6px; border-radius: 3px;">{} шт.</span>',
             count
         )
+    items_count.short_description = _('Товаров')
     
-    @display(description=_('Статистика'))
     def order_statistics(self, obj):
+        """Статистика заказа"""
         if obj.pk:
             items = obj.items.all()
             total_items = items.count()
@@ -195,6 +199,7 @@ class OrderAdmin(ModelAdmin):
                 obj.shipping
             )
         return _('Сохраните заказ для просмотра статистики')
+    order_statistics.short_description = _('Статистика')
     
     # Кастомные действия для быстрого изменения статусов
     def mark_as_processing(self, request, queryset):
@@ -259,6 +264,6 @@ class OrderItemAdmin(ModelAdmin):
     search_fields = ['name', 'order__order_number', 'order__user__email']
     readonly_fields = ['created_at', 'updated_at', 'total']
     
-    @display(description=_('Общая сумма'))
     def total(self, obj):
         return obj.total
+    total.short_description = _('Общая сумма')

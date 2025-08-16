@@ -2,6 +2,10 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem 1rem;
+  width: 100%;
+  position: relative;
+  z-index: 15;
+  background: #ffffff;
 }
 
 .checkout-page h1 {

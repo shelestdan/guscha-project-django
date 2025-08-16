@@ -2,9 +2,10 @@ from django import forms
 from unfold.widgets import (
     UnfoldAdminTextInputWidget, UnfoldAdminTextareaWidget,
     UnfoldAdminSelectWidget, UnfoldAdminCheckboxSelectMultiple,
-    UnfoldAdminFileFieldWidget, UnfoldAdminMoneyWidget
+    UnfoldAdminImageFieldWidget,
+    UnfoldAdminMoneyWidget
 )
-from .models import ProductSize, Product, ProductImage, PreorderImage
+from .models import ProductSize, Product, ProductImage, PreorderImage, PreorderSize
 import logging
 
 logger = logging.getLogger(__name__)
@@ -143,6 +144,39 @@ class ProductSizeForm(forms.ModelForm):
         self.fields['limit'].required = False
 
 
+class PreorderSizeForm(forms.ModelForm):
+    """Форма для размеров предзаказа"""
+    
+    class Meta:
+        model = PreorderSize
+        fields = ['size_name', 'stock_quantity', 'max_quantity', 'is_sold_out', 'is_active']
+        widgets = {
+            'size_name': UnfoldAdminTextInputWidget(attrs={
+                'placeholder': 'Например: S, M, L, XL'
+            }),
+            'stock_quantity': UnfoldAdminTextInputWidget(attrs={
+                'type': 'number',
+                'min': '0'
+            }),
+            'max_quantity': UnfoldAdminTextInputWidget(attrs={
+                'type': 'number',
+                'min': '1',
+                'placeholder': 'Максимум в заказе'
+            })
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['size_name'].label = 'Название размера'
+        self.fields['stock_quantity'].label = 'Количество на складе'
+        self.fields['max_quantity'].label = 'Лимит для заказа'
+        self.fields['is_sold_out'].label = 'Распродано'
+        self.fields['is_active'].label = 'Активен'
+        
+        # Делаем max_quantity необязательным
+        self.fields['max_quantity'].required = False
+
+
 class ProductImageForm(forms.ModelForm):
     """Форма для изображений товара с поддержкой загрузки файлов"""
     
@@ -150,23 +184,19 @@ class ProductImageForm(forms.ModelForm):
         model = ProductImage
         fields = ['image', 'image_url', 'alt_text', 'is_primary', 'sort_order']
         widgets = {
-            'image': UnfoldAdminFileFieldWidget(attrs={
-                'accept': 'image/jpeg,image/png,image/webp,image/gif',
-                'class': 'form-control-file'
+            'image': UnfoldAdminImageFieldWidget(attrs={
+                'accept': 'image/jpeg,image/png,image/webp,image/gif'
             }),
             'image_url': UnfoldAdminTextInputWidget(attrs={
-                'placeholder': 'https://example.com/image.jpg',
-                'class': 'form-control'
+                'placeholder': 'https://example.com/image.jpg'
             }),
             'alt_text': UnfoldAdminTextInputWidget(attrs={
-                'placeholder': 'Описание изображения для SEO',
-                'class': 'form-control'
+                'placeholder': 'Описание изображения для SEO'
             }),
             'sort_order': UnfoldAdminTextInputWidget(attrs={
                 'type': 'number',
                 'min': '0',
-                'value': '0',
-                'class': 'form-control'
+                'value': '0'
             })
         }
     
@@ -306,23 +336,19 @@ class PreorderImageForm(forms.ModelForm):
         model = PreorderImage
         fields = ['image', 'image_url', 'alt_text', 'is_primary', 'image_type', 'sort_order']
         widgets = {
-            'image': UnfoldAdminFileFieldWidget(attrs={
-                'accept': 'image/jpeg,image/png,image/webp,image/gif',
-                'class': 'form-control-file'
+            'image': UnfoldAdminImageFieldWidget(attrs={
+                'accept': 'image/jpeg,image/png,image/webp,image/gif'
             }),
             'image_url': UnfoldAdminTextInputWidget(attrs={
-                'placeholder': 'https://example.com/image.jpg',
-                'class': 'form-control'
+                'placeholder': 'https://example.com/image.jpg'
             }),
             'alt_text': UnfoldAdminTextInputWidget(attrs={
-                'placeholder': 'Описание изображения для SEO',
-                'class': 'form-control'
+                'placeholder': 'Описание изображения для SEO'
             }),
             'sort_order': UnfoldAdminTextInputWidget(attrs={
                 'type': 'number',
                 'min': '0',
-                'value': '0',
-                'class': 'form-control'
+                'value': '0'
             })
         }
     

@@ -1,0 +1,243 @@
+/* Стили для единой админ-панели управления фоновым контентом */
+
+/* Основные стили для формы */
+.form-row {
+    margin-bottom: 15px;
+}
+
+/* Скрытие полей по умолчанию */
+.content-type-field {
+    display: none;
+}
+
+/* Показ полей в зависимости от выбранного типа контента */
+.show-image-fields .image-field,
+.show-slideshow-fields .slideshow-field,
+.show-video-fields .video-field {
+    display: block;
+}
+
+/* Стили для fieldset'ов */
+.image-fieldset,
+.slideshow-fieldset,
+.video-fieldset {
+    display: none;
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.show-image-fields .image-fieldset,
+.show-slideshow-fields .slideshow-fieldset,
+.show-video-fields .video-fieldset {
+    display: block;
+}
+
+/* Стили для заголовков fieldset'ов */
+.image-fieldset h2,
+.slideshow-fieldset h2,
+.video-fieldset h2 {
+    color: #333;
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #ccc;
+}
+
+/* Стили для полей формы */
+.form-row label {
+    font-weight: bold;
+    color: #333;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-row input[type="text"],
+.form-row input[type="number"],
+.form-row input[type="url"],
+.form-row select,
+.form-row textarea {
+    width: 100%;
+    max-width: 400px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.form-row input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+/* Стили для файлового поля */
+.form-row input[type="file"] {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+}
+
+/* Стили для help text */
+.help {
+    font-size: 11px;
+    color: #666;
+    margin-top: 5px;
+    display: block;
+}
+
+/* Стили для ошибок */
+.errorlist {
+    color: #ba2121;
+    margin: 5px 0;
+    padding: 0;
+    list-style: none;
+}
+
+.errorlist li {
+    font-size: 12px;
+    margin-bottom: 3px;
+}
+
+/* Стили для inline форм (изображения слайдшоу) */
+.inline-group {
+    margin-top: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    display: none; /* Скрываем все инлайны по умолчанию */
+}
+
+/* Показ инлайнов в зависимости от типа контента */
+.show-image-fields .inline-group.image-inline,
+.show-slideshow-fields .inline-group.slideshow-inline,
+.show-video-fields .inline-group.video-inline {
+    display: block;
+}
+
+.inline-group h2 {
+    background-color: #e1e1e1;
+    padding: 10px 15px;
+    margin: 0;
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+    border-bottom: 1px solid #ddd;
+}
+
+.inline-related {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.inline-related:last-child {
+    border-bottom: none;
+}
+
+/* Стили для кнопок */
+.add-row {
+    background-color: #417690;
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    margin: 10px 15px;
+}
+
+.add-row:hover {
+    background-color: #205067;
+}
+
+.delete {
+    background-color: #ba2121;
+    color: white;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 11px;
+}
+
+.delete:hover {
+    background-color: #8b1a1a;
+}
+
+/* Адаптивные стили */
+@media (max-width: 768px) {
+    .form-row input[type="text"],
+    .form-row input[type="number"],
+    .form-row input[type="url"],
+    .form-row select,
+    .form-row textarea {
+        max-width: 100%;
+    }
+    
+    .image-fieldset,
+    .slideshow-fieldset,
+    .video-fieldset {
+        padding: 10px;
+    }
+    
+    .inline-related {
+        padding: 10px;
+    }
+}
+
+/* Стили для активных элементов */
+.form-row input:focus,
+.form-row select:focus,
+.form-row textarea:focus {
+    outline: none;
+    border-color: #417690;
+    box-shadow: 0 0 5px rgba(65, 118, 144, 0.3);
+}
+
+/* Стили для обязательных полей */
+.required label:after {
+    content: " *";
+    color: #ba2121;
+    font-weight: bold;
+}
+
+/* Стили для предварительного просмотра изображений */
+.image-preview {
+    max-width: 200px;
+    max-height: 150px;
+    margin-top: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Анимации для плавного показа/скрытия */
+.content-type-field {
+    transition: opacity 0.3s ease-in-out;
+}
+
+.image-fieldset,
+.slideshow-fieldset,
+.video-fieldset {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Стили для Django Unfold совместимости */
+.unfold .form-row {
+    margin-bottom: 20px;
+}
+
+.unfold .content-type-field {
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: opacity 0.3s ease-in-out, max-height 0.3s ease-in-out;
+}
+
+.unfold .show-image-fields .image-field,
+.unfold .show-slideshow-fields .slideshow-field,
+.unfold .show-video-fields .video-field {
+    opacity: 1;
+    max-height: 200px;
+}
