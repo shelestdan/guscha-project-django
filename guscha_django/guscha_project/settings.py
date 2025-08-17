@@ -494,11 +494,11 @@ UNFOLD = {
     "SITE_HEADER": "Панель управления Guscha",
     "SITE_URL": "/",
     "SITE_ICON": {
-        "light": lambda request: static("images/logo.svg"),  # Светлая тема
+        "light": lambda request: static("images/logo-light.svg"),  # Светлая тема
         "dark": lambda request: static("images/logo-dark.svg"),  # Тёмная тема
     },
     "SITE_LOGO": {
-        "light": lambda request: static("images/logo.svg"),  # Светлая тема
+        "light": lambda request: static("images/logo-light.svg"),  # Светлая тема
         "dark": lambda request: static("images/logo-dark.svg"),  # Тёмная тема
     },
     "SITE_SYMBOL": "speed",  # Иконка Material Design
@@ -578,6 +578,16 @@ UNFOLD = {
                         "title": _("Резервирования"),
                         "icon": "bookmark",
                         "link": reverse_lazy("admin:cart_reservation_changelist"),
+                    },
+                    {
+                         "title": _("Фоновый контент"),
+                         "icon": "image",
+                         "link": "http://localhost/admin/background_content/",
+                     },
+                    {
+                        "title": _("Коллекции"),
+                        "icon": "collections",
+                        "link": reverse_lazy("admin:collections_collection_changelist"),
                     },
                 ],
             },
@@ -781,3 +791,14 @@ TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
 # URL фронтенда для генерации ссылок (для статических файлов)
 # Поскольку фронтенд собирается в статические файлы и обслуживается Django
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:8000')
+
+# Content Security Policy настройки для Django Unfold
+# Разрешаем inline скрипты для корректной работы админки
+CSP_DEFAULT_SRC = ("'self'",)
+CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "'unsafe-eval'")
+CSP_STYLE_SRC = ("'self'", "'unsafe-inline'")
+CSP_IMG_SRC = ("'self'", "data:", "blob:")
+CSP_FONT_SRC = ("'self'", "data:")
+CSP_CONNECT_SRC = ("'self'",)
+CSP_FRAME_SRC = ("'self'",)
+CSP_MEDIA_SRC = ("'self'",)

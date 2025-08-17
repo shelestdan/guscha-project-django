@@ -33,7 +33,7 @@ const HeaderCartIcon = ({ isDark = false }) => {
   );
 };
 
-const Header = ({ isHome }) => {
+const Header = ({ isHome, isBurgerMenuOpen, setIsBurgerMenuOpen }) => {
   const { scrollDirection, scrollPosition } = useScrollDirection();
 
   const isAtTop = scrollPosition < 100;
@@ -52,13 +52,13 @@ const Header = ({ isHome }) => {
         <div
           className="header-background-layer"
           style={{
-            opacity: (!isAtTop && !isScrollingDown) ? 1 : 0,
+            opacity: (!isAtTop && !isScrollingDown && !isBurgerMenuOpen) ? 1 : 0,
             transition: 'opacity 0.4s cubic-bezier(0.4,0,0.2,1)'
           }}
         />
         <div className="header-content">
           <div className="header-left">
-            <BurgerMenu black={black} menuLabelVisible={showMenuLabel} />
+            <BurgerMenu black={black} menuLabelVisible={showMenuLabel} isOpen={isBurgerMenuOpen} setIsOpen={setIsBurgerMenuOpen} />
           </div>
           <div className="header-center"> 
             <Logo isVisible={showLogo} black={black} size={64} />
@@ -78,7 +78,7 @@ const Header = ({ isHome }) => {
     <header className="header-container header-white header-visible">
       <div className="header-content">
         <div className="header-left">
-          <BurgerMenu black={true} menuLabelVisible={showMenuLabel} />
+          <BurgerMenu black={true} menuLabelVisible={showMenuLabel} isOpen={isBurgerMenuOpen} setIsOpen={setIsBurgerMenuOpen} />
         </div>
         <div className="header-center">
           <Logo isVisible={true} black={true} size={64} />

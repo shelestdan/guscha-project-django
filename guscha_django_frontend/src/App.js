@@ -1,4 +1,4 @@
-import React, { useEffect, Suspense, lazy, useRef } from 'react';
+import React, { useEffect, Suspense, lazy, useRef, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import './styles/App.css';
 import { Header, Footer } from './components/layout';
@@ -29,6 +29,7 @@ function AppContent() {
   console.log('🏠 isHome:', isHome, 'pathname:', location.pathname);
   const fetchCart = useCartStore((state) => state.fetchCart);
   const mainRef = useRef(null);
+  const [isBurgerMenuOpen, setIsBurgerMenuOpen] = useState(false);
   
   // Инициализируем аутентификацию для проверки токена при загрузке
   const { loading } = useAuth();
@@ -75,7 +76,7 @@ function AppContent() {
   return (
     <div className="App">
 
-      <Header isHome={isHome} />
+      <Header isHome={isHome} isBurgerMenuOpen={isBurgerMenuOpen} setIsBurgerMenuOpen={setIsBurgerMenuOpen} />
       <main ref={mainRef} style={{
         background: isHome ? 'transparent' : '#f1f1f1',
         minHeight: '100vh',

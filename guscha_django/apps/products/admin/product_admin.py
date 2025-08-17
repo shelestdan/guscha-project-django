@@ -16,11 +16,14 @@ from django.db import transaction
 from django.db import models
 from django.forms import Textarea
 from unfold.contrib.forms.widgets import WysiwygWidget
-from unfold.widgets import (
-    UnfoldAdminImageFieldWidget,
-    UnfoldAdminTextInputWidget,
-    UnfoldAdminTextareaWidget,
-    UnfoldAdminSelectWidget
+from unfold.widgets import UnfoldAdminMoneyWidget, UnfoldAdminImageFieldWidget, UnfoldAdminTextInputWidget, UnfoldAdminTextareaWidget
+from djmoney.models.fields import MoneyField
+from django.forms import (
+    TextInput,
+    Select,
+    CheckboxInput,
+    FileInput,
+    NumberInput
 )
 
 from .base_admin import BaseProductAdmin, BaseImageInline, BaseSizeInline
@@ -129,9 +132,10 @@ class ProductImageInline(BaseImageInline):
     
     Компактный интерфейс для добавления/редактирования изображений.
     Для детального управления используйте отдельный раздел "Изображения товаров".
+    Все поля остаются во вкладке с изображениями согласно требованиям.
     """
     model = ProductImage
-    # form = ProductImageForm  # Временно отключаем кастомную форму
+    form = ProductImageForm  # Используем кастомную форму с Unfold виджетами
     verbose_name = _("Изображение")
     verbose_name_plural = _("Изображения")
     extra = 1  # Показывать одну пустую форму для добавления
@@ -141,6 +145,7 @@ class ProductImageInline(BaseImageInline):
     fields = ['image', 'image_url', 'alt_text', 'is_primary', 'sort_order', 'image_preview']
     show_change_link = True  # Показывать ссылку для редактирования
     can_delete = True  # Разрешить удаление
+    readonly_fields = ['image_preview']
 
 
 @admin.register(Product)
@@ -170,21 +175,21 @@ class ProductAdmin(BaseProductAdmin):
         'rating_display', 'formatted_price', 'stock_status', 'status_badges'
     ]
     
-    # Четкое разделение функций по вкладкам - каждая вкладка отвечает только за свою область
+    # Официальные fieldset элементы с вкладками - каждая вкладка отвечает только за свою область
     fieldsets = (
         (_('Основная информация'), {
             'fields': ('name', 'slug', 'sku', 'category', 'description', 'track_inventory', 'is_active', 'created_at', 'updated_at'),
-            'classes': ('tab',),
+            'classes': ['tab'],
             'description': 'Основные данные товара, артикул, описание, статус публикации и системная информация'
         }),
         (_('Ценообразование'), {
             'fields': ('price', 'formatted_price'),
-            'classes': ('tab',),
+            'classes': ['tab'],
             'description': 'Управление ценами товара'
         }),
         (_('SEO метаданные'), {
             'fields': ('meta_title', 'meta_description', 'search_keywords'),
-            'classes': ('tab',),
+            'classes': ['tab'],
             'description': 'Данные для поисковых систем'
         })
     )
@@ -192,9 +197,23 @@ class ProductAdmin(BaseProductAdmin):
     # Размеры и изображения управляются через inline-формы в отдельных вкладках
     inlines = [ProductSizeInline, ProductImageInline]
     
-    # Настройки формы
+    # Настройки формы - официальные Unfold виджеты для всех полей
     formfield_overrides = {
-        models.TextField: {'widget': UnfoldAdminTextareaWidget(attrs={'rows': 4, 'cols': 40})},
+        # Основная информация - используем официальные Unfold виджеты для текстовых полей
+        models.CharField: {'widget': UnfoldAdminTextInputWidget()},
+        models.SlugField: {'widget': UnfoldAdminTextInputWidget()},
+        models.TextField: {'widget': UnfoldAdminTextareaWidget(attrs={'rows': 4})},
+        models.BooleanField: {'widget': CheckboxInput()},
+        models.ForeignKey: {'widget': Select()},
+        
+        # Ценообразование
+        MoneyField: {'widget': UnfoldAdminMoneyWidget()},
+        models.DecimalField: {'widget': NumberInput(attrs={'step': '0.01'})},
+        models.PositiveIntegerField: {'widget': NumberInput(attrs={'min': '0'})},
+        
+        # Изображения
+        models.ImageField: {'widget': UnfoldAdminImageFieldWidget()},
+        models.URLField: {'widget': UnfoldAdminTextInputWidget(attrs={'type': 'url'})},
     }
     
     def image_preview(self, obj):

@@ -6,9 +6,21 @@
 """
 
 from django.contrib import admin
-from django.contrib.admin import ModelAdmin, TabularInline
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
+from django.db import models
+from djmoney.models.fields import MoneyField
+from unfold.admin import ModelAdmin, TabularInline, StackedInline
+from unfold.widgets import UnfoldAdminMoneyWidget, UnfoldAdminImageFieldWidget, UnfoldAdminTextInputWidget, UnfoldAdminTextareaWidget
+
+from django.forms import (
+    TextInput,
+    Select,
+    CheckboxInput,
+    FileInput,
+    NumberInput,
+    Textarea
+)
 
 
 class BaseProductAdmin(ModelAdmin):
@@ -16,7 +28,7 @@ class BaseProductAdmin(ModelAdmin):
     Базовый класс для администрирования товаров и предзаказов.
     
     Наследует от unfold.admin.ModelAdmin для использования
-    современного интерфейса django-unfold.
+    современного интерфейса django-unfold с поддержкой вкладок.
     """
     
     # Общие настройки для всех админ-классов товаров
@@ -25,6 +37,25 @@ class BaseProductAdmin(ModelAdmin):
     
     # Общие действия
     actions = ['make_active', 'make_inactive']
+    
+    # Базовые настройки формы - официальные Unfold виджеты для всех полей
+    formfield_overrides = {
+        # Основная информация - используем официальные Unfold виджеты для текстовых полей
+        models.CharField: {'widget': UnfoldAdminTextInputWidget()},
+        models.SlugField: {'widget': UnfoldAdminTextInputWidget()},
+        models.TextField: {'widget': UnfoldAdminTextareaWidget(attrs={'rows': 4})},
+        models.BooleanField: {'widget': CheckboxInput()},
+        models.ForeignKey: {'widget': Select()},
+        
+        # Ценообразование
+        models.DecimalField: {'widget': NumberInput(attrs={'step': '0.01'})},
+        models.PositiveIntegerField: {'widget': NumberInput(attrs={'min': '0'})},
+        MoneyField: {'widget': UnfoldAdminMoneyWidget()},
+        
+        # Изображения
+        models.ImageField: {'widget': UnfoldAdminImageFieldWidget()},
+        models.URLField: {'widget': UnfoldAdminTextInputWidget(attrs={'type': 'url'})},
+    }
     
     def make_active(self, request, queryset):
         """Активировать выбранные объекты"""
@@ -59,6 +90,10 @@ class BaseImageInline(TabularInline):
     show_change_link = True
     fields = ['image', 'image_url', 'alt_text', 'image_preview']
     readonly_fields = ['image_preview']
+    
+    formfield_overrides = {
+        models.ImageField: {'widget': UnfoldAdminImageFieldWidget()},
+    }
     
     def image_preview(self, obj):
         """Предварительный просмотр изображения"""

@@ -10,13 +10,15 @@ from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.db import models
+from django import forms
 from django.forms import Textarea
 from django.utils.translation import gettext_lazy as _
 from django.contrib.admin import ModelAdmin, TabularInline
-from unfold.widgets import UnfoldAdminTextInputWidget, UnfoldAdminTextareaWidget
-# from unfold.decorators import display
-# from unfold.contrib.forms.widgets import WysiwygWidget
+from unfold.widgets import UnfoldAdminTextInputWidget, UnfoldAdminTextareaWidget, UnfoldAdminImageFieldWidget
+from unfold.contrib.forms.widgets import WysiwygWidget
+from unfold.decorators import display
 from .models import Collection, CollectionImage
+from .forms import CollectionImageForm
 import logging
 
 logger = logging.getLogger(__name__)
@@ -24,18 +26,26 @@ logger = logging.getLogger(__name__)
 
 class CollectionImageInline(TabularInline):
     """
-    Инлайн для изображений коллекций.
+    Inline для быстрого управления изображениями коллекций.
     
-    Позволяет добавлять и редактировать изображения коллекций
-    прямо на странице редактирования коллекции.
+    Компактный интерфейс для добавления/редактирования изображений.
+    Для детального управления используйте отдельный раздел "Изображения коллекций".
+    Все поля остаются во вкладке с изображениями согласно требованиям.
     """
     model = CollectionImage
-    extra = 1
-    max_num = 10
-    
-    fields = ['image', 'alt_text', 'is_primary', 'sort_order', 'image_preview']
+    form = CollectionImageForm
+    verbose_name = _("Изображение")
+    verbose_name_plural = _("Изображения")
+    extra = 1  # Показывать одну пустую форму для добавления
+    min_num = 0  # Минимальное количество форм
+    max_num = 10  # Максимальное количество форм
+    tab = True  # Отображать в отдельной вкладке
+    fields = ['image', 'image_url', 'alt_text', 'sort_order', 'image_preview']
+    show_change_link = True  # Показывать ссылку для редактирования
+    can_delete = True  # Разрешить удаление
     readonly_fields = ['image_preview']
     
+    @display(description=_("Превью"))
     def image_preview(self, obj):
         """
         Отображает превью изображения в админке.
@@ -48,11 +58,15 @@ class CollectionImageInline(TabularInline):
         """
         if obj.image:
             return format_html(
-                '<img src="{}" style="max-width: 100px; max-height: 100px; border-radius: 4px;" />',
+                '<img src="{}" style="max-width: 100px; max-height: 100px; object-fit: cover; border-radius: 4px;" />',
                 obj.image.url
             )
+        elif obj.image_url:
+            return format_html(
+                '<img src="{}" style="max-width: 100px; max-height: 100px; object-fit: cover; border-radius: 4px;" />',
+                obj.image_url
+            )
         return "Нет изображения"
-    image_preview.short_description = _("Превью")
     
     class Media:
         css = {
@@ -122,6 +136,7 @@ class CollectionAdmin(ModelAdmin):
         return "0 изображений"
     images_count.short_description = _("Изображения")
     
+    @display(description=_("Основное изображение"))
     def main_image_preview(self, obj):
         """
         Отображает превью главного изображения коллекции.
@@ -141,6 +156,11 @@ class CollectionAdmin(ModelAdmin):
         return "Нет изображения"
     inlines = [CollectionImageInline]
     
+    # Настройка для отображения inline на отдельной вкладке
+    tab_overview = (
+        (_("Изображения коллекций"), "collections.collectionimage"),
+    )
+    
     # Настройка полей для отображения с использованием вкладок django-unfold
     fieldsets = (
         (_('Основная информация'), {
@@ -148,20 +168,12 @@ class CollectionAdmin(ModelAdmin):
                 'name', 
                 'slug', 
                 'short_description', 
-                'description'
+                'description',
+                'is_active'
             ),
             'classes': ('tab',)
         }),
-        (_('Настройки отображения'), {
-            'fields': (
-                'is_active', 
-                'featured',
-                'sort_order',
-                'main_image_preview',
-                'images_count'
-            ),
-            'classes': ('tab',)
-        }),
+
         (_('SEO'), {
             'fields': (
                 'meta_title', 
@@ -184,10 +196,19 @@ class CollectionAdmin(ModelAdmin):
     
     # Настройки формы
     formfield_overrides = {
-        models.TextField: {'widget': UnfoldAdminTextareaWidget(attrs={'rows': 4})},
         models.CharField: {'widget': UnfoldAdminTextInputWidget()},
         models.SlugField: {'widget': UnfoldAdminTextInputWidget()},
     }
+    
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        """
+        Переопределение виджетов для конкретных полей.
+        """
+        if db_field.name == 'description':
+            kwargs['widget'] = WysiwygWidget()
+        elif isinstance(db_field, models.TextField):
+            kwargs['widget'] = UnfoldAdminTextareaWidget(attrs={'rows': 4})
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
     
     def get_queryset(self, request):
         """
@@ -323,6 +344,7 @@ class CollectionImageAdmin(ModelAdmin):
         })
     )
     
+    @display(description=_("Превью"))
     def image_preview(self, obj):
         """
         Отображает превью изображения в списке.

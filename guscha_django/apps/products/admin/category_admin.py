@@ -12,7 +12,7 @@ from django.http import HttpResponseRedirect
 from django.utils.translation import gettext_lazy as _
 from django.db import models
 from django.forms import Textarea
-from unfold.widgets import UnfoldAdminTextInputWidget, UnfoldAdminTextareaWidget
+from django.forms import TextInput
 # from unfold.contrib.forms.widgets import WysiwygWidget
 
 from .base_admin import BaseProductAdmin
@@ -38,9 +38,9 @@ class CategoryAdmin(BaseProductAdmin):
     
     # Настройки формы
     formfield_overrides = {
-        models.TextField: {'widget': UnfoldAdminTextareaWidget(attrs={'rows': 4})},
-        models.CharField: {'widget': UnfoldAdminTextInputWidget()},
-        models.SlugField: {'widget': UnfoldAdminTextInputWidget()},
+        models.TextField: {'widget': Textarea(attrs={'rows': 4})},
+        models.CharField: {'widget': TextInput()},
+        models.SlugField: {'widget': TextInput()},
     }
     
     # Используем вкладки django-unfold с обводкой как у пользователей

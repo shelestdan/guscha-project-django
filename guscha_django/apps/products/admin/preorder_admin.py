@@ -13,10 +13,21 @@ from django.urls import reverse
 from django.http import HttpResponseRedirect
 from django.contrib import messages
 from django.db import transaction
+from django.db import models
+
+from django.forms import (
+    TextInput,
+    Select,
+    CheckboxInput,
+    FileInput,
+    NumberInput,
+    Textarea
+)
+from unfold.widgets import UnfoldAdminImageFieldWidget, UnfoldAdminTextInputWidget, UnfoldAdminTextareaWidget
 
 from .base_admin import BaseProductAdmin, BaseImageInline, BaseSizeInline
 from ..models import Preorder, PreorderSize, PreorderImage
-from ..forms import PreorderSizeForm
+from ..forms import PreorderSizeForm, PreorderImageForm
 
 
 class PreorderSizeAdmin(admin.ModelAdmin):
@@ -115,8 +126,10 @@ class PreorderImageInline(BaseImageInline):
     
     Компактный интерфейс для добавления/редактирования изображений.
     Для детального управления используйте отдельный раздел "Изображения предзаказов".
+    Все поля остаются во вкладке с изображениями согласно требованиям.
     """
     model = PreorderImage
+    form = PreorderImageForm  # Используем кастомную форму с Unfold виджетами
     verbose_name = _("Изображение")
     verbose_name_plural = _("Изображения")
     extra = 1  # Показывать одну пустую форму для добавления
@@ -125,7 +138,8 @@ class PreorderImageInline(BaseImageInline):
     can_delete = True
     show_change_link = True
     tab = True  # Отображать в отдельной вкладке
-    fields = ['image', 'image_url', 'image_type', 'image_preview']
+    fields = ['image', 'image_url', 'alt_text', 'image_type', 'is_primary', 'sort_order', 'image_preview']
+    readonly_fields = ['image_preview']
 
 @admin.register(Preorder)
 class PreorderAdmin(BaseProductAdmin):
@@ -139,6 +153,23 @@ class PreorderAdmin(BaseProductAdmin):
     # Кастомный шаблон для улучшения UI inline форм
     change_form_template = 'admin/products/preorder/change_form.html'
     
+    # Настройки формы - официальные Unfold виджеты для всех полей
+    formfield_overrides = {
+        # Основная информация - используем официальные Unfold виджеты для текстовых полей
+        models.CharField: {'widget': UnfoldAdminTextInputWidget()},
+        models.SlugField: {'widget': UnfoldAdminTextInputWidget()},
+        models.TextField: {'widget': UnfoldAdminTextareaWidget(attrs={'rows': 4})},
+        models.BooleanField: {'widget': CheckboxInput()},
+        models.ForeignKey: {'widget': Select()},
+        
+        # Ценообразование
+        models.DecimalField: {'widget': NumberInput(attrs={'step': '0.01'})},
+        models.PositiveIntegerField: {'widget': NumberInput(attrs={'min': '0'})},
+        
+        # Изображения
+        models.ImageField: {'widget': UnfoldAdminImageFieldWidget()},
+        models.URLField: {'widget': UnfoldAdminTextInputWidget(attrs={'type': 'url'})},
+    }
 
     
     list_display = [
