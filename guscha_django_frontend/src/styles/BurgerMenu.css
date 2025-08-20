@@ -123,7 +123,7 @@
   min-width: 320px;
   max-width: 420px;
   background: #000000 !important;
-  box-shadow: 2px 0 24px rgba(0,0,0,0.5);
+  box-shadow: 2px 0 24px rgba(0, 0, 0, 0.5);
   transform: translateX(-100%);
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, visibility 0.3s ease;
   z-index: 1999;
@@ -225,7 +225,7 @@
   position: absolute;
   left: -20px;
   top: 50%;
-  transform: translateY(-50%);  
+  transform: translateY(-50%);
   width: 0;
   height: 2px;
   background: #ffffff;
@@ -274,4 +274,86 @@
   .burger-nav-button {
     font-size: 28px;
   }
+}
+
+/* Ensure overlay/panel don't block header interactions when closed,
+   and provide a visible close button inside the panel when open */
+.burger-overlay {
+  z-index: 1998;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+}
+.burger-overlay.open {
+  pointer-events: auto;
+  opacity: 1;
+  visibility: visible;
+}
+
+.burger-panel {
+  z-index: 1999;
+  pointer-events: none;
+  transform: translateX(-100%);
+  opacity: 0;
+  visibility: hidden;
+}
+.burger-panel.open {
+  pointer-events: auto;
+  transform: translateX(0);
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Close button inside the panel */
+.burger-panel-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2000;
+  padding: 8px;
+  border-radius: 6px;
+}
+.burger-panel-close:hover {
+  color: #cccccc;
+  transform: scale(1.05);
+}
+
+/* Portal button positioning: render the button fixed in the viewport so it stays above overlay/panel */
+.burger-menu-btn.portal {
+  position: fixed;
+  z-index: 3002;
+  pointer-events: auto;
+}
+
+/* Portal root should not block page layout; keep it fixed and allow children to be interactive explicitly */
+.burger-portal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 1990;
+  pointer-events: none;
+}
+
+/* Make the portal children interactive while keeping the root non-interactive by default */
+.burger-portal-root .burger-menu-btn,
+.burger-portal-root .burger-overlay,
+.burger-portal-root .burger-panel {
+  pointer-events: auto;
+}
+
+/* Prefer overlay to provide the blur for the whole page (like Cart) */
+.burger-overlay {
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* Panel should not introduce additional backdrop filtering that limits the blur area */
+.burger-panel {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }

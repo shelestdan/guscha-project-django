@@ -24,7 +24,7 @@
   right: 0;
   height: 100%;
   z-index: 99;
-  background: rgba(255,255,255,0.95);
+  background: rgba(255, 255, 255, 0.95);
   pointer-events: none;
 }
 
@@ -92,7 +92,9 @@
 }
 
 /* Анимация элементов внутри header */
-.header-left, .header-center, .header-right {
+.header-left,
+.header-center,
+.header-right {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -148,7 +150,7 @@
   justify-content: center;
   font-weight: 600;
   border: 2px solid white;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .header-cart-icon.dark-theme .header-cart-badge {
@@ -162,7 +164,7 @@
   .header-content {
     padding: 0 1rem;
   }
-  
+
   .header-cart-icon {
     padding: 0.5rem;
   }
@@ -172,4 +174,44 @@
   .header-content {
     padding: 0 0.5rem;
   }
+}
+/* --- Overrides: only hide left and center; keep cart visible and stable --- */
+.header-content.hide-elements .header-left,
+.header-content.hide-elements .header-center {
+  opacity: 0;
+  transform: translateY(-20px);
+  pointer-events: none;
+}
+
+/* Keep right side (cart) visible and interactive during hide */
+.header-content.hide-elements .header-right,
+.header-container.header-hidden .header-right {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+/* Hide the whole burger button smoothly but do not translate the icon itself */
+.header-content.hide-elements .burger-menu-btn {
+  opacity: 0;
+  transform: none;
+}
+
+.header-content.hide-elements .burger-menu-icon {
+  transform: none !important; /* prevent bar shifting */
+}
+
+/* Hide only label with translate so icon doesn't move when label disappears */
+.header-content.hide-elements .burger-menu-label {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+/* When burger menu is open, force logo and cart icon to light variant so they don't "flip" to black */
+.burger-open .logo-image {
+  filter: invert(0) !important;
+  opacity: 1 !important;
+}
+.burger-open .header-cart-icon-filter {
+  filter: invert(0) !important;
 }

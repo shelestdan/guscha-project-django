@@ -30,7 +30,7 @@ function AppContent() {
   const fetchCart = useCartStore((state) => state.fetchCart);
   const mainRef = useRef(null);
   const [isBurgerMenuOpen, setIsBurgerMenuOpen] = useState(false);
-  
+
   // Инициализируем аутентификацию для проверки токена при загрузке
   const { loading } = useAuth();
 
@@ -47,7 +47,7 @@ function AppContent() {
     if (scrollBackgroundToggle && scrollBackgroundToggle.refresh) {
       scrollBackgroundToggle.refresh();
     }
-    
+
     // Cleanup при размонтировании компонента
     return () => {
       if (scrollBackgroundToggle && scrollBackgroundToggle.destroy) {
@@ -76,7 +76,7 @@ function AppContent() {
   return (
     <div className="App">
 
-      <Header isHome={isHome} isBurgerMenuOpen={isBurgerMenuOpen} setIsBurgerMenuOpen={setIsBurgerMenuOpen} />
+      <Header isHome={isHome} isBurgerMenuOpen={isBurgerMenuOpen} setIsBurgerMenuOpen={setIsBurgerMenuOpen} mainRef={mainRef} />
       <main ref={mainRef} style={{
         background: isHome ? 'transparent' : '#f1f1f1',
         minHeight: '100vh',
