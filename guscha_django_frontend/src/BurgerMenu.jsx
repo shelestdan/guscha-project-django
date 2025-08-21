@@ -55,6 +55,13 @@ const BurgerMenu = ({
   // calculate fixed position for portal button once (on mount/resize/when header changes)
   useEffect(() => {
     const updateBtnPos = () => {
+      const header = document.querySelector('.header-container');
+      // Не пересчитываем позицию если хедер скрыт или анимируется
+      if (header && (header.classList.contains('header-hidden') || 
+          getComputedStyle(header).transform !== 'none')) {
+        return;
+      }
+      
       const headerLeft = document.querySelector('.header-left');
       if (headerLeft) {
         const rect = headerLeft.getBoundingClientRect();
@@ -74,14 +81,30 @@ const BurgerMenu = ({
 
     const header = document.querySelector('.header-container');
     let observer = null;
+    let debounceTimer = null;
+    
     if (header && typeof MutationObserver !== 'undefined') {
-      observer = new MutationObserver(() => updateBtnPos());
+      observer = new MutationObserver((mutations) => {
+        // Проверяем, что изменились именно классы видимости
+        const hasVisibilityChange = mutations.some(mutation => {
+          const target = mutation.target;
+          return target.classList.contains('header-visible') && 
+                 !target.classList.contains('header-hidden');
+        });
+        
+        if (hasVisibilityChange) {
+          // Debounce для предотвращения множественных вызовов во время анимации
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(updateBtnPos, 100);
+        }
+      });
       observer.observe(header, { attributes: true, attributeFilter: ['class'] });
     }
 
     return () => {
       window.removeEventListener('resize', updateBtnPos);
       if (observer) observer.disconnect();
+      if (debounceTimer) clearTimeout(debounceTimer);
     };
   }, []);
 

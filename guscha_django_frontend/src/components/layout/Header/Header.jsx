@@ -2,32 +2,10 @@ import React, { useEffect } from 'react';
 import useScrollDirection from '../../../hooks/useScrollDirection';
 import Logo from '../../Logo/Logo';
 import BurgerMenu from '../../../BurgerMenu';
+import HeaderCartIcon from './HeaderCartIcon';
 import { useCartStore } from '../../../store/cartStore';
-import InstrumentCartIcon from '../../../assets/icons/instrument_x4fdrqsfczqn.svg';
 import '../../../styles/Header.css';
-
-// Специальный компонент иконки корзины для header
-const HeaderCartIcon = ({ isDark = false }) => {
-  const cartCount = useCartStore((state) => state.count);
-  const toggleCart = useCartStore((state) => state.toggleCart);
-
-  return (
-    <button
-      className={`header-cart-icon ${isDark ? 'white-theme' : 'dark-theme'}`}
-      onClick={toggleCart}
-      aria-label="Открыть корзину"
-    >
-      <img
-        src={InstrumentCartIcon}
-        alt="Корзина"
-        width={24}
-        height={24}
-        className={`header-cart-icon-filter ${isDark ? 'light' : 'dark'}`}
-      />
-      {cartCount > 0 && <span className="header-cart-badge">{cartCount}</span>}
-    </button>
-  );
-};
+import './HeaderCartIcon.css';
 
 const Header = ({ isHome, isBurgerMenuOpen, setIsBurgerMenuOpen, mainRef }) => {
   // Получаем направление и позицию скролла (слушаем mainRef если передан)

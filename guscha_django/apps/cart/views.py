@@ -3,6 +3,7 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action, api_view, permission_classes
+from django.views.decorators.csrf import csrf_exempt
 
 from .models import CartItem
 from .serializers import CartItemSerializer
@@ -63,7 +64,8 @@ class CartViewSet(viewsets.ModelViewSet):
 
 
 @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
+@csrf_exempt
+@permission_classes([])
 def add_to_cart(request):
     """Добавить товар в корзину"""
     logger.info("Add to cart called")
@@ -203,6 +205,7 @@ def add_to_cart(request):
 
 
 @api_view(['POST'])
+@permission_classes([])
 def create_cart_reservations(request):
     """Создать резервирования для всех товаров в корзине"""
     logger.info("Create cart reservations called")
@@ -331,7 +334,7 @@ def create_cart_reservations(request):
 
 
 @api_view(['PUT'])
-# @permission_classes([IsAuthenticated])
+@permission_classes([])
 def update_cart_item(request, item_id):
     """Обновить количество товара в корзине"""
     logger.info(f"Update cart item {item_id}")
@@ -430,7 +433,7 @@ def update_cart_item(request, item_id):
 
 
 @api_view(['DELETE'])
-# @permission_classes([IsAuthenticated])
+@permission_classes([])
 def remove_cart_item(request, item_id):
     """Удалить товар из корзины"""
     logger.info(f"Remove cart item {item_id}")
@@ -586,7 +589,7 @@ def add_preorder_to_cart(request):
 
 
 @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
+@permission_classes([])
 def clear_cart(request):
     """Очистить корзину пользователя"""
     logger.info(f"Clear cart called")

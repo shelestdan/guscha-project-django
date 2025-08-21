@@ -122,18 +122,7 @@
   border-radius: 50%;
 }
 
-.header-cart-icon:hover {
-  transform: scale(1.05);
-  background: rgba(0, 0, 0, 0.05);
-}
-
-.header-cart-icon.white-theme:hover {
-  background: rgba(0, 0, 0, 0.05);
-}
-
-.header-cart-icon.dark-theme:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
+/* Hover эффекты удалены по запросу пользователя */
 
 .header-cart-badge {
   position: absolute;

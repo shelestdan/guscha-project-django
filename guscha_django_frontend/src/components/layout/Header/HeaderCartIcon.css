@@ -1,0 +1,43 @@
+/* Header Cart Icon Animation Styles */
+
+/* Скрываем обычную иконку корзины когда хедер скрыт */
+.header-hidden .header-cart-icon {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Показываем фиксированную иконку когда хедер скрыт */
+.header-hidden .cart-icon-fixed {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* Скрываем фиксированную иконку когда хедер видим */
+.header-visible .cart-icon-fixed {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Анимация появления/исчезновения фиксированной иконки */
+.cart-icon-fixed .header-cart-icon {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Дополнительные стили для плавности */
+.cart-icon-fixed .header-cart-badge {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+  .cart-icon-fixed {
+    right: 1rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .cart-icon-fixed {
+    right: 0.5rem !important;
+  }
+}
