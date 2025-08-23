@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, CopyTextButton
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
 from django.conf import settings
 from apps.accounts.models import User, TelegramVerificationCode, QRCodeScan
@@ -559,14 +559,20 @@ class TelegramBot:
             display_code = await sync_to_async(verification_code.generate_secure_code)()
             code_text = (
                 f"🔐 Ваш код подтверждения: ||{display_code}||\n\n"
-                f"Введите этот код на сайте для завершения {verification_type_display.lower()}.\n\n"
-                f"⏰ Код действителен в течение 10 минут."
+                f"Введите этот код на сайте для завершения {verification_type_display.lower()}\.\n\n"
+                f"⏰ Код действителен в течение 10 минут\."
             )
+            
+            # Создаем кнопку для копирования кода
+            keyboard = InlineKeyboardMarkup([
+                [CopyTextButton("📋 Скопировать код", copy_text=display_code)]
+            ])
             
             await self.application.bot.send_message(
                 chat_id=int(chat_id),
                 text=code_text,
-                parse_mode='MarkdownV2'
+                parse_mode='MarkdownV2',
+                reply_markup=keyboard
             )
             
             return display_code
@@ -599,7 +605,7 @@ class TelegramBot:
                 f"🔐 Запрос на вход через Telegram\n\n"
                 f"📱 Номер телефона с сайта: {phone_number}\n\n"
                 f"Для подтверждения входа поделитесь своим номером телефона, "
-                f"нажав кнопку ниже. Мы сверим его с номером, указанным на сайте."
+                f"нажав кнопку ниже\. Мы сверим его с номером, указанным на сайте\."
             )
             
             await self.application.bot.send_message(
@@ -768,15 +774,23 @@ class TelegramBot:
                 # Отправляем код
                 verification_type_display = await sync_to_async(verification_code.get_verification_type_display)()
                 code_text = (
-                    f"✅ Номер телефона сохранен!\n\n"
+                    f"✅ Номер телефона сохранен\!\n\n"
                     f"🔐 Ваш код подтверждения: ||{display_code}||\n\n"
-                    f"Введите этот код на сайте для завершения регистрации.\n\n"
-                    f"⏰ Код действителен в течение 10 минут."
+                    f"Введите этот код на сайте для завершения регистрации\.\n\n"
+                    f"⏰ Код действителен в течение 10 минут\."
                 )
+                
+                # Создаем inline кнопку для копирования кода
+                copy_button = InlineKeyboardButton(
+                    text="📋 Скопировать код",
+                    copy_text=CopyTextButton(text=display_code)
+                )
+                keyboard = InlineKeyboardMarkup([[copy_button]])
                 
                 await update.message.reply_text(
                     code_text,
-                    parse_mode='MarkdownV2'
+                    parse_mode='MarkdownV2',
+                    reply_markup=keyboard
                 )
                 
                 logger.info(f"Код {display_code} отправлен для QR-регистрации")
@@ -834,15 +848,23 @@ class TelegramBot:
             # Отправляем код пользователю
             verification_type_display = await sync_to_async(verification_code.get_verification_type_display)()
             code_text = (
-                f"✅ Номер телефона подтвержден!\n\n"
+                f"✅ Номер телефона подтвержден\!\n\n"
                 f"🔐 Ваш код подтверждения: ||{display_code}||\n\n"
-                f"Введите этот код на сайте для завершения {verification_type_display.lower()}.\n\n"
-                f"⏰ Код действителен в течение 10 минут."
+                f"Введите этот код на сайте для завершения {verification_type_display.lower()}\.\n\n"
+                f"⏰ Код действителен в течение 10 минут\."
             )
+            
+            # Создаем inline кнопку для копирования кода
+            copy_button = InlineKeyboardButton(
+                text="📋 Скопировать код",
+                copy_text=CopyTextButton(text=display_code)
+            )
+            keyboard = InlineKeyboardMarkup([[copy_button]])
             
             await update.message.reply_text(
                 code_text,
-                parse_mode='MarkdownV2'
+                parse_mode='MarkdownV2',
+                reply_markup=keyboard
             )
             
             logger.info(f"Код {display_code} отправлен пользователю {chat_id} после проверки номера телефона")

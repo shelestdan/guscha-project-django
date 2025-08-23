@@ -17,6 +17,13 @@ const AccountAddresses = ({ user }) => {
   // Отладка состояния (можно убрать после тестирования)
   // console.log('🏠 AccountAddresses рендерится, addresses.length:', addresses.length);
 
+  // Очищаем modal-open класс при размонтировании компонента
+  useEffect(() => {
+    return () => {
+      document.body.classList.remove('modal-open');
+    };
+  }, []);
+
   // Загрузка адресов при монтировании компонента
   useEffect(() => {
     if (user) {
@@ -76,6 +83,8 @@ const AccountAddresses = ({ user }) => {
 
   const handleAddressModalClose = () => {
     setIsAnimating(false);
+    // Убираем класс для предотвращения прокрутки
+    document.body.classList.remove('modal-open');
     setTimeout(() => {
       setShowAddressModal(false);
       setEditingAddress(null);
@@ -97,12 +106,16 @@ const AccountAddresses = ({ user }) => {
     });
     setEditingAddress(address);
     setShowAddressModal(true);
+    // Добавляем класс для предотвращения прокрутки
+    document.body.classList.add('modal-open');
     setTimeout(() => setIsAnimating(true), 10); // Небольшая задержка для анимации
   };
 
   const handleAddAddress = () => {
     setEditingAddress(null);
     setShowAddressModal(true);
+    // Добавляем класс для предотвращения прокрутки
+    document.body.classList.add('modal-open');
     setTimeout(() => setIsAnimating(true), 10); // Небольшая задержка для анимации
   };
 
@@ -206,7 +219,7 @@ const AccountAddresses = ({ user }) => {
 
       {/* Модальное окно для добавления/редактирования адреса */}
       {showAddressModal && (
-        <div className="modal-overlay">
+        <div className={`modal-overlay ${isAnimating ? 'show' : ''}`} onClick={handleAddressModalClose}>
           <div className={`modal-slide ${isAnimating ? 'modal-slide-enter' : 'modal-slide-exit'}`} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>

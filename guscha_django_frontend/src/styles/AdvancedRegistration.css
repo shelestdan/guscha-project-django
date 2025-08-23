@@ -1,29 +1,37 @@
-/* Минималистичная система регистрации */
+/* =============================================================================
+   ADVANCED REGISTRATION FORM 2025
+   =============================================================================
+   Optimized registration form using modern CSS architecture
+============================================================================= */
+
 .advanced-registration {
   width: 100%;
   background: transparent;
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 2rem 0;
+  padding-block: clamp(1rem, 4vw, 2rem);
+  padding-inline: clamp(0.5rem, 2vw, 1rem);
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   position: relative;
   z-index: 10;
-  min-height: calc(100vh - 120px);
+  min-block-size: calc(100vh - 120px);
   overflow-y: auto;
+  container-type: inline-size;
 }
 
 .registration-container {
-  background: #ffffff;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
+  background: var(--form-bg, #ffffff);
+  border: 1px solid var(--form-border, #e0e0e0);
+  border-radius: clamp(8px, 2vw, 12px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  padding: 2.5rem;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
   width: 100%;
-  max-width: 550px;
-  min-height: 600px;
+  max-width: min(550px, 90vw);
+  min-block-size: 600px;
   animation: none;
+  container-type: inline-size;
 }
 
 /* Заголовок */
@@ -90,43 +98,68 @@
 /* Исправляем отступы для обычных полей */
 .input-with-icon .form-input {
   padding-left: 2.5rem;
+  border-radius: var(--form-border-radius);
 }
 
-/* Инпуты */
-.form-input {
-  padding: 0.875rem 1rem 0.875rem 2.5rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  transition: border-color 0.2s ease;
-  background: #ffffff;
-  color: #000000;
-  width: 100%;
-  height: 48px;
-  box-sizing: border-box;
+/* Добавляем border-radius для всех полей ввода в форме регистрации */
+.registration-container .form-input,
+.registration-container input[type="text"],
+.registration-container input[type="email"],
+.registration-container input[type="password"],
+.registration-container input[type="tel"] {
+  border-radius: var(--form-border-radius) !important;
 }
 
-.form-input:focus {
-  outline: none;
-  border-color: #000000;
-  box-shadow: none;
+/* Принудительно применяем border-radius для всех input элементов */
+.advanced-registration input {
+  border-radius: var(--form-border-radius) !important;
 }
 
-.form-input.valid {
-  border-color: #4caf50;
-  background: #ffffff;
+/* Специфично для полей с иконками */
+.input-with-icon input {
+  border-radius: var(--form-border-radius) !important;
 }
 
-.form-input.invalid {
-  border-color: #f44336;
-  background: #ffffff;
+/* =============================================================================
+   REGISTRATION-SPECIFIC FORM ENHANCEMENTS
+   =============================================================================
+   Specialized styles that extend the base form system from globals.css
+============================================================================= */
+
+/* Apply modern form system to registration container */
+.registration-container {
+  /* Inherits base form system from globals.css via .form-system class */
 }
 
-.form-input:disabled {
-  background: #f5f5f5;
-  color: #999999;
-  cursor: not-allowed;
+/* Enhanced form groups for registration */
+.registration-container .form-group {
+  margin-block-end: clamp(1rem, 3vw, 1.5rem);
+  position: relative;
+  container-type: inline-size;
 }
+
+/* Registration-specific label styling */
+.registration-container .form-label {
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  margin-block-end: 0.5rem;
+}
+
+/* Enhanced input styling for registration */
+.registration-container .form-input {
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.registration-container .form-input::placeholder {
+  font-size: clamp(0.85rem, 2.3vw, 0.95rem);
+}
+
+/* =============================================================================
+   PASSWORD STRENGTH INDICATOR
+   =============================================================================
+   Modern password strength visualization with accessibility
+============================================================================= */
 
 /* Телефонный инпут */
 .phone-input-wrapper {
@@ -135,8 +168,8 @@
 }
 
 .phone-input-wrapper .phone-input {
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
+  border: none;
+  border-radius: var(--form-border-radius);
   transition: border-color 0.2s ease;
   margin-left: 2.5rem;
   width: calc(100% - 2.5rem);
@@ -201,7 +234,7 @@
   color: #666666;
   cursor: pointer;
   padding: 0.25rem;
-  border-radius: 4px;
+  border-radius: var(--form-border-radius);
   transition: color 0.2s ease;
   width: 20px;
   height: 20px;
@@ -220,27 +253,69 @@
   opacity: 0.5;
 }
 
-/* Индикатор силы пароля - максимально компактный */
+/* Password Strength Indicator - Modern Implementation */
 .password-strength {
-  margin-top: 0.3rem;
+  margin-block-start: 0.3rem;
   padding: 0.4rem;
-  background: #f9f9f9;
-  border-radius: 3px;
-  border: 1px solid #e0e0e0;
+  background: color-mix(in srgb, #f9f9f9 90%, transparent);
+  border-radius: var(--form-border-radius);
+  border: 1px solid var(--form-border, #e0e0e0);
+  container-type: inline-size;
 }
 
 .strength-bar {
-  height: 2px;
-  background: #e0e0e0;
+  block-size: 2px;
+  background: color-mix(in srgb, var(--form-border, #e0e0e0) 50%, transparent);
   border-radius: 1px;
   overflow: hidden;
-  margin-bottom: 0.25rem;
+  margin-block-end: 0.25rem;
+  position: relative;
 }
 
 .strength-fill {
-  height: 100%;
-  transition: all 0.3s ease;
+  block-size: 100%;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 1px;
+  position: relative;
+}
+
+.strength-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: inherit;
+  filter: brightness(1.1);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.strength-fill:hover::after {
+  opacity: 1;
+}
+
+/* Strength levels with modern color mixing */
+.strength-fill.weak {
+  background: linear-gradient(90deg, 
+    color-mix(in srgb, #ff4444 80%, #ffffff 20%), 
+    color-mix(in srgb, #ff6666 80%, #ffffff 20%));
+}
+
+.strength-fill.fair {
+  background: linear-gradient(90deg, 
+    color-mix(in srgb, #ff8800 80%, #ffffff 20%), 
+    color-mix(in srgb, #ffaa00 80%, #ffffff 20%));
+}
+
+.strength-fill.good {
+  background: linear-gradient(90deg, 
+    color-mix(in srgb, #00aa00 80%, #ffffff 20%), 
+    color-mix(in srgb, #00cc00 80%, #ffffff 20%));
+}
+
+.strength-fill.strong {
+  background: linear-gradient(90deg, 
+    color-mix(in srgb, #008800 80%, #ffffff 20%), 
+    color-mix(in srgb, #00aa00 80%, #ffffff 20%));
 }
 
 .strength-label {
@@ -274,22 +349,35 @@
   height: 9px;
 }
 
-/* Сообщения валидации */
+/* =============================================================================
+   VALIDATION MESSAGES & ERROR STATES
+   =============================================================================
+   Modern validation feedback with enhanced accessibility
+============================================================================= */
+
+/* Validation Messages */
 .validation-message {
   display: flex;
   align-items: center;
   gap: 0.15rem;
-  font-size: 0.6rem;
-  margin-top: 0.15rem;
-  transition: all 0.2s ease;
+  font-size: clamp(0.55rem, 2vw, 0.6rem);
+  margin-block-start: 0.15rem;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0;
+  transform: translateY(-0.25rem);
+}
+
+.validation-message.show {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .validation-message.success {
-  color: #4caf50;
+  color: var(--form-text-valid, #4caf50);
 }
 
 .validation-message.error {
-  color: #f44336;
+  color: var(--form-text-invalid, #f44336);
 }
 
 .validation-message svg {
@@ -297,37 +385,132 @@
   height: 9px;
 }
 
-/* Кнопка регистрации */
+/* Error and Success Messages */
+.error-message {
+  color: var(--form-text-invalid, #f44336);
+  font-size: clamp(0.75rem, 2vw, 0.8rem);
+  margin-block-start: 0.25rem;
+  display: block;
+  min-block-size: 1rem;
+  line-height: 1.3;
+  font-weight: 400;
+  opacity: 0;
+  transform: translateY(-0.25rem);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.error-message.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.success-message {
+  color: var(--form-text-valid, #4caf50);
+  font-size: clamp(0.75rem, 2vw, 0.8rem);
+  margin-block-start: 0.25rem;
+  display: block;
+  min-block-size: 1rem;
+  line-height: 1.3;
+  font-weight: 400;
+  opacity: 0;
+  transform: translateY(-0.25rem);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.success-message.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Enhanced Field States */
+.field-error {
+  border-color: var(--form-border-invalid, #f44336) !important;
+  background: color-mix(in srgb, var(--form-border-invalid, #f44336) 2%, var(--form-bg, #ffffff) 98%);
+  animation: shake 0.3s ease-in-out;
+}
+
+.field-success {
+  border-color: var(--form-border-valid, #4caf50) !important;
+  background: color-mix(in srgb, var(--form-border-valid, #4caf50) 2%, var(--form-bg, #ffffff) 98%);
+}
+
+/* Shake animation for errors */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+/* =============================================================================
+   REGISTRATION BUTTON
+   =============================================================================
+   Modern button with enhanced interactions and accessibility
+============================================================================= */
+
 .register-btn {
-  padding: 0.875rem 1.25rem;
+  inline-size: 100%;
+  padding-block: clamp(0.75rem, 2.5vw, 0.875rem);
+  padding-inline: clamp(1rem, 3vw, 1.25rem);
   background: #000000;
   color: #ffffff;
   border: none;
-  border-radius: 6px;
-  font-size: 0.95rem;
+  border-radius: var(--form-border-radius);
+  font-size: clamp(0.9rem, 2.5vw, 0.95rem);
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  margin-top: 1.5rem;
-  height: 48px;
+  margin-block-start: clamp(1rem, 3vw, 1.5rem);
+  block-size: clamp(44px, 10vw, 48px);
   box-sizing: border-box;
+  font-family: inherit;
+  letter-spacing: 0.01em;
+  position: relative;
+  overflow: hidden;
+}
+
+.register-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.register-btn:hover::before {
+  transform: translateX(100%);
 }
 
 .register-btn.enabled:hover {
   background: #333333;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.register-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.register-btn:focus-visible {
+  outline: 2px solid rgba(0, 0, 0, 0.5);
+  outline-offset: 2px;
+}
+
+.register-btn.disabled {
+  background: color-mix(in srgb, #cccccc 80%, transparent);
+  color: color-mix(in srgb, #666666 80%, transparent);
+  cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
-.register-btn.disabled {
-  background: #cccccc;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
+.register-btn.disabled::before {
+  display: none;
 }
 
 .btn-spinner {
@@ -450,7 +633,6 @@
 
 /* Фокус для доступности - минималистичный */
 .form-input:focus,
-.phone-input:focus-within,
 .password-toggle:focus,
 .register-btn:focus,
 .link-btn:focus {
@@ -523,63 +705,87 @@
   }
 }
 
-/* Стили для чекбокса принятия условий */
+/* =============================================================================
+   CHECKBOX COMPONENT
+   =============================================================================
+   Modern checkbox with enhanced accessibility and interactions
+============================================================================= */
+
 .checkbox-label {
   display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
+  align-items: center;
+  gap: clamp(0.5rem, 2vw, 0.75rem);
   cursor: pointer;
-  font-size: 0.875rem;
+  font-size: clamp(0.8rem, 2.2vw, 0.875rem);
   line-height: 1.4;
-  color: #333333;
+  color: color-mix(in srgb, #333333 90%, transparent);
   margin: 0;
   padding: 0;
+  container-type: inline-size;
 }
 
-.checkbox-label input[type="checkbox"] {
+.checkbox-label input[type='checkbox'] {
   position: absolute;
   opacity: 0;
   cursor: pointer;
-  height: 0;
-  width: 0;
+  block-size: 0;
+  inline-size: 0;
 }
 
 .checkmark {
   position: relative;
-  height: 18px;
-  width: 18px;
-  background-color: #ffffff;
-  border: 2px solid #d1d5db;
-  border-radius: 4px;
+  block-size: clamp(18px, 4vw, 20px);
+  inline-size: clamp(18px, 4vw, 20px);
+  background-color: var(--form-bg, #ffffff);
+  border: 2px solid #6b7280;
+  border-radius: clamp(4px, 1vw, 5px);
   flex-shrink: 0;
-  margin-top: 1px;
-  transition: all 0.2s ease;
+  margin-block-start: 0;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .checkbox-label:hover .checkmark {
-  border-color: #9ca3af;
+  transform: scale(1.05);
 }
 
 .checkbox-label input:checked ~ .checkmark {
-  background-color: #3b82f6;
-  border-color: #3b82f6;
+  background-color: transparent;
+  border-color: #000000;
+  transform: scale(1.1);
+}
+
+.checkbox-label input:checked:hover ~ .checkmark {
+  background-color: #333333;
 }
 
 .checkmark:after {
-  content: "";
+  content: '';
   position: absolute;
   display: none;
-  left: 5px;
-  top: 2px;
-  width: 4px;
-  height: 8px;
-  border: solid white;
+  left: 50%;
+  top: 50%;
+  inline-size: clamp(3px, 1vw, 4px);
+  block-size: clamp(6px, 2vw, 8px);
+  border: solid #000000;
   border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
+  transform: translate(-50%, -60%) rotate(45deg);
+  transition: all 0.2s ease;
 }
 
 .checkbox-label input:checked ~ .checkmark:after {
   display: block;
+  animation: checkmark-appear 0.2s ease-in-out;
+}
+
+@keyframes checkmark-appear {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -60%) rotate(45deg) scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -60%) rotate(45deg) scale(1);
+  }
 }
 
 .checkbox-text {
@@ -590,19 +796,149 @@
   color: #3b82f6;
   text-decoration: none;
   font-weight: 500;
+  transition: color 0.2s ease;
 }
 
 .checkbox-text a:hover {
+  color: color-mix(in srgb, #3b82f6 80%, #000000 20%);
   text-decoration: underline;
 }
 
 .checkbox-label input:disabled ~ .checkmark {
-  background-color: #f3f4f6;
-  border-color: #e5e7eb;
+  background-color: color-mix(in srgb, #f3f4f6 90%, transparent);
   cursor: not-allowed;
 }
 
 .checkbox-label input:disabled ~ .checkbox-text {
-  color: #9ca3af;
+  color: color-mix(in srgb, #9ca3af 70%, transparent);
   cursor: not-allowed;
+}
+
+.checkbox-label:focus-within .checkmark {
+  outline: 2px solid rgba(59, 130, 246, 0.5);
+  outline-offset: 2px;
+}
+/* =============================================================================
+   CONTAINER QUERIES & RESPONSIVE DESIGN
+   =============================================================================
+   Modern responsive design using Container Queries for 2025 standards
+============================================================================= */
+
+/* Container Query Breakpoints */
+@container (max-width: 400px) {
+  .registration-container {
+    padding: clamp(1rem, 3vw, 1.5rem);
+    min-block-size: auto;
+  }
+  
+  .registration-container .form-group {
+    margin-block-end: 0.875rem;
+  }
+  
+  .registration-container .form-input {
+    font-size: 0.9rem;
+    padding-block: 0.75rem;
+  }
+  
+  .register-btn {
+    block-size: 44px;
+    font-size: 0.9rem;
+  }
+}
+
+@container (min-width: 401px) and (max-width: 550px) {
+  .registration-container {
+    padding: clamp(1.5rem, 4vw, 2rem);
+  }
+  
+  .registration-container .form-input {
+    font-size: 0.95rem;
+  }
+}
+
+@container (min-width: 551px) {
+  .registration-container {
+    padding: 2.5rem;
+  }
+  
+  .registration-container .form-input {
+    font-size: 1rem;
+  }
+}
+
+/* =============================================================================
+   REGISTRATION FORM OVERRIDES
+   =============================================================================
+   Final optimizations for registration-specific styling
+============================================================================= */
+
+.registration-form {
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  container-type: inline-size;
+}
+
+/* Apply form system class for modern styling */
+.registration-container.form-system .form-group {
+  gap: 0.25rem;
+  margin-bottom: 0.25rem;
+  margin-block-end: clamp(0.875rem, 2.5vw, 1rem);
+}
+
+.form-row {
+  gap: 0.25rem;
+}
+
+/* Ensure icons do not overlap placeholder text and inputs have uniform left padding */
+.input-with-icon .input-icon {
+  left: 0.75rem;
+}
+
+.registration-container.form-system .input-with-icon .form-input {
+  padding-left: 2.75rem;
+  height: 48px;
+  box-sizing: border-box;
+  padding-block: clamp(0.625rem, 2vw, 0.75rem);
+  padding-inline: clamp(0.875rem, 2.5vw, 1rem);
+  padding-inline-start: clamp(2.25rem, 6vw, 2.75rem);
+  block-size: clamp(40px, 10vw, 44px);
+  font-size: clamp(0.85rem, 2.3vw, 0.9rem);
+}
+
+/* Phone input alignment */
+.phone-input-wrapper .phone-input {
+  margin-left: 2.75rem;
+  width: calc(100% - 2.75rem);
+}
+
+/* Password containers inside input-with-icon should align with other inputs */
+.input-with-icon .password-input-container {
+  width: calc(100% - 2.75rem);
+  margin-left: 2.75rem;
+}
+
+/* Slightly smaller validation message spacing for compact layout */
+.validation-message {
+  margin-top: 0.15rem;
+  font-size: 0.7rem;
+}
+
+.registration-container.form-system .register-btn {
+  margin-block-start: clamp(0.875rem, 2.5vw, 1rem);
+  block-size: clamp(40px, 10vw, 44px);
+  font-size: clamp(0.85rem, 2.3vw, 0.9rem);
+}
+
+/* Mobile tweaks */
+@media (max-width: 480px) {
+  .input-with-icon .form-input {
+    padding-left: 2rem;
+  }
+  .input-icon {
+    left: 0.4rem;
+  }
+  .registration-container {
+    padding: 0.5rem;
+  }
 }

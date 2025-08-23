@@ -19,6 +19,13 @@ const AccountDetails = ({ user, onUserUpdate }) => {
     email: ''
   });
 
+  // Очищаем modal-open класс при размонтировании компонента
+  useEffect(() => {
+    return () => {
+      document.body.classList.remove('modal-open');
+    };
+  }, []);
+
   // Инициализация формы при изменении пользователя
   useEffect(() => {
     if (user) {
@@ -33,6 +40,8 @@ const AccountDetails = ({ user, onUserUpdate }) => {
 
   const handleEditModalClose = () => {
     setIsAnimating(false);
+    // Убираем класс для предотвращения прокрутки
+    document.body.classList.remove('modal-open');
     setTimeout(() => {
       setShowEditModal(false);
     }, 300); // Время анимации
@@ -90,6 +99,8 @@ const AccountDetails = ({ user, onUserUpdate }) => {
             className="account-details-add-btn"
             onClick={() => {
               setShowEditModal(true);
+              // Добавляем класс для предотвращения прокрутки
+              document.body.classList.add('modal-open');
               setTimeout(() => setIsAnimating(true), 10);
             }}
           >
@@ -100,7 +111,7 @@ const AccountDetails = ({ user, onUserUpdate }) => {
 
       {/* Модальное окно редактирования данных пользователя */}
       {showEditModal && (
-        <div className="modal-overlay" onClick={handleEditModalClose}>
+        <div className={`modal-overlay ${isAnimating ? 'show' : ''}`} onClick={handleEditModalClose}>
           <div className={`modal-slide ${isAnimating ? 'modal-slide-enter' : 'modal-slide-exit'}`} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Редактировать данные</h3>

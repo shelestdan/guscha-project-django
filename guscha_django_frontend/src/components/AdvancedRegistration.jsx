@@ -393,7 +393,7 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
 
   return (
     <div className="advanced-registration">
-      <div className="registration-container">
+      <div className="registration-container form-system">
         <div className="registration-header">
           <h1>Создать аккаунт</h1>
           <p>Заполните поля для регистрации</p>

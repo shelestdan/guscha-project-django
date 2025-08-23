@@ -457,24 +457,6 @@ select {
     transform: translateY(0) scale(1);
   }
 }
-/* Отладочные рамки — временно */
-@media (max-width: 1024px) {
-  .checkout-container {
-    outline: 2px dashed rgba(0, 0, 0, 0.12);
-    background: rgba(255, 255, 255, 0.02);
-  }
-  .checkout-form {
-    outline: 2px dotted rgba(0, 0, 0, 0.08);
-    background: rgba(255, 255, 255, 0.01);
-  }
-  .order-summary {
-    outline: 2px dashed rgba(0, 0, 0, 0.06);
-    background: rgba(255, 255, 255, 0.01);
-  }
-  .modal-slide {
-    outline: 2px solid rgba(0, 0, 0, 0.08);
-  }
-}
 
 @keyframes fadeOutDown {
   from {
@@ -502,4 +484,259 @@ select {
   opacity: 0;
   transform: translateY(16px);
   pointer-events: none;
+}
+
+/* =============================================================================
+   MODERN FORM SYSTEM 2025 - BASE ARCHITECTURE
+   =============================================================================
+   Advanced form system with CSS Custom Properties, Container Queries, and
+   modern accessibility standards
+============================================================================= */
+
+/* CSS Custom Properties for Form System */
+:root {
+  /* Form Colors */
+  --form-bg: #ffffff;
+  --form-text: #000000;
+  --form-border: #e0e0e0;
+  --form-border-focus: #000000;
+  --form-border-valid: #4caf50;
+  --form-border-invalid: #f44336;
+  --form-shadow-focus: rgba(0, 0, 0, 0.1);
+  
+  /* Form Dimensions */
+  --form-input-height: 48px;
+  --form-input-padding-block: 12px;
+  --form-input-padding-inline: 14px;
+  --form-input-padding-with-icon: 2.75rem;
+  --form-border-radius: clamp(8px, 1vw, 12px);
+  --form-gap: clamp(0.5rem, 2vw, 0.75rem);
+  
+  /* Form Typography */
+  --form-font-size: clamp(0.875rem, 2.5vw, 1rem);
+  --form-line-height: 1.2;
+  
+  /* Form Transitions */
+  --form-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --form-transition-focus: border-color 0.2s ease, box-shadow 0.2s ease, outline 0.2s ease;
+}
+
+/* Container Query Support for Forms */
+@container (min-width: 320px) {
+  .form-system {
+    --form-gap: 0.75rem;
+  }
+}
+
+@container (min-width: 768px) {
+  .form-system {
+    --form-gap: 1rem;
+    --form-input-padding-inline: 16px;
+  }
+}
+
+/* Modern Form Layout with Container Queries */
+.form-system {
+  container-type: inline-size;
+  width: 100%;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
+  gap: var(--form-gap);
+  margin-block-end: var(--form-gap);
+  width: 100%;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--form-gap) * 0.5);
+  margin-block-end: var(--form-gap);
+  width: 100%;
+  container-type: inline-size;
+}
+
+/* Advanced Input Styles with Modern CSS */
+.form-input,
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  block-size: var(--form-input-height);
+  padding-block: var(--form-input-padding-block);
+  padding-inline: var(--form-input-padding-inline);
+  border: 1px solid var(--form-border);
+  border-radius: var(--form-border-radius);
+  font-size: var(--form-font-size);
+  line-height: var(--form-line-height);
+  font-family: inherit;
+  background: var(--form-bg);
+  color: var(--form-text);
+  transition: var(--form-transition-focus);
+  box-sizing: border-box;
+  accent-color: var(--form-border-focus);
+}
+
+/* Modern Focus States with Enhanced Accessibility */
+.form-input:focus,
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--form-border-focus);
+  box-shadow: 0 0 0 3px var(--form-shadow-focus);
+}
+
+.form-input:focus-visible,
+.form-group input:focus-visible,
+.form-group textarea:focus-visible,
+.form-group select:focus-visible {
+  outline: 2px solid var(--form-border-focus);
+  outline-offset: 2px;
+}
+
+/* Enhanced Validation States */
+.form-input:valid,
+.form-group input:valid,
+.form-input.valid,
+.form-group input.valid {
+  border-color: var(--form-border-valid);
+}
+
+.form-input:invalid:not(:placeholder-shown),
+.form-group input:invalid:not(:placeholder-shown),
+.form-input.invalid,
+.form-group input.invalid {
+  border-color: var(--form-border-invalid);
+}
+
+/* Disabled States */
+.form-input:disabled,
+.form-group input:disabled,
+.form-group textarea:disabled,
+.form-group select:disabled {
+  background: color-mix(in srgb, var(--form-bg) 70%, transparent);
+  color: color-mix(in srgb, var(--form-text) 50%, transparent);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Input with Icon Container - Modern Approach */
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  container-type: inline-size;
+}
+
+.input-with-icon .input-icon {
+  position: absolute;
+  inset-inline-start: 0.75rem;
+  color: color-mix(in srgb, var(--form-text) 60%, transparent);
+  width: 18px;
+  height: 18px;
+  z-index: 2;
+  pointer-events: none;
+  transition: var(--form-transition);
+}
+
+.input-with-icon .form-input {
+  padding-inline-start: var(--form-input-padding-with-icon);
+}
+
+/* Focus enhancement for icon inputs */
+.input-with-icon:focus-within .input-icon {
+  color: var(--form-border-focus);
+}
+
+/* Textarea Specific */
+.form-group textarea {
+  height: auto;
+  min-height: 96px;
+  resize: vertical;
+}
+
+/* Address Components */
+.address-item,
+.address-list .address-item,
+.address-card,
+.account-details-block .address-item,
+.addresses-page .address-item,
+.addresses-container .address-item {
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 12px;
+  margin-bottom: 12px;
+  background-color: #fff;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.address-item:hover {
+  background-color: #f8f8f8;
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+/* Phone Input Components */
+.phone-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.phone-input-wrapper .PhoneInput {
+  width: 100%;
+}
+
+.phone-input-wrapper .PhoneInputInput {
+  height: 48px;
+  padding: 12px 14px;
+  font-size: 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #000000;
+}
+
+/* Utility Classes */
+.full-width {
+  width: 100%;
+}
+
+.no-margin {
+  margin: 0;
+}
+
+.no-padding {
+  padding: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .form-row {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .form-input,
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    height: 44px;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-group {
+    margin-bottom: 0.5rem;
+  }
+  
+  .form-input,
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    padding: 10px 12px;
+  }
 }
