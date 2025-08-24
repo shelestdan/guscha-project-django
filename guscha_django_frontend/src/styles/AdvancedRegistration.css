@@ -62,22 +62,35 @@
 .registration-form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+}
+
+.registration-form > * {
+  margin-bottom: 1rem; /* Одинаковые отступы между всеми элементами формы */
+}
+
+.registration-form > *:last-child {
+  margin-bottom: 0; /* Убираем отступ у последнего элемента */
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
+  margin: 0 !important; /* Принудительно убираем все внешние отступы */
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  margin-bottom: 1rem; /* Одинаковый отступ для всех полей */
 }
 
-/* Контейнер для поля с иконкой */
+/* Убираем отступ у полей внутри ряда */
+.form-row .form-group {
+  margin-bottom: 0;
+}
+
+/* Контейнер для поля с иконкой - Улучшенная версия */
 .input-with-icon {
   position: relative;
   display: flex;
@@ -87,18 +100,79 @@
 
 .input-icon {
   position: absolute;
-  left: 0.5rem;
-  color: #666666;
-  width: 18px;
-  height: 18px;
+  left: 1rem;
+  color: #999999;
+  width: 20px;
+  height: 20px;
   z-index: 2;
   pointer-events: none;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: color 0.2s ease;
 }
 
-/* Исправляем отступы для обычных полей */
+
+
+/* Поля с иконками - Унифицированные стили для всех полей */
 .input-with-icon .form-input {
-  padding-left: 2.5rem;
+  padding-left: 3rem; /* 16px иконка + 8px отступ слева + 8px отступ справа от иконки */
+  padding-right: 1rem;
   border-radius: var(--form-border-radius);
+  height: 48px;
+  box-sizing: border-box;
+  border: 1px solid #e0e0e0;
+  background: #ffffff;
+  color: #000000;
+  font-size: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Поля пароля с кнопкой показать/скрыть */
+.input-with-icon:has(input[type="password"]) .form-input,
+.input-with-icon:has(input[type="text"]) .form-input {
+  padding-right: 2.5rem; /* Уменьшенное расстояние для соответствия положению кнопки */
+}
+
+/* Кнопка показать/скрыть пароль */
+.password-toggle {
+  position: absolute;
+  right: 0.5rem; /* Уменьшенное расстояние для более плотного размещения */
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #999999;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: var(--form-border-radius);
+  transition: color 0.2s ease;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+}
+
+.password-toggle:hover {
+  color: #000000;
+  background: none;
+}
+
+.password-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Состояние фокуса для поля с иконкой */
+.input-with-icon:focus-within .input-icon {
+  color: #000000;
+}
+
+.input-with-icon .form-input:focus {
+  outline: none;
+  border-color: #000000;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
 }
 
 /* Добавляем border-radius для всех полей ввода в форме регистрации */
@@ -161,97 +235,9 @@
    Modern password strength visualization with accessibility
 ============================================================================= */
 
-/* Телефонный инпут */
-.phone-input-wrapper {
-  position: relative;
-  width: 100%;
-}
 
-.phone-input-wrapper .phone-input {
-  border: none;
-  border-radius: var(--form-border-radius);
-  transition: border-color 0.2s ease;
-  margin-left: 2.5rem;
-  width: calc(100% - 2.5rem);
-}
 
-.phone-input-wrapper .phone-input.valid {
-  border-color: #4caf50;
-}
 
-.phone-input-wrapper .phone-input.invalid {
-  border-color: #f44336;
-}
-
-.phone-input-wrapper .phone-input .PhoneInputInput {
-  padding: 0.875rem 1rem;
-  border: none;
-  font-size: 0.95rem;
-  background: transparent;
-  color: #000000;
-  height: 48px;
-  box-sizing: border-box;
-}
-
-.phone-input-wrapper .phone-input .PhoneInputInput:focus {
-  outline: none;
-}
-
-.phone-input-wrapper .phone-input:focus-within {
-  border-color: #000000;
-  box-shadow: none;
-}
-
-.phone-input-wrapper .phone-input .PhoneInputCountrySelect {
-  padding-left: 3rem;
-}
-
-/* Отступ для контейнера флага */
-.phone-input-wrapper .phone-input .PhoneInputCountry {
-  margin-left: 0.75rem;
-}
-
-/* Контейнер пароля */
-.input-with-icon .password-input-container {
-  position: relative;
-  width: calc(100% - 2.5rem);
-  margin-left: 2.5rem;
-}
-
-/* Исправляем padding для полей пароля внутри password-input-container */
-.input-with-icon .password-input-container .form-input {
-  padding-left: 1rem;
-  padding-right: 3rem;
-}
-
-.password-toggle {
-  position: absolute;
-  right: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: #666666;
-  cursor: pointer;
-  padding: 0.25rem;
-  border-radius: var(--form-border-radius);
-  transition: color 0.2s ease;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.password-toggle:hover {
-  color: #000000;
-  background: none;
-}
-
-.password-toggle:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
 
 /* Password Strength Indicator - Modern Implementation */
 .password-strength {
@@ -463,7 +449,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  margin-block-start: clamp(1rem, 3vw, 1.5rem);
+  margin-top: 1.5rem; /* Увеличиваем отступ сверху для кнопки */
   block-size: clamp(44px, 10vw, 48px);
   box-sizing: border-box;
   font-family: inherit;
@@ -566,22 +552,70 @@
 /* Адаптивность для мобильных */
 @media (max-width: 768px) {
   .advanced-registration {
-    padding: 1rem 0;
+    padding: 1rem 0.5rem;
     min-height: calc(100vh - 80px);
   }
 
   .registration-container {
-    padding: 0.75rem;
+    padding: 1rem;
     max-width: 100%;
     max-height: calc(100vh - 2rem);
+    margin: 0 auto;
   }
 
   .form-row {
     grid-template-columns: 1fr;
+    gap: 0.75rem;
   }
 
   .registration-header h1 {
-    font-size: 1rem;
+    font-size: 1.1rem;
+  }
+
+  .form-group {
+    margin-bottom: 0.75rem;
+  }
+
+  /* Унифицированная высота для всех полей на планшетах */
+  .form-input,
+  .input-with-icon .form-input,
+  .password-input-container .form-input,
+  .phone-input .PhoneInputInput {
+    height: 48px !important;
+    font-size: 1rem !important;
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+    box-sizing: border-box !important;
+  }
+
+  .input-with-icon .form-input {
+    padding-left: 3rem !important; /* Сохраняем новые отступы */
+    padding-right: 1rem !important;
+  }
+
+  .input-icon {
+    left: 1rem !important; /* Сохраняем новое положение иконки */
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .phone-input-wrapper .phone-input {
+    margin-left: 3rem;
+    width: calc(100% - 3rem);
+  }
+
+  .input-with-icon .password-input-container {
+    width: calc(100% - 3rem);
+    margin-left: 3rem;
+  }
+
+  .input-with-icon .password-input-container .form-input {
+    padding-left: 1rem !important;
+    padding-right: 3rem !important;
+  }
+
+  .password-toggle {
+    right: 1rem !important; /* Сохраняем новое положение */
   }
 
   .password-requirements {
@@ -591,43 +625,81 @@
 
 @media (max-width: 480px) {
   .advanced-registration {
-    padding: 0.5rem 0;
+    padding: 0.5rem 0.25rem;
     min-height: calc(100vh - 60px);
   }
 
   .registration-container {
-    padding: 0.5rem;
+    padding: 0.75rem;
     max-height: calc(100vh - 1rem);
+    border-radius: 8px;
   }
 
   .registration-header h1 {
-    font-size: 0.95rem;
+    font-size: 1rem;
   }
 
+  .form-group {
+    margin-bottom: 0.5rem;
+  }
+
+  /* Мобильная адаптация с уменьшенными отступами */
   .form-input,
+  .input-with-icon .form-input,
+  .password-input-container .form-input,
   .phone-input .PhoneInputInput {
-    padding: 0.625rem 2.5rem 0.625rem 0.75rem;
-    font-size: 0.85rem;
-    height: 44px;
+    height: 44px !important;
+    font-size: 0.95rem !important;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+    box-sizing: border-box !important;
   }
 
   .input-with-icon .form-input {
-    padding-left: 2rem;
+    padding-left: 2.75rem !important; /* Немного уменьшаем для мобильных, но сохраняем читаемость */
+    padding-right: 0.875rem !important;
   }
 
   .input-icon {
-    width: 16px;
-    height: 16px;
-    left: 0.4rem;
+    width: 18px !important;
+    height: 18px !important;
+    left: 0.75rem !important; /* Немного уменьшаем для мобильных */
+  }
+
+  .phone-input-wrapper .phone-input {
+    margin-left: 2.75rem;
+    width: calc(100% - 2.75rem);
+  }
+
+  .input-with-icon .password-input-container {
+    width: calc(100% - 2.75rem);
+    margin-left: 2.75rem;
+  }
+
+  .input-with-icon .password-input-container .form-input {
+    padding-left: 0.875rem !important;
+    padding-right: 2.5rem !important;
+  }
+
+  .password-toggle {
+    right: 0.75rem !important;
+    width: 18px !important;
+    height: 18px !important;
   }
 
   .register-btn {
-    padding: 0.5rem 0.8rem;
-    font-size: 0.7rem;
+    height: 44px !important;
+    font-size: 0.9rem !important;
+    padding: 10px 1rem !important;
   }
 
   .password-requirements {
     grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+
+  .requirement {
+    font-size: 0.75rem;
   }
 }
 
@@ -713,7 +785,7 @@
 
 .checkbox-label {
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* Выравниваем по верхней части для выравнивания с первой строкой */
   gap: clamp(0.5rem, 2vw, 0.75rem);
   cursor: pointer;
   font-size: clamp(0.8rem, 2.2vw, 0.875rem);
@@ -734,13 +806,13 @@
 
 .checkmark {
   position: relative;
+  top: 20px;
   block-size: clamp(18px, 4vw, 20px);
   inline-size: clamp(18px, 4vw, 20px);
   background-color: var(--form-bg, #ffffff);
   border: 2px solid #6b7280;
   border-radius: clamp(4px, 1vw, 5px);
   flex-shrink: 0;
-  margin-block-start: 0;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -897,13 +969,17 @@
 
 .registration-container.form-system .input-with-icon .form-input {
   padding-left: 2.75rem;
+  padding-right: 1rem;
   height: 48px;
   box-sizing: border-box;
-  padding-block: clamp(0.625rem, 2vw, 0.75rem);
-  padding-inline: clamp(0.875rem, 2.5vw, 1rem);
-  padding-inline-start: clamp(2.25rem, 6vw, 2.75rem);
-  block-size: clamp(40px, 10vw, 44px);
-  font-size: clamp(0.85rem, 2.3vw, 0.9rem);
+  padding-block: 12px;
+  padding-inline: 14px;
+  padding-inline-start: 2.75rem;
+  font-size: 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: var(--form-border-radius);
+  background: #ffffff;
+  color: #000000;
 }
 
 /* Phone input alignment */
@@ -925,9 +1001,18 @@
 }
 
 .registration-container.form-system .register-btn {
-  margin-block-start: clamp(0.875rem, 2.5vw, 1rem);
-  block-size: clamp(40px, 10vw, 44px);
-  font-size: clamp(0.85rem, 2.3vw, 0.9rem);
+  margin-block-start: 1rem;
+  height: 48px;
+  font-size: 1rem;
+  padding: 12px 24px;
+  background: #000000;
+  color: #ffffff;
+  border: none;
+  border-radius: var(--form-border-radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Mobile tweaks */
@@ -941,4 +1026,110 @@
   .registration-container {
     padding: 0.5rem;
   }
+}
+
+/* Дополнительные адаптивные брейкпоинты */
+@media (max-width: 360px) {
+  /* Маленькие смартфоны */
+  .registration-container {
+    padding: 0.5rem;
+    margin: 0;
+  }
+
+  .form-input,
+  .input-with-icon .form-input,
+  .password-input-container .form-input,
+  .phone-input .PhoneInputInput {
+    height: 42px !important;
+    font-size: 0.9rem !important;
+    padding: 9px 12px !important;
+  }
+
+  .input-with-icon .form-input {
+    padding-left: 2.25rem !important;
+  }
+
+  .input-icon {
+    width: 14px !important;
+    height: 14px !important;
+    left: 0.4rem !important;
+  }
+
+  .phone-input-wrapper .phone-input {
+    margin-left: 2.25rem;
+    width: calc(100% - 2.25rem);
+  }
+
+  .input-with-icon .password-input-container {
+    width: calc(100% - 2.25rem);
+    margin-left: 2.25rem;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 640px) {
+  /* Большие смартфоны и маленькие планшеты */
+  .form-input,
+  .input-with-icon .form-input,
+  .password-input-container .form-input,
+  .phone-input .PhoneInputInput {
+    height: 46px !important;
+    font-size: 0.95rem !important;
+    padding: 11px 14px !important;
+  }
+
+  .input-with-icon .form-input {
+    padding-left: 2.6rem !important;
+  }
+
+  .phone-input-wrapper .phone-input {
+    margin-left: 2.6rem;
+    width: calc(100% - 2.6rem);
+  }
+
+  .input-with-icon .password-input-container {
+    width: calc(100% - 2.6rem);
+    margin-left: 2.6rem;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 767px) {
+  /* Планшеты в портретной ориентации */
+  .form-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .form-input,
+  .input-with-icon .form-input,
+  .password-input-container .form-input,
+  .phone-input .PhoneInputInput {
+    height: 48px !important;
+    font-size: 1rem !important;
+    padding: 12px 14px !important;
+  }
+
+  .input-with-icon .form-input {
+    padding-left: 2.75rem !important;
+  }
+}
+
+/* Фиксация выравнивания всех элементов формы */
+.form-input,
+.input-with-icon .form-input,
+.password-input-container .form-input,
+.phone-input .PhoneInputInput {
+  border: 1px solid #e0e0e0;
+  border-radius: var(--form-border-radius);
+  background: #ffffff;
+  color: #000000;
+  transition: border-color 0.2s ease;
+}
+
+.form-input:focus,
+.input-with-icon .form-input:focus,
+.password-input-container .form-input:focus,
+.phone-input .PhoneInputInput:focus {
+  outline: none;
+  border-color: #000000;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
 }

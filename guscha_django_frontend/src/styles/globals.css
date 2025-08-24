@@ -509,7 +509,7 @@ select {
   --form-input-padding-block: 12px;
   --form-input-padding-inline: 14px;
   --form-input-padding-with-icon: 2.75rem;
-  --form-border-radius: clamp(8px, 1vw, 12px);
+  --form-border-radius: 6px; /* Одинаковое скругление с формой входа */
   --form-gap: clamp(0.5rem, 2vw, 0.75rem);
   
   /* Form Typography */

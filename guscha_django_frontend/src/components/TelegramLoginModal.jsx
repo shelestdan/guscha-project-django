@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FaTimes } from 'react-icons/fa';
+import { isValidPhoneNumber } from 'libphonenumber-js';
 import { ReactComponent as TelegramIcon } from '../assets/TelegramIcon.svg';
 import '../styles/TelegramLoginModal.css';
 
@@ -8,38 +9,14 @@ const TelegramLoginModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
   const [error, setError] = useState('');
   const [isValidating, setIsValidating] = useState(false);
 
-  // Форматирование номера телефона
-  const formatPhoneNumber = (value) => {
-    // Удаляем все символы кроме цифр
-    const numbers = value.replace(/\D/g, '');
-    
-    // Если начинается с 8, заменяем на +7
-    if (numbers.startsWith('8')) {
-      return '+7' + numbers.slice(1);
-    }
-    
-    // Если начинается с 7, добавляем +
-    if (numbers.startsWith('7')) {
-      return '+' + numbers;
-    }
-    
-    // Если не начинается с 7 или 8, добавляем +7
-    if (numbers.length > 0 && !numbers.startsWith('7')) {
-      return '+7' + numbers;
-    }
-    
-    return numbers.length > 0 ? '+' + numbers : '';
-  };
-
   // Валидация номера телефона
   const validatePhoneNumber = (phone) => {
-    const phoneRegex = /^\+7\d{10}$/;
-    return phoneRegex.test(phone);
+    if (!phone) return false;
+    return isValidPhoneNumber(phone);
   };
 
   const handlePhoneChange = (e) => {
-    const formatted = formatPhoneNumber(e.target.value);
-    setPhoneNumber(formatted);
+    setPhoneNumber(e.target.value);
     
     // Очищаем ошибку при вводе
     if (error) {
@@ -56,7 +33,7 @@ const TelegramLoginModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
     }
     
     if (!validatePhoneNumber(phoneNumber)) {
-      setError('Введите корректный номер телефона в формате +7XXXXXXXXXX');
+      setError('Введите корректный номер телефона');
       return;
     }
     
@@ -115,7 +92,7 @@ const TelegramLoginModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
                 className={`telegram-input ${error ? 'error' : ''}`}
                 value={phoneNumber}
                 onChange={handlePhoneChange}
-                placeholder="+7 (XXX) XXX-XX-XX"
+                placeholder="+1 234 567-8900"
                 disabled={isValidating || isLoading}
                 autoFocus
               />

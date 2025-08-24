@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import PhoneInput from 'react-phone-number-input';
-import { isValidPhoneNumber } from 'libphonenumber-js';
 import validator from 'validator';
 import { 
   FiEye, 
@@ -13,7 +11,6 @@ import {
   FiUser,
   FiShield
 } from 'react-icons/fi';
-import 'react-phone-number-input/style.css';
 import '../styles/AdvancedRegistration.css';
 import { PasswordSecurityBadge } from './SecurityIndicator';
 
@@ -88,7 +85,9 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
     if (!phone) {
       return { isValid: false, message: 'Номер телефона обязателен' };
     }
-    if (!isValidPhoneNumber(phone)) {
+    // Simple international phone number validation
+    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+    if (!phoneRegex.test(phone.replace(/[\s()-]/g, ''))) {
       return { isValid: false, message: 'Некорректный номер телефона' };
     }
     return { isValid: true, message: 'Корректный номер' };
@@ -423,12 +422,6 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
                   autoComplete="given-name"
                 />
               </div>
-              {formData.firstName && (
-                <div className={`validation-message ${validation.firstName.isValid ? 'success' : 'error'}`}>
-                  {validation.firstName.isValid ? <FiCheck /> : <FiX />}
-                  <span>{validation.firstName.message}</span>
-                </div>
-              )}
             </div>
 
             <div className="form-group">
@@ -446,12 +439,6 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
                   autoComplete="family-name"
                 />
               </div>
-              {formData.lastName && (
-                <div className={`validation-message ${validation.lastName.isValid ? 'success' : 'error'}`}>
-                  {validation.lastName.isValid ? <FiCheck /> : <FiX />}
-                  <span>{validation.lastName.message}</span>
-                </div>
-              )}
             </div>
           </div>
 
@@ -471,112 +458,79 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
                 autoComplete="email"
               />
             </div>
-            {/* Серверная ошибка имеет приоритет */}
-            {serverErrors.email ? (
-              <div className="validation-message error">
-                <FiX />
-                <span>{serverErrors.email}</span>
-              </div>
-            ) : formData.email && (
-              <div className={`validation-message ${validation.email.isValid ? 'success' : 'error'}`}>
-                {validation.email.isValid ? <FiCheck /> : <FiX />}
-                <span>{validation.email.message}</span>
-              </div>
-            )}
           </div>
 
           <div className="form-group">
-            <div className="input-with-icon phone-input-wrapper">
+            <div className="input-with-icon">
               <FiPhone className="input-icon" />
-              <PhoneInput
-                className={`phone-input ${
+              <input
+                type="tel"
+                className={`form-input ${
                   serverErrors.phone ? 'invalid' : 
                   formData.phone ? (validation.phone.isValid ? 'valid' : 'invalid') : ''
                 }`}
-                placeholder="Номер телефона"
                 value={formData.phone}
-                onChange={(value) => handleInputChange('phone', value || '')}
-                defaultCountry="RU"
+                onChange={(e) => handleInputChange('phone', e.target.value)}
+                placeholder="+1 234 567-8900"
                 disabled={isSubmitting}
                 autoComplete="tel"
               />
             </div>
-            {/* Серверная ошибка имеет приоритет */}
-            {serverErrors.phone ? (
-              <div className="validation-message error">
-                <FiX />
-                <span>{serverErrors.phone}</span>
-              </div>
-            ) : formData.phone && (
-              <div className={`validation-message ${validation.phone.isValid ? 'success' : 'error'}`}>
-                {validation.phone.isValid ? <FiCheck /> : <FiX />}
-                <span>{validation.phone.message}</span>
-              </div>
-            )}
           </div>
 
           <div className="form-group">
             <div className="input-with-icon">
               <FiLock className="input-icon" />
-              <div className="password-input-container">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  className={`form-input ${
-                    formData.password ? (validation.password.isValid ? 'valid' : 'invalid') : ''
-                  }`}
-                  value={formData.password}
-                  onChange={(e) => handleInputChange('password', e.target.value)}
-                  placeholder="Создайте пароль"
-                  disabled={isSubmitting}
-                  autoComplete="new-password"
-                />
-                <button
-                  type="button"
-                  className="password-toggle"
-                  onClick={() => setShowPassword(!showPassword)}
-                  disabled={isSubmitting}
-                  aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
-                >
-                  {showPassword ? <FiEyeOff /> : <FiEye />}
-                </button>
-              </div>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className={`form-input ${
+                  formData.password ? (validation.password.isValid ? 'valid' : 'invalid') : ''
+                }`}
+                value={formData.password}
+                onChange={(e) => handleInputChange('password', e.target.value)}
+                placeholder="Создайте пароль"
+                disabled={isSubmitting}
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+                disabled={isSubmitting}
+                aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
+              >
+                {showPassword ? <FiEyeOff /> : <FiEye />}
+              </button>
             </div>
-            {formData.password && <PasswordStrengthIndicator validation={validation.password} />}
-            <PasswordSecurityBadge show={formData.password.length > 0} />
+            {formData.password && (
+              <PasswordStrengthIndicator validation={validation.password} />
+            )}
           </div>
 
           <div className="form-group">
             <div className="input-with-icon">
               <FiShield className="input-icon" />
-              <div className="password-input-container">
-                <input
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  className={`form-input ${
-                    formData.confirmPassword ? (validation.confirmPassword.isValid ? 'valid' : 'invalid') : ''
-                  }`}
-                  value={formData.confirmPassword}
-                  onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                  placeholder="Повторите пароль"
-                  disabled={isSubmitting}
-                  autoComplete="new-password"
-                />
-                <button
-                  type="button"
-                  className="password-toggle"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  disabled={isSubmitting}
-                  aria-label={showConfirmPassword ? 'Скрыть пароль' : 'Показать пароль'}
-                >
-                  {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
-                </button>
-              </div>
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                className={`form-input ${
+                  formData.confirmPassword ? (validation.confirmPassword.isValid ? 'valid' : 'invalid') : ''
+                }`}
+                value={formData.confirmPassword}
+                onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                placeholder="Повторите пароль"
+                disabled={isSubmitting}
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                disabled={isSubmitting}
+                aria-label={showConfirmPassword ? 'Скрыть пароль' : 'Показать пароль'}
+              >
+                {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+              </button>
             </div>
-            {formData.confirmPassword && (
-              <div className={`validation-message ${validation.confirmPassword.isValid ? 'success' : 'error'}`}>
-                {validation.confirmPassword.isValid ? <FiCheck /> : <FiX />}
-                <span>{validation.confirmPassword.message}</span>
-              </div>
-            )}
           </div>
 
           <div className="form-group">
