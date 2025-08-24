@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Header from "../components/layout/Header/Header";
+
 import AddressList from "../components/features/addresses/AddressList";
 import AddressForm from "../components/features/addresses/AddressForm";
 import "../styles/AddressesPage.css";
@@ -33,8 +33,6 @@ const AddressesPage = () => {
 
   return (
     <div className="addresses-page">
-      <Header isHome={false} />
-
       <div className="addresses-container">
         <div className="addresses-header">
           <div className="addresses-header-content">

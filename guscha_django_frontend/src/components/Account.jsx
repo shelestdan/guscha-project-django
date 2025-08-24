@@ -5,7 +5,7 @@ import AccountDetails from './account/AccountDetails';
 import AccountAddresses from './account/AccountAddresses';
 import AccountOrders from './account/AccountOrders';
 import PasswordReset from './account/PasswordReset';
-import Header from './layout/Header/Header';
+
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
 import ToastContainer from './ui/ToastContainer';
@@ -29,7 +29,6 @@ const Account = () => {
   if (loading) {
     return (
       <>
-        <Header isHome={false} />
         <div className="account-figma-root">
           <div className="account-figma-content centered-auth">
             <div className="account-figma-loading">Загрузка...</div>
@@ -43,7 +42,6 @@ const Account = () => {
   if (isLoggedIn && user) {
     return (
       <>
-        <Header isHome={false} />
         <ToastContainer position="top-center" />
         <div className="account-figma-root">
           <div className="account-figma-sidebar account-sidebar-fixed">
@@ -101,7 +99,6 @@ const Account = () => {
   // Если пользователь не авторизован, показываем новую систему аутентификации
   return (
     <>
-      <Header isHome={false} />
       <div className="account-auth-wrapper">
         <AdvancedAuth
           onLogin={async (emailOrUser, password) => {

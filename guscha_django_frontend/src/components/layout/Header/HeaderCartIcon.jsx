@@ -9,6 +9,7 @@ const HeaderCartIcon = ({ isDark = false }) => {
   
   const cartCount = useCartStore((state) => state.count);
   const toggleCart = useCartStore((state) => state.toggleCart);
+  const isCartOpen = useCartStore((state) => state.isOpen);
 
   // Функция для обновления позиции иконки корзины
   const updateIconPos = useCallback(() => {
@@ -82,7 +83,9 @@ const HeaderCartIcon = ({ isDark = false }) => {
           right: iconRight,
           zIndex: 3001,
           transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-          pointerEvents: 'auto'
+          pointerEvents: 'auto',
+          opacity: isCartOpen ? 0 : 1,
+          visibility: isCartOpen ? 'hidden' : 'visible'
         }}
       >
         <img
@@ -103,7 +106,13 @@ const HeaderCartIcon = ({ isDark = false }) => {
       <div
         className="cart-icon-placeholder"
         aria-hidden="true"
-        style={{ width: 64, height: 40 }}
+        style={{
+          width: 64,
+          height: 40,
+          opacity: isCartOpen ? 0 : 1,
+          visibility: isCartOpen ? 'hidden' : 'visible',
+          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+        }}
       />
       {typeof document !== 'undefined' && document.body
         ? createPortal(portalContent, document.body)

@@ -20,23 +20,7 @@ const Header = ({ isHome, isBurgerMenuOpen, setIsBurgerMenuOpen, mainRef }) => {
   // Уменьшил порог до 10px, чтобы анимация начиналась сразу при небольшой прокрутке
   const isScrollingDown = canHide && scrollDirection === 'down' && scrollPosition > 10;
 
-  // Логи для диагностики: они видны в DevTools -> Console
-  useEffect(() => {
-    console.log('[Header] scrollDirection:', scrollDirection, 'scrollPosition:', scrollPosition);
-  }, [scrollDirection, scrollPosition]);
 
-  useEffect(() => {
-    console.log(
-      '[Header] isScrollingDown:',
-      isScrollingDown,
-      'isAtTop:',
-      isAtTop,
-      'isBurgerMenuOpen:',
-      isBurgerMenuOpen,
-      'cartIsOpen:',
-      cartIsOpen
-    );
-  }, [isScrollingDown, isAtTop, isBurgerMenuOpen, cartIsOpen]);
 
   // Главная страница: одна шапка, меняем стили
   if (isHome) {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { confirmPasswordReset } from '../api/authApi';
 import { useToast } from '../hooks/useToast';
-import Header from './layout/Header/Header';
+
 import '../styles/PasswordResetConfirm.css';
 
 /**
@@ -116,7 +116,6 @@ const PasswordResetConfirm = () => {
   if (isSuccess) {
     return (
       <>
-        <Header isHome={false} />
         <div className="password-reset-confirm-wrapper">
           <div className="password-reset-confirm-container">
             <div className="password-reset-success">
@@ -142,7 +141,6 @@ const PasswordResetConfirm = () => {
 
   return (
     <>
-      <Header isHome={false} />
       <div className="password-reset-confirm-wrapper">
         <div className="password-reset-confirm-container">
           <div className="password-reset-confirm-form">

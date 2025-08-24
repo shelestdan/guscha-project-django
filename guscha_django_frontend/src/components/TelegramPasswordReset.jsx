@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { confirmPasswordResetWithToken } from '../api/authApi';
 import { useToast } from '../hooks/useToast';
-import Header from './layout/Header/Header';
+
 import '../styles/features/auth/password-reset-confirm.css';
 
 /**
@@ -115,7 +115,6 @@ const TelegramPasswordReset = () => {
   if (isSuccess) {
     return (
       <>
-        <Header isHome={false} />
         <div className="password-reset-confirm-wrapper">
           <div className="password-reset-confirm-container">
             <div className="password-reset-confirm-content">
@@ -137,7 +136,6 @@ const TelegramPasswordReset = () => {
 
   return (
     <>
-      <Header isHome={false} />
       <div className="password-reset-confirm-wrapper">
         <div className="password-reset-confirm-container">
           <div className="password-reset-confirm-content">
