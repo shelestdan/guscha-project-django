@@ -11,7 +11,6 @@ const AccountAddresses = ({ user }) => {
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [editingAddress, setEditingAddress] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
   const { showSuccess, showError } = useToast();
 
   // Отладка состояния (можно убрать после тестирования)
@@ -82,13 +81,9 @@ const AccountAddresses = ({ user }) => {
   };
 
   const handleAddressModalClose = () => {
-    setIsAnimating(false);
-    // Убираем класс для предотвращения прокрутки
+    setShowAddressModal(false);
+    setEditingAddress(null);
     document.body.classList.remove('modal-open');
-    setTimeout(() => {
-      setShowAddressModal(false);
-      setEditingAddress(null);
-    }, 300); // Время анимации
   };
 
   const handleEditAddress = (address) => {
@@ -106,17 +101,13 @@ const AccountAddresses = ({ user }) => {
     });
     setEditingAddress(address);
     setShowAddressModal(true);
-    // Добавляем класс для предотвращения прокрутки
     document.body.classList.add('modal-open');
-    setTimeout(() => setIsAnimating(true), 10); // Небольшая задержка для анимации
   };
 
   const handleAddAddress = () => {
     setEditingAddress(null);
     setShowAddressModal(true);
-    // Добавляем класс для предотвращения прокрутки
     document.body.classList.add('modal-open');
-    setTimeout(() => setIsAnimating(true), 10); // Небольшая задержка для анимации
   };
 
   const handleDeleteAddress = async (addressId) => {
@@ -218,9 +209,8 @@ const AccountAddresses = ({ user }) => {
       </div>
 
       {/* Модальное окно для добавления/редактирования адреса */}
-      {showAddressModal && (
-        <div className={`modal-overlay ${isAnimating ? 'show' : ''}`} onClick={handleAddressModalClose}>
-          <div className={`modal-slide ${isAnimating ? 'modal-slide-enter' : 'modal-slide-exit'}`} onClick={(e) => e.stopPropagation()}>
+      <div className={`modal-overlay ${showAddressModal ? 'open' : ''}`} onClick={handleAddressModalClose}>
+        <div className={`modal-slide ${showAddressModal ? 'open' : ''}`} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>
                 {editingAddress ? 'Редактировать адрес' : 'Добавить адрес'}
@@ -234,9 +224,8 @@ const AccountAddresses = ({ user }) => {
               onSuccess={handleAddressSuccess}
               onCancel={handleAddressModalClose}
             />
-          </div>
         </div>
-      )}
+      </div>
     </>
   );
 };

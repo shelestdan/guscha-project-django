@@ -65,7 +65,7 @@
 }
 
 .registration-form > * {
-  margin-bottom: 1rem; /* Одинаковые отступы между всеми элементами формы */
+  margin-bottom: 0.25rem; /* Уменьшенные отступы между элементами формы */
 }
 
 .registration-form > *:last-child {
@@ -82,7 +82,7 @@
 .form-group {
   display: flex;
   flex-direction: column;
-  margin-bottom: 1rem; /* Одинаковый отступ для всех полей */
+  margin-bottom: 0.25rem; /* Уменьшенный отступ для всех полей */
 }
 
 /* Убираем отступ у полей внутри ряда */
@@ -207,7 +207,7 @@
 
 /* Enhanced form groups for registration */
 .registration-container .form-group {
-  margin-block-end: clamp(1rem, 3vw, 1.5rem);
+  margin-block-end: 0.25rem;
   position: relative;
   container-type: inline-size;
 }
@@ -573,7 +573,7 @@
   }
 
   .form-group {
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.25rem;
   }
 
   /* Унифицированная высота для всех полей на планшетах */
@@ -640,7 +640,7 @@
   }
 
   .form-group {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
   }
 
   /* Мобильная адаптация с уменьшенными отступами */
@@ -904,7 +904,7 @@
   }
   
   .registration-container .form-group {
-    margin-block-end: 0.875rem;
+    margin-block-end: 0.25rem;
   }
   
   .registration-container .form-input {
@@ -955,7 +955,7 @@
 .registration-container.form-system .form-group {
   gap: 0.25rem;
   margin-bottom: 0.25rem;
-  margin-block-end: clamp(0.875rem, 2.5vw, 1rem);
+  margin-block-end: 0.25rem;
 }
 
 .form-row {

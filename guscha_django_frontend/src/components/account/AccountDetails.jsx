@@ -4,13 +4,13 @@ import { isValidPhoneNumber } from 'libphonenumber-js';
 import { updateUserProfile } from '../../api/profileApi';
 import { useToast } from '../../hooks/useToast';
 import 'react-phone-number-input/style.css';
+import '../../styles/AddressForm.css';
 
 /**
  * Компонент для отображения и редактирования деталей аккаунта
  */
 const AccountDetails = ({ user, onUserUpdate }) => {
   const [showEditModal, setShowEditModal] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
   const { showSuccess, showError } = useToast();
   const [userForm, setUserForm] = useState({
     first_name: '',
@@ -39,12 +39,8 @@ const AccountDetails = ({ user, onUserUpdate }) => {
   }, [user]);
 
   const handleEditModalClose = () => {
-    setIsAnimating(false);
-    // Убираем класс для предотвращения прокрутки
+    setShowEditModal(false);
     document.body.classList.remove('modal-open');
-    setTimeout(() => {
-      setShowEditModal(false);
-    }, 300); // Время анимации
   };
 
   const handleProfileUpdate = async (e) => {
@@ -99,9 +95,7 @@ const AccountDetails = ({ user, onUserUpdate }) => {
             className="account-details-add-btn"
             onClick={() => {
               setShowEditModal(true);
-              // Добавляем класс для предотвращения прокрутки
               document.body.classList.add('modal-open');
-              setTimeout(() => setIsAnimating(true), 10);
             }}
           >
             ИЗМЕНИТЬ
@@ -110,9 +104,8 @@ const AccountDetails = ({ user, onUserUpdate }) => {
       </div>
 
       {/* Модальное окно редактирования данных пользователя */}
-      {showEditModal && (
-        <div className={`modal-overlay ${isAnimating ? 'show' : ''}`} onClick={handleEditModalClose}>
-          <div className={`modal-slide ${isAnimating ? 'modal-slide-enter' : 'modal-slide-exit'}`} onClick={(e) => e.stopPropagation()}>
+      <div className={`modal-overlay ${showEditModal ? 'open' : ''}`} onClick={handleEditModalClose}>
+        <div className={`modal-slide ${showEditModal ? 'open' : ''}`} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Редактировать данные</h3>
               <button className="modal-close" onClick={handleEditModalClose}>
@@ -195,9 +188,8 @@ const AccountDetails = ({ user, onUserUpdate }) => {
                 </button>
               </div>
             </form>
-          </div>
         </div>
-      )}
+      </div>
     </>
   );
 };
