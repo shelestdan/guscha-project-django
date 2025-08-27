@@ -1,4 +1,5 @@
 /* Компактная система аутентификации */
+/* Ensure advanced auth wrapper allows expansion */
 .advanced-auth {
   width: 100%;
   background: transparent;
@@ -10,10 +11,13 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   position: relative;
   z-index: 10;
-  min-height: calc(100vh - 120px);
-  overflow-y: auto;
+  min-height: 100vh;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
 }
 
+/* Ensure auth container allows natural content expansion */
 .auth-container {
   background: #ffffff;
   border: none;
@@ -21,8 +25,15 @@
   box-shadow: none;
   padding: 2rem;
   width: 100%;
-  max-width: 600px;
+  max-width: 700px;
   animation: none;
+  min-height: auto;
+  max-height: none !important;
+  height: auto !important;
+  display: flex;
+  flex-direction: column;
+  overflow: visible !important;
+  flex-shrink: 0;
 }
 
 /* Заголовок */
@@ -707,5 +718,48 @@
   .telegram-bot-btn svg {
     width: 18px;
     height: 18px;
+  }
+}
+
+/* Special handling for devices with limited vertical space */
+@media (max-height: 700px) {
+  .advanced-auth {
+    padding: 1rem 0;
+    align-items: flex-start;
+  }
+  
+  .auth-container {
+    padding: 1.5rem;
+    max-width: min(600px, 95vw);
+  }
+  
+  .auth-header {
+    margin-bottom: 1.2rem;
+  }
+}
+
+@media (max-height: 600px) {
+  .advanced-auth {
+    padding: 0.5rem 0;
+    min-height: auto;
+  }
+  
+  .auth-container {
+    padding: 1rem;
+    box-shadow: none;
+    border: none;
+    background: transparent;
+  }
+  
+  .auth-header {
+    margin-bottom: 1rem;
+  }
+  
+  .auth-header h1 {
+    font-size: 1.4rem;
+  }
+  
+  .auth-header p {
+    font-size: 0.85rem;
   }
 }

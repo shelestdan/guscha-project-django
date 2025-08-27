@@ -8,14 +8,13 @@ import PasswordReset from './account/PasswordReset';
 
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
-import ToastContainer from './ui/ToastContainer';
 import '../styles/Account.css';
 
 const Account = () => {
   const [activeTab, setActiveTab] = useState('details');
   const { user, loading, isLoggedIn, login, register, logout, setUser, setUserWithLogin } = useAuth();
   const navigate = useNavigate();
-  const { showSuccess } = useToast();
+  const { showSuccess, showError } = useToast();
 
   const handleLogout = async () => {
     await logout();
@@ -42,7 +41,6 @@ const Account = () => {
   if (isLoggedIn && user) {
     return (
       <>
-        <ToastContainer position="top-center" />
         <div className="account-figma-root">
           <div className="account-figma-sidebar account-sidebar-fixed">
             <div className="account-figma-menu">
@@ -109,6 +107,7 @@ const Account = () => {
             } else {
               // Обычный вход по email и паролю
               await login({ email: emailOrUser, password });
+              showSuccess('Вход выполнен успешно!');
             }
           }}
           onRegister={async (data) => {

@@ -77,8 +77,9 @@ instance.interceptors.response.use(
   (error) => {
     console.error('🔥 Axios error:', error);
     
-    // Не показываем toast для ошибок корзины
-    if (!error.config?.url?.includes('/api/cart/')) {
+    // Не показываем toast для ошибок корзины и регистрации (обрабатываются отдельно)
+    if (!error.config?.url?.includes('/api/cart/') && 
+        !error.config?.url?.includes('/api/accounts/users/')) {
       const message = error.response?.data?.detail || 
                       error.response?.data?.message || 
                       error.message || 

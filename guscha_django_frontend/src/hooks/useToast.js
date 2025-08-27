@@ -2,16 +2,22 @@ import { create } from 'zustand';
 
 const useToastStore = create((set, get) => ({
   toasts: [],
+  nextId: 0, // Счетчик для гарантированно уникальных ID
   addToast: (message, type = 'info', duration = 4000) => {
-    const id = Date.now() + Math.random();
+    const state = get();
+    const id = state.nextId + Date.now() + Math.random(); // Комбинированный уникальный ID
     const toast = { id, message, type, duration };
     
-    set((state) => ({
-      toasts: [...state.toasts, toast]
+    console.log('🔔 Добавляем тост:', { id, message, type, duration });
+    
+    set((prevState) => ({
+      toasts: [...prevState.toasts, toast],
+      nextId: prevState.nextId + 1 // Увеличиваем счетчик
     }));
 
     // Автоматически удаляем toast через duration
     setTimeout(() => {
+      console.log('⏰ Удаляем тост по ID:', id);
       get().removeToast(id);
     }, duration + 300); // Добавляем время для анимации
   },

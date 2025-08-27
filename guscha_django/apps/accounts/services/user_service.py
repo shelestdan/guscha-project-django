@@ -63,10 +63,10 @@ class UserService:
         """Обновление данных пользователя"""
         try:
             # Валидация данных обновления
-            self.user_validator.validate_user_update_data(update_data)
+            self.user_validator.validate_user_update_data(update_data, user.id)
             
             with transaction.atomic():
-                updated_user = self.user_repository.update_user(user, update_data)
+                updated_user = self.user_repository.update_user(user, **update_data)
                 logger.info(f"Пользователь обновлен: {user.email}")
                 return updated_user
                 

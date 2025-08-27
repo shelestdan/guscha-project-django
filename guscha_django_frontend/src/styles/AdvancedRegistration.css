@@ -10,14 +10,14 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-block: clamp(1rem, 4vw, 2rem);
-  padding-inline: clamp(0.5rem, 2vw, 1rem);
+  padding: clamp(1rem, 4vw, 2rem) clamp(0.5rem, 2vw, 1rem);
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   position: relative;
   z-index: 10;
-  min-block-size: calc(100vh - 120px);
-  overflow-y: auto;
+  min-height: 100vh;
+  height: auto;
+  overflow: visible;
   container-type: inline-size;
 }
 
@@ -28,10 +28,16 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   padding: clamp(1.5rem, 4vw, 2.5rem);
   width: 100%;
-  max-width: min(550px, 90vw);
-  min-block-size: 600px;
+  max-width: min(700px, 95vw);
+  min-height: auto;
+  max-height: none;
+  height: auto;
   animation: none;
   container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  flex-shrink: 0;
 }
 
 /* Заголовок */
@@ -62,6 +68,11 @@
 .registration-form {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  overflow: visible;
+  min-height: auto;
+  height: auto;
+  max-height: none;
 }
 
 .registration-form > * {
@@ -82,12 +93,23 @@
 .form-group {
   display: flex;
   flex-direction: column;
-  margin-bottom: 0.25rem; /* Уменьшенный отступ для всех полей */
+  margin-bottom: 0.5rem;
+  min-height: auto;
+  height: auto;
+  max-height: none;
 }
 
 /* Убираем отступ у полей внутри ряда */
 .form-row .form-group {
   margin-bottom: 0;
+}
+
+/* Специальные стили для группы с паролем */
+.form-group:has(.password-strength) {
+  margin-bottom: 1.5rem;
+  min-height: auto;
+  height: auto;
+  max-height: none;
 }
 
 /* Контейнер для поля с иконкой - Улучшенная версия */
@@ -111,8 +133,6 @@
   transition: color 0.2s ease;
 }
 
-
-
 /* Поля с иконками - Унифицированные стили для всех полей */
 .input-with-icon .form-input {
   padding-left: 3rem; /* 16px иконка + 8px отступ слева + 8px отступ справа от иконки */
@@ -128,8 +148,8 @@
 }
 
 /* Поля пароля с кнопкой показать/скрыть */
-.input-with-icon:has(input[type="password"]) .form-input,
-.input-with-icon:has(input[type="text"]) .form-input {
+.input-with-icon:has(input[type='password']) .form-input,
+.input-with-icon:has(input[type='text']) .form-input {
   padding-right: 2.5rem; /* Уменьшенное расстояние для соответствия положению кнопки */
 }
 
@@ -177,10 +197,10 @@
 
 /* Добавляем border-radius для всех полей ввода в форме регистрации */
 .registration-container .form-input,
-.registration-container input[type="text"],
-.registration-container input[type="email"],
-.registration-container input[type="password"],
-.registration-container input[type="tel"] {
+.registration-container input[type='text'],
+.registration-container input[type='email'],
+.registration-container input[type='password'],
+.registration-container input[type='tel'] {
   border-radius: var(--form-border-radius) !important;
 }
 
@@ -235,95 +255,108 @@
    Modern password strength visualization with accessibility
 ============================================================================= */
 
-
-
-
-
 /* Password Strength Indicator - Modern Implementation */
 .password-strength {
-  margin-block-start: 0.3rem;
-  padding: 0.4rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem;
   background: color-mix(in srgb, #f9f9f9 90%, transparent);
   border-radius: var(--form-border-radius);
   border: 1px solid var(--form-border, #e0e0e0);
   container-type: inline-size;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  opacity: 0;
+  transform: translateY(-8px);
+  animation: fadeInUp 0.3s ease-out forwards;
 }
 
-.strength-bar {
-  block-size: 2px;
-  background: color-mix(in srgb, var(--form-border, #e0e0e0) 50%, transparent);
-  border-radius: 1px;
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Полоса силы пароля */
+.password-strength-bar {
+  height: 3px;
+  background: #e0e0e0;
+  border-radius: 2px;
+  margin-bottom: 0.4rem;
+  position: relative;
   overflow: hidden;
-  margin-block-end: 0.25rem;
-  position: relative;
 }
 
-.strength-fill {
-  block-size: 100%;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: 1px;
-  position: relative;
-}
-
-.strength-fill::after {
+.password-strength-bar::after {
   content: '';
   position: absolute;
-  inset: 0;
-  background: inherit;
-  filter: brightness(1.1);
-  opacity: 0;
-  transition: opacity 0.2s ease;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease, background-color 0.3s ease;
 }
 
-.strength-fill:hover::after {
-  opacity: 1;
+.password-strength-bar.password-strength-weak::after {
+  width: 25%;
+  background: #f44336;
 }
 
-/* Strength levels with modern color mixing */
-.strength-fill.weak {
-  background: linear-gradient(90deg, 
-    color-mix(in srgb, #ff4444 80%, #ffffff 20%), 
-    color-mix(in srgb, #ff6666 80%, #ffffff 20%));
+.password-strength-bar.password-strength-medium::after {
+  width: 60%;
+  background: #ff9800;
 }
 
-.strength-fill.fair {
-  background: linear-gradient(90deg, 
-    color-mix(in srgb, #ff8800 80%, #ffffff 20%), 
-    color-mix(in srgb, #ffaa00 80%, #ffffff 20%));
+.password-strength-bar.password-strength-strong::after {
+  width: 100%;
+  background: #4caf50;
 }
 
-.strength-fill.good {
-  background: linear-gradient(90deg, 
-    color-mix(in srgb, #00aa00 80%, #ffffff 20%), 
-    color-mix(in srgb, #00cc00 80%, #ffffff 20%));
-}
-
-.strength-fill.strong {
-  background: linear-gradient(90deg, 
-    color-mix(in srgb, #008800 80%, #ffffff 20%), 
-    color-mix(in srgb, #00aa00 80%, #ffffff 20%));
-}
-
-.strength-label {
-  font-size: 0.6rem;
+/* Текст силы пароля */
+.password-strength-text {
+  font-size: 0.7rem;
   font-weight: 500;
-  margin-bottom: 0.25rem;
-  color: #000000;
+  margin-bottom: 0.4rem;
+  text-align: center;
 }
 
+.password-strength-weak-text {
+  color: #f44336;
+}
+
+.password-strength-medium-text {
+  color: #ff9800;
+}
+
+.password-strength-strong-text {
+  color: #4caf50;
+}
+
+/* Требования к паролю */
 .password-requirements {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.15rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.2rem;
+}
+
+@media (max-width: 400px) {
+  .password-requirements {
+    grid-template-columns: 1fr;
+  }
 }
 
 .requirement {
   display: flex;
   align-items: center;
-  gap: 0.15rem;
-  font-size: 0.55rem;
+  gap: 0.2rem;
+  font-size: 0.65rem;
   color: #666666;
   transition: color 0.2s ease;
+  padding: 0.1rem 0;
 }
 
 .requirement.met {
@@ -331,8 +364,9 @@
 }
 
 .requirement svg {
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
 }
 
 /* =============================================================================
@@ -411,7 +445,11 @@
 /* Enhanced Field States */
 .field-error {
   border-color: var(--form-border-invalid, #f44336) !important;
-  background: color-mix(in srgb, var(--form-border-invalid, #f44336) 2%, var(--form-bg, #ffffff) 98%);
+  background: color-mix(
+    in srgb,
+    var(--form-border-invalid, #f44336) 2%,
+    var(--form-bg, #ffffff) 98%
+  );
   animation: shake 0.3s ease-in-out;
 }
 
@@ -422,9 +460,16 @@
 
 /* Shake animation for errors */
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-2px); }
-  75% { transform: translateX(2px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-2px);
+  }
+  75% {
+    transform: translateX(2px);
+  }
 }
 
 /* =============================================================================
@@ -462,7 +507,12 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 70%
+  );
   transform: translateX(-100%);
   transition: transform 0.6s ease;
 }
@@ -559,7 +609,7 @@
   .registration-container {
     padding: 1rem;
     max-width: 100%;
-    max-height: calc(100vh - 2rem);
+    max-height: none;
     margin: 0 auto;
   }
 
@@ -631,7 +681,7 @@
 
   .registration-container {
     padding: 0.75rem;
-    max-height: calc(100vh - 1rem);
+    max-height: none;
     border-radius: 8px;
   }
 
@@ -902,16 +952,16 @@
     padding: clamp(1rem, 3vw, 1.5rem);
     min-block-size: auto;
   }
-  
+
   .registration-container .form-group {
     margin-block-end: 0.25rem;
   }
-  
+
   .registration-container .form-input {
     font-size: 0.9rem;
     padding-block: 0.75rem;
   }
-  
+
   .register-btn {
     block-size: 44px;
     font-size: 0.9rem;
@@ -922,7 +972,7 @@
   .registration-container {
     padding: clamp(1.5rem, 4vw, 2rem);
   }
-  
+
   .registration-container .form-input {
     font-size: 0.95rem;
   }
@@ -932,7 +982,7 @@
   .registration-container {
     padding: 2.5rem;
   }
-  
+
   .registration-container .form-input {
     font-size: 1rem;
   }
@@ -1125,6 +1175,96 @@
   transition: border-color 0.2s ease;
 }
 
+/* Ensure password strength indicator is fully visible */
+.password-strength {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  box-sizing: border-box;
+  min-height: auto;
+  height: auto;
+  max-height: none;
+  overflow: visible;
+  flex-shrink: 0;
+}
+
+/* Ensure form groups with password strength can expand */
+.form-group:has(.password-strength) {
+  flex-shrink: 0;
+  overflow: visible;
+  min-height: auto;
+  height: auto;
+  max-height: none;
+}
+
+/* Ensure registration container allows natural expansion */
+.registration-container {
+  flex-shrink: 0;
+  overflow: visible;
+  min-height: auto;
+  height: auto !important;
+  max-height: none !important;
+}
+
+/* CRITICAL: Force container expansion for password strength indicator */
+.registration-container.form-system {
+  min-height: auto !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  flex-shrink: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.registration-form {
+  min-height: auto !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Force form groups to expand naturally */
+.registration-container .form-group {
+  min-height: auto !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  flex-shrink: 0 !important;
+}
+
+/* Ensure password strength indicator is never clipped */
+.registration-container .password-strength {
+  position: relative !important;
+  z-index: 1000 !important;
+  background: #f8f9fa !important;
+  border: 1px solid #e0e0e0 !important;
+  border-radius: 4px !important;
+  padding: 0.75rem !important;
+  margin-top: 0.5rem !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+  min-height: auto !important;
+  height: auto !important;
+  max-height: none !important;
+  flex-shrink: 0 !important;
+}
+
+/* Force the parent auth wrapper to expand */
+.advanced-registration,
+.advanced-auth {
+  min-height: 100vh !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
 .form-input:focus,
 .input-with-icon .form-input:focus,
 .password-input-container .form-input:focus,
@@ -1132,4 +1272,96 @@
   outline: none;
   border-color: #000000;
   box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Special handling for devices with limited vertical space */
+@media (max-height: 700px) {
+  .advanced-registration {
+    padding: 1rem 0.5rem;
+    align-items: flex-start;
+  }
+  
+  .registration-container {
+    padding: 1.5rem;
+    max-width: min(600px, 95vw);
+  }
+  
+  .form-group {
+    margin-bottom: 0.4rem;
+  }
+  
+  .registration-header {
+    margin-bottom: 0.8rem;
+  }
+}
+
+@media (max-height: 600px) {
+  .advanced-registration {
+    padding: 0.5rem;
+    min-height: auto;
+  }
+  
+  .registration-container {
+    padding: 1rem;
+    box-shadow: none;
+    border: none;
+    background: transparent;
+  }
+  
+  .form-group {
+    margin-bottom: 0.3rem;
+  }
+  
+  .registration-header h1 {
+    font-size: 1rem;
+  }
+  
+  .registration-header p {
+    font-size: 0.7rem;
+  }
+}
+
+/* =============================================================================
+   FINAL CRITICAL OVERRIDE: Ensure registration form height can expand
+   =============================================================================
+   These rules absolutely ensure the form can expand for password indicators
+============================================================================= */
+
+.advanced-registration,
+.advanced-registration .registration-container,
+.advanced-registration .registration-form,
+.advanced-registration .form-group,
+.advanced-registration .password-strength {
+  min-height: auto !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  flex-shrink: 0 !important;
+}
+
+/* Specifically target the registration container with form-system class */
+.advanced-registration .registration-container.form-system {
+  min-height: auto !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  display: flex !important;
+  flex-direction: column !important;
+  flex-shrink: 0 !important;
+}
+
+/* Ensure password strength indicator never gets clipped */
+.advanced-registration .password-strength {
+  position: relative !important;
+  display: block !important;
+  width: 100% !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.75rem !important;
+  padding: 0.75rem !important;
+  background: #f8f9fa !important;
+  border: 1px solid #e0e0e0 !important;
+  border-radius: 4px !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+  z-index: 10 !important;
 }

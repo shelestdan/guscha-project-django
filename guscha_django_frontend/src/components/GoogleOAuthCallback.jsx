@@ -117,7 +117,7 @@ const GoogleOAuthCallback = () => {
         // Обновляем состояние пользователя
         if (data.user) {
           authHook.setUser(data.user);
-          toastHook.showSuccess('Вход через Google выполнен успешно!');
+          // Уведомление о успешном входе показывается в Account.jsx
           console.log('🟢 Google OAuth завершен успешно!');
           setProcessingStep('Завершение авторизации...');
         }

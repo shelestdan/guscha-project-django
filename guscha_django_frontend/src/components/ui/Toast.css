@@ -24,7 +24,7 @@
 /* Позиционирование */
 .toast--top-right {
   top: 0;
-  right: 0;
+  right: 80px; /* Сдвигаем влево от иконки корзины */
 }
 
 .toast--top-left {
@@ -34,7 +34,7 @@
 
 .toast--bottom-right {
   bottom: 0;
-  right: 0;
+  right: 80px; /* Сдвигаем влево от иконки корзины */
 }
 
 .toast--bottom-left {
@@ -197,6 +197,15 @@
     min-width: auto;
     max-width: calc(100vw - 2rem);
     margin: 0.5rem;
+  }
+  
+  /* На мобильных устройствах сдвигаем ещё больше влево */
+  .toast--top-right {
+    right: 60px; /* Больше места для мобильной иконки корзины */
+  }
+  
+  .toast--bottom-right {
+    right: 60px; /* Больше места для мобильной иконки корзины */
   }
   
   .toast__content {

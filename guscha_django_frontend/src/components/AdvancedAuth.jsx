@@ -7,9 +7,12 @@ import { FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
 import { FcGoogle } from 'react-icons/fc';
 import { SiTelegram } from 'react-icons/si';
 import '../styles/AdvancedAuth.css';
+import { useToast } from '../hooks/useToast';
 // import { PasswordSecurityBadge } from './SecurityIndicator';
 
 const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onClose }) => {
+  const { showSuccess, showError, showWarning } = useToast();
+  
   // Функция для получения CSRF токена
   const getCSRFToken = () => {
     const cookieValue = document.cookie
@@ -50,11 +53,22 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onC
       await onLogin(loginData.email, loginData.password);
       // После успешного входа компонент Account автоматически обновится
       // благодаря изменению isLoggedIn в хуке useAuth
+      // Уведомление о успешном входе показывается в Account.jsx
     } catch (error) {
       console.error('Ошибка входа:', error);
       const errorMessage = error.response?.data?.detail || 
                           error.response?.data?.message || 
                           'Неверный email или пароль';
+      
+      // Показываем уведомление об ошибке
+      if (errorMessage.includes('Неверный') || errorMessage.includes('Invalid')) {
+        showError('🔒 Неверные данные для входа. Проверьте email и пароль', 5000);
+      } else if (errorMessage.includes('заблокирован') || errorMessage.includes('blocked')) {
+        showError('⚠️ Аккаунт заблокирован. Обратитесь в поддержку', 6000);
+      } else {
+        showError(' Ошибка входа: ' + errorMessage, 5000);
+      }
+      
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -175,6 +189,16 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onC
     } catch (error) {
       console.error('❌ Ошибка Google OAuth:', error);
       console.error('❌ Стек ошибки:', error.stack);
+      
+      // Показываем уведомление об ошибке Google OAuth
+      if (error.message.includes('Client ID')) {
+        showError('⚙️ Не настроен Google OAuth. Обратитесь к администратору', 6000);
+      } else if (error.message.includes('redirect_uri')) {
+        showError('🔴 Ошибка конфигурации Google. Попробуйте позже', 6000);
+      } else {
+        showError('🔴 Ошибка входа через Google: ' + error.message, 5000);
+      }
+      
       setError(`Ошибка Google OAuth: ${error.message}`);
       setIsLoading(false);
     }
@@ -187,6 +211,7 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onC
       setShowTelegramModal(true);
     } catch (error) {
       console.error('❌ Ошибка открытия Telegram модального окна:', error);
+      showError('📱 Ошибка открытия Telegram входа: ' + error.message, 5000);
       setError(`Ошибка: ${error.message}`);
     }
   };
@@ -230,7 +255,7 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onC
       }
 
     } catch (error) {
-      console.error('❌ Ошибка отправки номера телефона:', error);
+      console.error(' Ошибка отправки номера телефона:', error);
       throw error; // Пробрасываем ошибку в модальное окно
     } finally {
       setTelegramLoginLoading(false);
@@ -268,7 +293,9 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onC
       
       if (response.ok && data.success && data.authenticated) {
         // Пользователь успешно авторизован через Telegram
-        console.log('✅ Успешный вход через Telegram:', data);
+        console.log(' Успешный вход через Telegram:', data);
+        
+        // Уведомление о успешном входе показывается в Account.jsx
         
         // Сохраняем токены
         if (data.access_token) {
@@ -324,6 +351,7 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onC
         
         if (attempts >= maxAttempts && !isAuthenticated) {
           console.log('⏰ Время ожидания входа через Telegram истекло');
+          showWarning('⏰ Время ожидания истекло. Попробуйте войти снова', 6000);
           alert('Время ожидания истекло. Попробуйте войти снова.');
         }
       }

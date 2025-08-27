@@ -13,8 +13,11 @@ import {
 } from 'react-icons/fi';
 import '../styles/AdvancedRegistration.css';
 import { PasswordSecurityBadge } from './SecurityIndicator';
+import { useToast } from '../hooks/useToast';
 
 const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
+  const { showSuccess, showError, showWarning } = useToast();
+  
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -289,34 +292,72 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
       
       console.log('✅ Регистрация успешна:', result);
       
+      // Показываем уведомление об успешной регистрации
+      showSuccess('🎉 Регистрация прошла успешно! Проверьте Telegram для подтверждения', 5000);
+      
       // Результат уже передан через onRegister выше
       // Родительский компонент (AdvancedAuth) обработает переход к Telegram-верификации
       // если в result есть verification_id
     } catch (error) {
       console.error('Ошибка регистрации:', error);
-      console.log('error.response:', error.response);
+      console.log('Подробности ошибки:');
+      console.log('Статус:', error.response?.status);
+      console.log('Данные ошибки:', error.response?.data);
+      console.log('Сообщение ошибки:', error.message);
       
       // Очищаем предыдущие ошибки
       setServerErrors({ email: '', phone: '', general: '' });
+      
+      // Небольшая задержка, чтобы избежать конфликтов состояния
+      await new Promise(resolve => setTimeout(resolve, 50));
       
       // Парсим ошибки сервера и показываем под соответствующими полями
       if (error.response && error.response.data) {
         const errorData = error.response.data;
         
-        // Проверяем ошибки валидации из схемы
-        if (errorData.errors) {
+        // Проверяем ошибки валидации из актуального формата сервера
+        if (errorData.details) {
+          const newServerErrors = { email: '', phone: '', general: '' };
+          
+          if (errorData.details.email) {
+            newServerErrors.email = Array.isArray(errorData.details.email) 
+              ? errorData.details.email[0] 
+              : errorData.details.email;
+            // Показываем уведомление для ошибки email
+            console.log('🔔 Отправляем тост об ошибке email');
+            const emailErrorMsg = `❌ Пользователь с таким email уже зарегистрирован (${new Date().toLocaleTimeString()})`;
+            showError(emailErrorMsg, 6000);
+          }
+          
+          if (errorData.details.phone) {
+            newServerErrors.phone = Array.isArray(errorData.details.phone) 
+              ? errorData.details.phone[0] 
+              : errorData.details.phone;
+            // Показываем уведомление для ошибки телефона
+            console.log('🔔 Отправляем тост об ошибке телефона');
+            const phoneErrorMsg = `📱 Пользователь с таким номером телефона уже зарегистрирован (${new Date().toLocaleTimeString()})`;
+            showError(phoneErrorMsg, 6000);
+          }
+          
+          console.log('Установлены серверные ошибки:', newServerErrors);
+          setServerErrors(newServerErrors);
+        }
+        // Резервная проверка старого формата ошибок (на случай изменения API)
+        else if (errorData.errors) {
           const newServerErrors = { email: '', phone: '', general: '' };
           
           if (errorData.errors.email) {
             newServerErrors.email = Array.isArray(errorData.errors.email) 
               ? errorData.errors.email[0] 
               : errorData.errors.email;
+            showError('❌ Пользователь с таким email уже зарегистрирован', 6000);
           }
           
           if (errorData.errors.phone) {
             newServerErrors.phone = Array.isArray(errorData.errors.phone) 
               ? errorData.errors.phone[0] 
               : errorData.errors.phone;
+            showError('📱 Пользователь с таким номером телефона уже зарегистрирован', 6000);
           }
           
           console.log('Установлены серверные ошибки:', newServerErrors);
@@ -326,14 +367,33 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
         else if (errorData.message) {
           if (errorData.message.includes('email уже зарегистрирован')) {
             setServerErrors({ email: 'Пользователь с таким email уже зарегистрирован', phone: '', general: '' });
+            showError('❌ Этот email уже используется другим аккаунтом', 6000);
           } else if (errorData.message.includes('номером телефона уже зарегистрирован')) {
             setServerErrors({ email: '', phone: 'Пользователь с таким номером телефона уже зарегистрирован', general: '' });
+            showError('📱 Этот номер телефона уже привязан к другому аккаунту', 6000);
           } else {
             setServerErrors({ email: '', phone: '', general: errorData.message });
+            showError('⚠️ Ошибка регистрации: ' + errorData.message, 6000);
           }
         }
+        // Если есть общее описание ошибки в поле 'error'
+        else if (errorData.error) {
+          setServerErrors({ email: '', phone: '', general: errorData.error });
+          showError('⚠️ ' + errorData.error, 6000);
+        }
       } else {
-        setServerErrors({ email: '', phone: '', general: 'Произошла ошибка при регистрации. Попробуйте позже.' });
+        // Нет ошибок сервера или нет response.data
+        const errorMessage = error.message || 'Произошла ошибка при регистрации. Попробуйте позже.';
+        console.log('Общая ошибка:', errorMessage);
+        
+        setServerErrors({ email: '', phone: '', general: errorMessage });
+        
+        // Показываем уведомление с подробной информацией
+        if (error.response?.status) {
+          showError(`🔴 Ошибка сервера ${error.response.status}: ${errorMessage}`, 6000);
+        } else {
+          showError('🔴 Произошла ошибка при регистрации. Попробуйте позже.', 6000);
+        }
       }
     } finally {
       setIsSubmitting(false);

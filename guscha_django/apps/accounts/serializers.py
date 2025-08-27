@@ -281,7 +281,7 @@ class UserUpdateSerializer(BaseSerializer, serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'phone', 'address']
+        fields = ['first_name', 'last_name', 'phone', 'address', 'email']
     
     def validate_first_name(self, value):
         """Валидация имени"""
@@ -290,6 +290,12 @@ class UserUpdateSerializer(BaseSerializer, serializers.ModelSerializer):
     def validate_last_name(self, value):
         """Валидация фамилии"""
         return self.validate_name(value, 'фамилия')
+    
+    def validate_email(self, value):
+        """Валидация email"""
+        if value:
+            return super().validate_email(value)
+        return value
     
     def validate(self, attrs):
         """Общая валидация обновления"""

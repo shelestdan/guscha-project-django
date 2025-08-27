@@ -476,23 +476,15 @@ class UserViewSet(BaseViewMixin, viewsets.ModelViewSet):
                 
                 # Обновление через сервис
                 update_data = serializer.validated_data
-                client_info = self.get_client_info(request)
                 
-                result = self.user_service.update_user(
+                updated_user = self.user_service.update_user(
                     request.user,
-                    update_data,
-                    client_info=client_info
+                    update_data
                 )
-                
-                if not result['success']:
-                    return Response(
-                        {'error': result['error']},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
                 
                 return Response({
                     'message': 'Профиль успешно обновлен',
-                    'user': UserSerializer(result['user']).data
+                    'user': UserSerializer(updated_user).data
                 })
                 
         except Exception as e:
