@@ -5,13 +5,15 @@
  */
 
 class ScrollBackgroundToggle {
-  constructor() {
+  constructor(targetElement = null) {
+    this.targetElement = targetElement || (typeof document !== 'undefined' ? document.body : null);
+    this.originalBackgroundColor = null;
+    this.isEnabled = true;
     this.isScrolling = false;
     this.scrollTimeout = null;
-    this.originalBackground = null;
-    this.targetElement = null;
+    this.eventListeners = [];
     
-    this.init();
+    this.setup();
   }
 
   init() {
@@ -24,49 +26,64 @@ class ScrollBackgroundToggle {
   }
 
   setup() {
-    // Находим элемент с фоновым изображением
-    this.targetElement = document.body;
+    // Используем переданный targetElement или document.body по умолчанию
+    if (!this.targetElement && typeof document !== 'undefined') {
+      this.targetElement = document.body;
+    }
     
     if (!this.targetElement) {
-      console.warn('ScrollBackgroundToggle: Target element not found');
       return;
     }
 
     // Сохраняем оригинальный фон
-    const computedStyle = window.getComputedStyle(this.targetElement);
-    this.originalBackground = {
-      backgroundImage: computedStyle.backgroundImage,
-      backgroundColor: computedStyle.backgroundColor,
-      background: computedStyle.background
-    };
+    if (typeof window !== 'undefined' && window.getComputedStyle && this.targetElement && this.targetElement.nodeType === 1) {
+      try {
+        const computedStyle = window.getComputedStyle(this.targetElement);
+        this.originalBackground = {
+          backgroundImage: computedStyle.backgroundImage,
+          backgroundColor: computedStyle.backgroundColor,
+          background: computedStyle.background
+        };
+      } catch (error) {
+        this.originalBackground = {
+          backgroundImage: '',
+          backgroundColor: '',
+          background: ''
+        };
+      }
+    } else {
+      this.originalBackground = {
+        backgroundImage: '',
+        backgroundColor: '',
+        background: ''
+      };
+    }
 
     // Добавляем обработчики событий
     this.addEventListeners();
   }
 
   addEventListeners() {
-    // Обработчик прокрутки с throttling для производительности
-    let ticking = false;
+    const hasWindow = typeof window !== 'undefined' && window;
+    const hasDocument = typeof document !== 'undefined' && document && document.querySelectorAll;
     
-    const handleScroll = () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          this.onScroll();
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    // Слушаем прокрутку на window и document
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    document.addEventListener('scroll', handleScroll, { passive: true });
+    if (hasWindow) {
+      window.addEventListener('scroll', this.onScroll.bind(this), { passive: true });
+    }
     
-    // Также слушаем прокрутку на всех элементах с overflow
-    const scrollableElements = document.querySelectorAll('[style*="overflow"], .overflow-auto, .overflow-scroll, .overflow-y-auto, .overflow-y-scroll');
-    scrollableElements.forEach(element => {
-      element.addEventListener('scroll', handleScroll, { passive: true });
-    });
+    if (hasDocument) {
+      document.addEventListener('scroll', this.onScroll.bind(this), { passive: true });
+    }
+    
+    // Добавляем обработчики для элементов с overflow
+    if (typeof document !== 'undefined' && document.querySelectorAll) {
+      const scrollableElements = document.querySelectorAll('[style*="overflow"], .overflow-auto, .overflow-scroll, .overflow-y-auto, .overflow-y-scroll');
+      scrollableElements.forEach(element => {
+        if (element && element.addEventListener) {
+          element.addEventListener('scroll', this.onScroll.bind(this), { passive: true });
+        }
+      });
+    }
   }
 
   onScroll() {
@@ -143,10 +160,34 @@ class ScrollBackgroundToggle {
   }
 }
 
-// Создаем и экспортируем экземпляр
-const scrollBackgroundToggle = new ScrollBackgroundToggle();
+// Создаем и экспортируем экземпляр только в браузерной среде
+let scrollBackgroundToggle;
+if (typeof window !== 'undefined' && typeof document !== 'undefined' && document.body) {
+  try {
+    scrollBackgroundToggle = new ScrollBackgroundToggle();
+  } catch (error) {
+    // В случае ошибки создаем заглушку
+    scrollBackgroundToggle = {
+      init: () => {},
+      destroy: () => {},
+      toggle: () => {},
+      enable: () => {},
+      disable: () => {}
+    };
+  }
+} else {
+  // В тестовой среде или среде без DOM создаем заглушку
+  scrollBackgroundToggle = {
+    init: () => {},
+    destroy: () => {},
+    toggle: () => {},
+    enable: () => {},
+    disable: () => {}
+  };
+}
 
-// Экспортируем для использования в других модулях
+// Экспортируем класс и экземпляр
+export { ScrollBackgroundToggle };
 export default scrollBackgroundToggle;
 
 // Также делаем доступным глобально для совместимости

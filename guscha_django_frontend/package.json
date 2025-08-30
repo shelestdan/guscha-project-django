@@ -61,6 +61,11 @@
       "last 1 safari version"
     ]
   },
+  "jest": {
+    "transformIgnorePatterns": [
+      "node_modules/(?!(axios)/)"
+    ]
+  },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.10",
     "@types/node": "^24.0.1",

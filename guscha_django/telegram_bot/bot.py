@@ -75,6 +75,11 @@ class TelegramBot:
                 verification_id = param[6:]  # Убираем префикс 'login_'
                 is_login = True
                 logger.info(f"Обнаружен login параметр: {verification_id}")
+            elif param.startswith('phone_change_'):
+                # Обработка смены номера телефона
+                verification_code = param[13:]  # Убираем префикс 'phone_change_'
+                await self.handle_phone_change_start(update, verification_code)
+                return
             else:
                 verification_id = param
                 logger.info(f"Обнаружен обычный параметр: {verification_id}")
@@ -275,6 +280,69 @@ class TelegramBot:
             normalized = '+' + normalized
             
         return normalized
+    
+    async def handle_phone_change_start(self, update: Update, verification_code: str):
+        """Обработка смены номера телефона"""
+        chat_id = str(update.effective_chat.id)
+        user = update.effective_user
+        
+        logger.info(f"Обработка смены номера для chat_id={chat_id}, code={verification_code}")
+        
+        try:
+            # Находим код верификации для смены номера
+            phone_change_code = await sync_to_async(
+                TelegramVerificationCode.objects.filter(
+                    verification_type='phone_change_new',
+                    is_used=False,
+                    expires_at__gt=timezone.now()
+                ).order_by('-created_at').first
+            )()
+            
+            if not phone_change_code:
+                await update.message.reply_text(
+                    "❌ Не найден активный запрос на смену номера.\n\n"
+                    "Повторите процедуру смены номера на сайте."
+                )
+                return
+            
+            # Проверяем, что код соответствует переданному
+            display_code = await sync_to_async(phone_change_code.generate_secure_code)()
+            if display_code != verification_code:
+                await update.message.reply_text(
+                    "❌ Неверная ссылка для смены номера.\n\n"
+                    "Повторите процедуру смены номера на сайте."
+                )
+                return
+            
+            # Получаем новый номер телефона
+            new_phone = phone_change_code.telegram_phone
+            
+            # Отправляем сообщение с запросом на подтверждение
+            welcome_text = (
+                f"📱 Смена номера телефона\n\n"
+                f"Новый номер: {new_phone}\n\n"
+                f"Для подтверждения смены номера необходимо:\n\n"
+                f"1. Подтвердить согласие на обработку персональных данных\n"
+                f"2. Поделиться номером телефона для сравнения"
+            )
+            
+            # Создаем клавиатуру с кнопкой согласия
+            keyboard = [[
+                InlineKeyboardButton("✅ Соглашаюсь на обработку данных", callback_data=f"agree_phone_change_{verification_code}")
+            ]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            
+            await update.message.reply_text(
+                welcome_text,
+                reply_markup=reply_markup
+            )
+            
+        except Exception as e:
+            logger.error(f"Ошибка при обработке смены номера: {e}")
+            await update.message.reply_text(
+                "❌ Произошла ошибка при обработке запроса.\n\n"
+                "Повторите процедуру позже."
+            )
     
     async def agree_sms_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Обработчик согласия на SMS"""
@@ -951,7 +1019,74 @@ class TelegramBot:
         """Настройка обработчиков команд"""
         self.application.add_handler(CommandHandler("start", self.start_command))
         self.application.add_handler(CallbackQueryHandler(self.agree_sms_callback, pattern="agree_sms"))
+        self.application.add_handler(CallbackQueryHandler(self.agree_phone_change_callback, pattern="agree_phone_change_.*"))
         self.application.add_handler(MessageHandler(filters.CONTACT, self.handle_contact))
+    
+    async def agree_phone_change_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Обработчик согласия на смену номера телефона"""
+        query = update.callback_query
+        await query.answer()
+        
+        chat_id = query.from_user.id
+        callback_data = query.data
+        
+        # Извлекаем код верификации из callback_data
+        verification_code = callback_data.replace('agree_phone_change_', '')
+        
+        logger.info(f"agree_phone_change_callback: Согласие на смену номера от chat_id={chat_id}, code={verification_code}")
+        
+        try:
+            # Находим код верификации
+            phone_change_code = await sync_to_async(
+                TelegramVerificationCode.objects.filter(
+                    verification_type='phone_change_new',
+                    is_used=False,
+                    expires_at__gt=timezone.now()
+                ).order_by('-created_at').first
+            )()
+            
+            if not phone_change_code:
+                await query.edit_message_text(
+                    "❌ Не найден активный запрос на смену номера.\n\n"
+                    "Повторите процедуру смены номера на сайте."
+                )
+                return
+            
+            # Проверяем соответствие кода
+            display_code = await sync_to_async(phone_change_code.generate_secure_code)()
+            if display_code != verification_code:
+                await query.edit_message_text(
+                    "❌ Неверный код верификации.\n\n"
+                    "Повторите процедуру смены номера."
+                )
+                return
+            
+            # Обновляем chat_id в коде верификации
+            phone_change_code.telegram_chat_id = str(chat_id)
+            await sync_to_async(phone_change_code.save)()
+            
+            # Запрашиваем контакт пользователя
+            contact_keyboard = KeyboardButton("📱 Поделиться номером телефона", request_contact=True)
+            reply_markup = ReplyKeyboardMarkup([[contact_keyboard]], one_time_keyboard=True, resize_keyboard=True)
+            
+            await query.edit_message_text(
+                "📱 Теперь поделитесь вашим номером телефона.\n\n"
+                "Мы сверим его с новым номером, указанным на сайте.",
+                reply_markup=None
+            )
+            
+            await self.application.bot.send_message(
+                chat_id=chat_id,
+                text="👇 Нажмите кнопку для подтверждения номера телефона:",
+                reply_markup=reply_markup
+            )
+            
+        except Exception as e:
+            logger.error(f"Ошибка при обработке согласия на смену номера: {e}")
+            await query.edit_message_text(
+                "❌ Произошла ошибка.\n\n"
+                "Повторите процедуру позже."
+            )
 
 
 # Глобальный экземпляр бота
@@ -1013,6 +1148,48 @@ async def send_login_request_to_telegram(chat_id: str, phone_number: str, verifi
         
     except Exception as e:
         logger.error(f"Ошибка при отправке запроса на вход через Telegram: {e}")
+        return False
+
+
+async def send_phone_change_code_to_telegram(chat_id: str, verification_code: str, current_phone: str, verification_type: str):
+    """Функция для отправки кода смены номера телефона через Telegram"""
+    try:
+        import telegram
+        bot_token = getattr(settings, 'TELEGRAM_BOT_TOKEN', None)
+        if not bot_token:
+            logger.error("Ошибка: TELEGRAM_BOT_TOKEN не настроен")
+            return False
+            
+        # Создаем отдельный экземпляр бота для отправки сообщений
+        bot = telegram.Bot(token=bot_token)
+        
+        # Определяем текст сообщения в зависимости от типа верификации
+        if verification_type == 'phone_change_current':
+            message_text = (
+                f"📱 Подтверждение текущего номера телефона\n\n"
+                f"Ваш текущий номер: {current_phone}\n\n"
+                f"🔐 Код подтверждения: {verification_code}\n\n"
+                f"Введите этот код на сайте для подтверждения текущего номера.\n\n"
+                f"⏰ Код действителен в течение 10 минут."
+            )
+        else:
+            message_text = (
+                f"📱 Код для смены номера телефона\n\n"
+                f"🔐 Код подтверждения: {verification_code}\n\n"
+                f"Введите этот код на сайте для завершения смены номера.\n\n"
+                f"⏰ Код действителен в течение 10 минут."
+            )
+        
+        await bot.send_message(
+            chat_id=int(chat_id),
+            text=message_text
+        )
+        
+        logger.info(f"Код смены номера успешно отправлен в chat_id {chat_id}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Ошибка при отправке кода смены номера через Telegram: {e}")
         return False
 
 

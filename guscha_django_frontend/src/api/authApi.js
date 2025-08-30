@@ -85,9 +85,12 @@ export async function fetchProfile() {
 }
 
 export async function logout() {
-  await axios.post('/api/accounts/users/logout/', {}, { withCredentials: true });
-  // Удаляем токен из localStorage
-  localStorage.removeItem('token');
+  try {
+    await axios.post('/api/accounts/users/logout/', {}, { withCredentials: true });
+  } finally {
+    // Удаляем токен из localStorage в любом случае
+    localStorage.removeItem('token');
+  }
 }
 
 export async function changePassword(oldPassword, newPassword) {

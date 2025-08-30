@@ -97,7 +97,7 @@ class TelegramValidator:
         if not isinstance(verification_type, str):
             raise ValidationError(_('Тип верификации должен быть строкой'))
         
-        valid_types = ['registration', 'password_reset', 'login', 'link_account', 'qr_code', 'qr_registration']
+        valid_types = ['registration', 'password_reset', 'login', 'link_account', 'qr_code', 'qr_registration', 'phone_change_current', 'phone_change_new']
         if verification_type not in valid_types:
             raise ValidationError(
                 _(f'Недействительный тип верификации. Допустимые: {", ".join(valid_types)}')
@@ -257,7 +257,7 @@ class TelegramValidator:
                 errors['chat_id'] = e.messages
         
         # Валидация типа кода
-        valid_code_types = ['registration', 'password_reset', 'login', 'link_account']
+        valid_code_types = ['registration', 'password_reset', 'login', 'link_account', 'phone_change_current', 'phone_change_new']
         if not code_type:
             errors['code_type'] = [_('Тип кода обязателен')]
         elif code_type not in valid_code_types:
@@ -294,7 +294,7 @@ class TelegramValidator:
         
         # Валидация типа кода (опционально)
         if code_type:
-            valid_code_types = ['registration', 'password_reset', 'login', 'link_account']
+            valid_code_types = ['registration', 'password_reset', 'login', 'link_account', 'phone_change_current', 'phone_change_new']
             if code_type not in valid_code_types:
                 errors['code_type'] = [_(f'Недействительный тип кода. Допустимые: {", ".join(valid_code_types)}')]
         

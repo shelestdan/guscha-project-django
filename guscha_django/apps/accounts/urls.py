@@ -92,6 +92,27 @@ urlpatterns = [
          views.confirm_password_reset_token, 
          name='confirm_password_reset_token'),
 
+    # === Смена номера телефона ===
+    # Отправка кода для подтверждения текущего номера
+    path('phone-change/send-current-code/',
+         views.send_current_phone_code,
+         name='send_current_phone_code'),
+    
+    # Проверка кода для текущего номера
+    path('phone-change/verify-current/',
+         views.verify_current_phone_code,
+         name='verify_current_phone_code'),
+    
+    # Запрос на смену номера
+    path('phone-change/request-change/',
+         views.request_phone_change,
+         name='request_phone_change'),
+    
+    # Проверка статуса смены номера
+    path('phone-change/status/',
+         views.phone_change_status,
+         name='phone_change_status'),
+
     
     # === QR коды ===
     # Создание QR кода

@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import PhoneInput from 'react-phone-number-input';
-import { isValidPhoneNumber } from 'libphonenumber-js';
 import { updateUserProfile } from '../../api/profileApi';
 import { useToast } from '../../hooks/useToast';
-import 'react-phone-number-input/style.css';
 import '../../styles/AddressForm.css';
 
 /**
@@ -15,7 +12,6 @@ const AccountDetails = ({ user, onUserUpdate }) => {
   const [userForm, setUserForm] = useState({
     first_name: '',
     last_name: '',
-    phone: '',
     email: ''
   });
 
@@ -32,7 +28,6 @@ const AccountDetails = ({ user, onUserUpdate }) => {
       setUserForm({
         first_name: user.first_name || '',
         last_name: user.last_name || '',
-        phone: user.phone || '',
         email: user.email || ''
       });
     }
@@ -45,14 +40,6 @@ const AccountDetails = ({ user, onUserUpdate }) => {
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
-
-    // Валидация телефонного номера
-    if (userForm.phone && !isValidPhoneNumber(userForm.phone)) {
-      showError(
-        'Некорректный формат российского номера телефона. Пример: +79372172203'
-      );
-      return;
-    }
 
     try {
       await updateUserProfile(userForm);
@@ -158,20 +145,6 @@ const AccountDetails = ({ user, onUserUpdate }) => {
                     }))
                   }
                   required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Телефон</label>
-                <PhoneInput
-                  international
-                  defaultCountry="RU"
-                  name="phone"
-                  value={userForm.phone}
-                  onChange={(value) =>
-                    setUserForm((prev) => ({ ...prev, phone: value }))
-                  }
-                  placeholder="+7 (999) 123-45-67"
                 />
               </div>
 

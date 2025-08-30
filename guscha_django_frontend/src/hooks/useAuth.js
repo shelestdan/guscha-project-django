@@ -49,6 +49,9 @@ export const useAuth = () => {
     let token = localStorage.getItem('token');
 
     const makeRequest = async (authToken) => {
+      if (!authToken) {
+        throw new Error('No auth token available');
+      }
       // Определяем тип токена и соответствующий заголовок
       const authHeader = authToken.includes('.') ? `Bearer ${authToken}` : `Token ${authToken}`;
       
@@ -63,16 +66,20 @@ export const useAuth = () => {
       });
     };
 
-    let response = await makeRequest(token);
+    try {
+      let response = await makeRequest(token);
 
-    if (response.status === 401) {
-      token = await refreshAccessToken();
-      if (token) {
-        response = await makeRequest(token);
+      if (response && response.status === 401) {
+        token = await refreshAccessToken();
+        if (token) {
+          response = await makeRequest(token);
+        }
       }
-    }
 
-    return response;
+      return response;
+    } catch (error) {
+      throw error;
+    }
   };
 
   // Получение профиля пользователя

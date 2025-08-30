@@ -38,11 +38,13 @@ export const getProductName = (item) => {
     baseName = item.preorder_name || 
                item.preorder?.name || 
                item.item_name || 
+               item.name || 
                'Предзаказ';
   } else if (item.item_type === 'product') {
     baseName = item.product_name || 
                item.product?.name || 
                item.item_name || 
+               item.name || 
                'Товар';
   }
   

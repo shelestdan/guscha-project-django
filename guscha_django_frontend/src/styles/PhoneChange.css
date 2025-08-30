@@ -1,0 +1,298 @@
+/* PhoneChange Component Styles */
+.phone-change-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 32px;
+  background: #ffffff;
+  border: 2px solid #000000;
+  border-radius: 0;
+}
+
+.phone-change-header {
+  text-align: center;
+  margin-bottom: 48px;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 24px;
+}
+
+.phone-change-header h2 {
+  font-size: 32px;
+  font-weight: 700;
+  color: #000000;
+  margin: 0 0 12px 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.phone-change-header p {
+  font-size: 16px;
+  color: #666666;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.phone-change-step {
+  margin-bottom: 32px;
+}
+
+.phone-change-step h3 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #000000;
+  margin: 0 0 16px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.step-description {
+  font-size: 14px;
+  color: #666666;
+  margin: 12px 0;
+  line-height: 1.5;
+}
+
+.current-phone-info {
+  margin-bottom: 32px;
+}
+
+.phone-display {
+  font-size: 24px;
+  font-weight: 600;
+  color: #000000;
+  padding: 16px 24px;
+  border: 2px solid #000000;
+  border-radius: 0;
+  background: #f8f8f8;
+  margin: 16px 0;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+.new-phone-display {
+  font-size: 18px;
+  color: #000000;
+  padding: 16px 24px;
+  border: 2px solid #000000;
+  border-radius: 0;
+  background: #f0f8ff;
+  margin: 16px 0;
+  text-align: center;
+}
+
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #000000;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.code-input {
+  width: 200px;
+  padding: 16px;
+  font-size: 24px;
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: 8px;
+  border: 2px solid #000000;
+  border-radius: 0;
+  background: #ffffff;
+  color: #000000;
+  margin: 0 auto;
+  display: block;
+}
+
+.code-input:focus {
+  outline: none;
+  border-color: #333333;
+  background: #f8f8f8;
+}
+
+.code-timer {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 14px;
+  color: #ff6b6b;
+  font-weight: 600;
+}
+
+.phone-input {
+  width: 100%;
+}
+
+.phone-input input {
+  width: 100%;
+  padding: 16px;
+  font-size: 16px;
+  border: 2px solid #000000;
+  border-radius: 0;
+  background: #ffffff;
+  color: #000000;
+}
+
+.phone-input input:focus {
+  outline: none;
+  border-color: #333333;
+  background: #f8f8f8;
+}
+
+.button-group {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 16px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: 2px solid #000000;
+  border-radius: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 140px;
+}
+
+.btn-primary {
+  background: #000000;
+  color: #ffffff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #333333;
+  border-color: #333333;
+}
+
+.btn-primary:disabled {
+  background: #cccccc;
+  border-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #ffffff;
+  color: #000000;
+}
+
+.btn-secondary:hover {
+  background: #f8f8f8;
+  border-color: #333333;
+}
+
+.no-phone-message {
+  padding: 24px;
+  border: 2px solid #ff6b6b;
+  border-radius: 0;
+  background: #fff5f5;
+  color: #d63031;
+  text-align: center;
+  font-weight: 600;
+  margin: 24px 0;
+}
+
+.telegram-link-container {
+  text-align: center;
+  margin: 32px 0;
+}
+
+.telegram-link {
+  display: inline-block;
+  padding: 20px 40px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  background: #0088cc;
+  border: 2px solid #0088cc;
+  border-radius: 0;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+}
+
+.telegram-link:hover {
+  background: #006699;
+  border-color: #006699;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.telegram-instructions {
+  font-size: 14px;
+  color: #666666;
+  line-height: 1.6;
+  padding: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 0;
+  background: #f8f8f8;
+  margin: 24px 0;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .phone-change-container {
+    padding: 20px;
+    margin: 16px;
+  }
+
+  .phone-change-header h2 {
+    font-size: 24px;
+  }
+
+  .phone-change-step h3 {
+    font-size: 20px;
+  }
+
+  .button-group {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .code-input {
+    width: 100%;
+    max-width: 250px;
+  }
+
+  .telegram-link {
+    padding: 16px 32px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .phone-change-container {
+    padding: 16px;
+    margin: 8px;
+  }
+
+  .phone-change-header h2 {
+    font-size: 20px;
+  }
+
+  .phone-display {
+    font-size: 18px;
+    padding: 12px 16px;
+  }
+
+  .new-phone-display {
+    font-size: 16px;
+    padding: 12px 16px;
+  }
+}

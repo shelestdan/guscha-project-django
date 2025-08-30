@@ -89,4 +89,5 @@ class Logger {
 }
 
 export const logger = new Logger();
+export { Logger };
 export default logger;

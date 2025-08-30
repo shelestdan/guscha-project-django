@@ -994,6 +994,181 @@ def telegram_password_reset_confirm(request):
         )
 
 
+# Phone Change Views
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def send_current_phone_code(request):
+    """Отправка кода для подтверждения текущего номера телефона"""
+    try:
+        user = request.user
+        
+        if not user.phone:
+            return Response(
+                {'error': 'У вас не указан номер телефона в профиле'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Проверка безопасности - ограничение по количеству запросов
+        security_check = SecurityUtils.check_rate_limit(
+            f"phone_change_code_{user.id}",
+            max_attempts=3,
+            window_minutes=15
+        )
+        if not security_check['allowed']:
+            return Response(
+                {'error': 'Превышен лимит запросов на отправку кода'},
+                status=status.HTTP_429_TOO_MANY_REQUESTS
+            )
+        
+        telegram_service = TelegramService()
+        result = telegram_service.send_phone_change_code(
+            user=user,
+            verification_type='phone_change_current'
+        )
+        
+        if not result['success']:
+            return Response(
+                {'error': result['error']},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        return Response({
+            'message': 'Код отправлен в ваш Telegram бот'
+        })
+        
+    except Exception as e:
+        logger.error(f'Error in send_current_phone_code: {str(e)}')
+        return Response(
+            {'error': 'Ошибка отправки кода'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def verify_current_phone_code(request):
+    """Проверка кода для текущего номера телефона"""
+    try:
+        user = request.user
+        verification_code = request.data.get('verification_code')
+        
+        if not verification_code:
+            return Response(
+                {'error': 'Код верификации обязателен'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        telegram_service = TelegramService()
+        result = telegram_service.verify_phone_change_code(
+            user=user,
+            verification_code=verification_code,
+            verification_type='phone_change_current'
+        )
+        
+        if not result['success']:
+            return Response(
+                {'error': result['error']},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        return Response({
+            'message': 'Текущий номер подтвержден'
+        })
+        
+    except Exception as e:
+        logger.error(f'Error in verify_current_phone_code: {str(e)}')
+        return Response(
+            {'error': 'Ошибка проверки кода'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def request_phone_change(request):
+    """Запрос на смену номера телефона"""
+    try:
+        user = request.user
+        new_phone_number = request.data.get('new_phone_number')
+        
+        if not new_phone_number:
+            return Response(
+                {'error': 'Новый номер телефона обязателен'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Нормализация номера
+        normalized_phone = ValidationUtils.normalize_phone_number(new_phone_number)
+        
+        # Проверка, не используется ли номер другим пользователем
+        if User.objects.filter(phone=normalized_phone).exclude(id=user.id).exists():
+            return Response(
+                {'error': 'Этот номер телефона уже используется другим пользователем'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Проверка, что новый номер отличается от текущего
+        if user.phone and ValidationUtils.normalize_phone_number(user.phone) == normalized_phone:
+            return Response(
+                {'error': 'Новый номер должен отличаться от текущего'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        telegram_service = TelegramService()
+        result = telegram_service.initiate_phone_change(
+            user=user,
+            new_phone_number=normalized_phone
+        )
+        
+        if not result['success']:
+            return Response(
+                {'error': result['error']},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        return Response({
+            'message': 'Ссылка для подтверждения смены номера создана',
+            'telegram_link': result['telegram_link']
+        })
+        
+    except Exception as e:
+        logger.error(f'Error in request_phone_change: {str(e)}')
+        return Response(
+            {'error': 'Ошибка запроса смены номера'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def phone_change_status(request):
+    """Проверка статуса смены номера телефона"""
+    try:
+        user = request.user
+        
+        telegram_service = TelegramService()
+        result = telegram_service.check_phone_change_status(user=user)
+        
+        if not result['success']:
+            return Response(
+                {'error': result['error']},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        return Response({
+            'is_completed': result['is_completed'],
+            'new_phone_number': result.get('new_phone_number')
+        })
+        
+    except Exception as e:
+        logger.error(f'Error in phone_change_status: {str(e)}')
+        return Response(
+            {'error': 'Ошибка проверки статуса'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
 # QR Code Views
 
 @api_view(['POST'])

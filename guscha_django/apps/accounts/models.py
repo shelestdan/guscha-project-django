@@ -86,6 +86,7 @@ class User(AbstractUser):
     telegram_username = models.CharField(
         _('Telegram Username'),
         max_length=100,
+        null=True,
         blank=True,
         help_text=_('Username пользователя в Telegram (без @)')
     )
@@ -161,6 +162,8 @@ class TelegramVerificationCode(models.Model):
         ('login', _('Вход в систему')),
         ('password_reset', _('Сброс пароля')),
         ('qr_registration', _('QR регистрация')),
+        ('phone_change_current', _('Подтверждение текущего номера')),
+        ('phone_change_new', _('Подтверждение нового номера')),
     ]
     
     user = models.ForeignKey(
@@ -211,7 +214,7 @@ class TelegramVerificationCode(models.Model):
     
     verification_type = models.CharField(
         _('Тип верификации'),
-        max_length=20,
+        max_length=30,
         choices=VERIFICATION_TYPES,
         default='registration'
     )

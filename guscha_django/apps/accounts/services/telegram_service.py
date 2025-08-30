@@ -199,7 +199,7 @@ class TelegramService:
         try:
             # Валидация входных данных
             self.telegram_validator.validate_chat_id(telegram_chat_id)
-            self.telegram_validator.validate_code(code)
+            self.telegram_validator.validate_verification_code(code)
             
             # Поиск кода верификации
             verification_code = self.telegram_repository.get_active_verification_code(
@@ -480,12 +480,13 @@ class TelegramService:
                 # Привязка Telegram (только если есть telegram_chat_id)
                 if telegram_chat_id:
                     user.telegram_chat_id = telegram_chat_id
-                    user.telegram_username = telegram_username
+                    user.telegram_username = telegram_username or ''
                     user.is_telegram_verified = True
                 else:
                     # Для QR-регистрации пользователь верифицирован через Telegram-бота
                     # даже если telegram_chat_id не сохраняется
                     user.is_telegram_verified = True
+                    user.telegram_username = ''
                 user.save()
                 
                 # Деактивация всех кодов верификации (только если есть telegram_chat_id)
@@ -717,3 +718,186 @@ class TelegramService:
         except Exception as e:
             logger.error(f"Ошибка при очистке истекших кодов: {e}")
             raise
+    
+    def send_phone_change_code(self, user: User, verification_type: str = 'phone_change_current') -> Dict[str, Any]:
+        """Отправка кода для подтверждения смены номера телефона"""
+        try:
+            # Проверяем, привязан ли Telegram к аккаунту
+            if not user.telegram_chat_id:
+                return {
+                    'success': False,
+                    'error': 'Telegram не привязан к аккаунту. Сначала привяжите Telegram в настройках профиля.'
+                }
+            
+            # Создание кода верификации
+            verification_code = self.create_verification_code(
+                telegram_chat_id=user.telegram_chat_id,
+                verification_type=verification_type,
+                user=user,
+                telegram_phone=user.phone
+            )
+            
+            # Отправка кода через Telegram бота
+            display_code = verification_code.generate_secure_code()
+            from telegram_bot.bot import send_phone_change_code_to_telegram
+            success = async_to_sync(send_phone_change_code_to_telegram)(
+                user.telegram_chat_id,
+                display_code,
+                user.phone or '',
+                verification_type
+            )
+            
+            if success:
+                logger.info(f"Код смены номера отправлен пользователю {user.email} через Telegram")
+                return {
+                    'success': True,
+                    'message': 'Код отправлен в ваш Telegram бот'
+                }
+            else:
+                return {
+                    'success': False,
+                    'error': 'Ошибка отправки кода в Telegram'
+                }
+                
+        except Exception as e:
+            logger.error(f"Ошибка при отправке кода смены номера для пользователя {user.email}: {e}")
+            return {
+                'success': False,
+                'error': 'Ошибка отправки кода'
+            }
+    
+    def verify_phone_change_code(self, user: User, verification_code: str, verification_type: str = 'phone_change_current') -> Dict[str, Any]:
+        """Проверка кода для смены номера телефона"""
+        try:
+            # Валидация кода
+            self.telegram_validator.validate_verification_code(verification_code)
+            
+            # Поиск активных кодов для этого пользователя
+            codes = TelegramVerificationCode.objects.filter(
+                user=user,
+                verification_type=verification_type,
+                is_used=False,
+                expires_at__gt=timezone.now()
+            )
+            
+            # Проверяем каждый код с помощью check_code_match
+            code_obj = None
+            for code_candidate in codes:
+                if code_candidate.check_code_match(verification_code):
+                    code_obj = code_candidate
+                    break
+            
+            if not code_obj:
+                logger.warning(f"Код верификации не найден для пользователя {user.email}, код: {verification_code}, тип: {verification_type}")
+                return {
+                    'success': False,
+                    'error': 'Неверный или истекший код верификации'
+                }
+            
+            # Отмечаем код как использованный
+            with transaction.atomic():
+                code_obj.is_used = True
+                code_obj.used_at = timezone.now()
+                code_obj.save()
+            
+            logger.info(f"Код смены номера успешно проверен для пользователя {user.email}")
+            return {
+                'success': True,
+                'message': 'Код успешно проверен'
+            }
+            
+        except Exception as e:
+            logger.error(f"Ошибка при проверке кода смены номера для пользователя {user.email}: {e}")
+            return {
+                'success': False,
+                'error': 'Ошибка проверки кода'
+            }
+    
+    def initiate_phone_change(self, user: User, new_phone_number: str) -> Dict[str, Any]:
+        """Инициация смены номера телефона через Telegram"""
+        try:
+            # Проверяем, привязан ли Telegram к аккаунту
+            if not user.telegram_chat_id:
+                return {
+                    'success': False,
+                    'error': 'Telegram не привязан к аккаунту. Сначала привяжите Telegram в настройках профиля.'
+                }
+            
+            # Создание кода верификации для смены номера
+            verification_code = self.create_verification_code(
+                telegram_chat_id=user.telegram_chat_id,
+                verification_type='phone_change_new',
+                user=user,
+                telegram_phone=new_phone_number  # Сохраняем новый номер
+            )
+            
+            # Генерируем deep link для Telegram бота
+            display_code = verification_code.generate_secure_code()
+            telegram_bot_username = getattr(settings, 'TELEGRAM_BOT_USERNAME', 'GuschaBot')
+            telegram_deep_link = f"https://t.me/{telegram_bot_username}?start=phone_change_{display_code}"
+            
+            logger.info(f"Инициирована смена номера для пользователя {user.email} с {user.phone} на {new_phone_number}")
+            
+            return {
+                'success': True,
+                'message': 'Ссылка для подтверждения смены номера создана',
+                'telegram_link': telegram_deep_link,
+                'verification_code': display_code
+            }
+                
+        except Exception as e:
+            logger.error(f"Ошибка при инициации смены номера для пользователя {user.email}: {e}")
+            return {
+                'success': False,
+                'error': 'Ошибка инициации смены номера'
+            }
+    
+    def check_phone_change_status(self, user: User) -> Dict[str, Any]:
+        """Проверка статуса смены номера телефона"""
+        try:
+            # Ищем активный код смены номера
+            active_code = self.telegram_repository.get_active_verification_code(
+                user.telegram_chat_id,
+                'phone_change_new'
+            )
+            
+            if not active_code:
+                return {
+                    'success': True,
+                    'is_completed': False,
+                    'message': 'Нет активного запроса на смену номера'
+                }
+            
+            # Проверяем, был ли код использован (т.е. номер подтвержден в Telegram)
+            if active_code.is_used:
+                # Обновляем номер пользователя
+                new_phone = active_code.telegram_phone
+                if new_phone and new_phone != user.phone:
+                    user.phone = new_phone
+                    user.save()
+                    
+                    # Деактивируем код после успешной смены
+                    active_code.is_used = True
+                    active_code.save()
+                    
+                    logger.info(f"Номер телефона успешно изменен для пользователя {user.email} на {new_phone}")
+                    
+                    return {
+                        'success': True,
+                        'is_completed': True,
+                        'new_phone_number': new_phone
+                    }
+            
+            # Код еще не использован
+            return {
+                'success': True,
+                'is_completed': False,
+                'message': 'Ожидание подтверждения в Telegram'
+            }
+            
+        except Exception as e:
+            logger.error(f"Ошибка при проверке статуса смены номера для пользователя {user.email}: {e}")
+            return {
+                'success': False,
+                'error': 'Ошибка проверки статуса смены номера'
+            }

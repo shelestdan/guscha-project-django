@@ -5,6 +5,7 @@ import AccountDetails from './account/AccountDetails';
 import AccountAddresses from './account/AccountAddresses';
 import AccountOrders from './account/AccountOrders';
 import PasswordReset from './account/PasswordReset';
+import PhoneChange from './account/PhoneChange';
 
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
@@ -73,6 +74,13 @@ const Account = () => {
                 СБРОС ПАРОЛЯ
               </button>
               <button
+                className={`account-figma-menu-item account-menu-item-nowrap${activeTab === "phone-change" ? " account-figma-menu-item-active" : ""}`}
+                onClick={() => setActiveTab("phone-change")}
+                type="button"
+              >
+                СМЕНА НОМЕРА
+              </button>
+              <button
                 className="account-figma-menu-item account-menu-item-nowrap"
                 onClick={handleLogout}
                 type="button"
@@ -86,6 +94,7 @@ const Account = () => {
              {activeTab === 'addresses' && <AccountAddresses user={user} />}
              {activeTab === 'orders' && <AccountOrders user={user} />}
              {activeTab === 'password-reset' && <PasswordReset />}
+             {activeTab === 'phone-change' && <PhoneChange user={user} onUserUpdate={handleUserUpdate} />}
           </div>
         </div>
 
