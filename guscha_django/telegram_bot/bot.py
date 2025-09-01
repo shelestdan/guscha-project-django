@@ -80,6 +80,10 @@ class TelegramBot:
                 verification_code = param[13:]  # Убираем префикс 'phone_change_'
                 await self.handle_phone_change_start(update, verification_code)
                 return
+            elif param.startswith('register_'):
+                # Обработка регистрации через Telegram
+                verification_id = param[9:]  # Убираем префикс 'register_'
+                logger.info(f"Обнаружен register параметр: {verification_id}")
             else:
                 verification_id = param
                 logger.info(f"Обнаружен обычный параметр: {verification_id}")
@@ -143,26 +147,21 @@ class TelegramBot:
                                 logger.info(f"Найден login код: {code.id}")
                                 break
                     else:
-                        # Для обычной верификации ищем по ID
-                        try:
-                            verification_id_int = int(verification_id)
-                            logger.info(f"Поиск verification_code по ID: {verification_id_int}")
-                            
-                            verification_code = await sync_to_async(
-                                TelegramVerificationCode.objects.filter(
-                                    id=verification_id_int,
-                                    is_used=False,
-                                    expires_at__gt=timezone.now()
-                                ).first
-                            )()
-                            
-                            if verification_code:
-                                logger.info(f"Найден обычный verification_code: {verification_code.id}, тип: {verification_code.verification_type}")
-                            else:
-                                logger.warning(f"Обычный verification_code с ID {verification_id_int} не найден или неактивен")
-                                
-                        except ValueError:
-                            logger.warning(f"verification_id {verification_id} не является числом и не найден как QR-код")
+                        # Для обычной верификации ищем по коду
+                        logger.info(f"Поиск verification_code по коду: {verification_id}")
+                        
+                        verification_code = await sync_to_async(
+                            TelegramVerificationCode.objects.filter(
+                                code=verification_id,
+                                is_used=False,
+                                expires_at__gt=timezone.now()
+                            ).first
+                        )()
+                        
+                        if verification_code:
+                            logger.info(f"Найден verification_code по коду: {verification_code.id}, тип: {verification_code.verification_type}")
+                        else:
+                            logger.warning(f"verification_code с кодом {verification_id} не найден или неактивен")
                 
                 if verification_code and not verification_code.is_expired():
                     # Обновляем chat_id в коде верификации
@@ -734,10 +733,63 @@ class TelegramBot:
             
             if not verification_code:
                 logger.warning(f"Активный код верификации не найден для chat_id {chat_id}")
-                await update.message.reply_text(
-                    "❌ Активный код верификации не найден.\n"
-                    "Пожалуйста, сначала зарегистрируйтесь на сайте или инициируйте вход."
+                
+                # Проверяем ограничение частоты регистрации
+                if not await self.check_registration_rate_limit(str(chat_id)):
+                    await update.message.reply_text(
+                        "⚠️ Превышен лимит попыток регистрации.\n\n"
+                        "Попробуйте снова через 5 минут."
+                    )
+                    return
+                
+                # Получаем номер телефона из контакта
+                telegram_phone = self.normalize_phone_number(contact.phone_number)
+                
+                # Проверяем, существует ли пользователь с таким номером телефона
+                existing_user = await sync_to_async(
+                    User.objects.filter(phone=telegram_phone).first
+                )()
+                
+                if existing_user:
+                    # Пользователь уже существует - предлагаем войти
+                    await update.message.reply_text(
+                        f"📱 Пользователь с номером {telegram_phone} уже зарегистрирован.\n\n"
+                        "Для входа в аккаунт перейдите на сайт и выберите 'Вход через Telegram'."
+                    )
+                    return
+                
+                # Создаем новый код верификации для регистрации через Telegram
+                new_verification_code = await sync_to_async(TelegramVerificationCode.objects.create)(
+                    telegram_chat_id=str(chat_id),
+                    verification_type='telegram_registration',
+                    expires_at=timezone.now() + timedelta(minutes=10)
                 )
+                
+                logger.info(f"Создан новый код верификации {new_verification_code.id} для регистрации через Telegram")
+                
+                # Сохраняем номер телефона в коде верификации
+                new_verification_code.telegram_phone = telegram_phone
+                await sync_to_async(new_verification_code.save)()
+                
+                # Создаем inline кнопку для подтверждения создания аккаунта
+                confirm_button = InlineKeyboardButton(
+                    text="✅ Да, согласен, создать новый аккаунт",
+                    callback_data=f"confirm_registration_{new_verification_code.id}"
+                )
+                cancel_button = InlineKeyboardButton(
+                    text="❌ Отмена",
+                    callback_data="cancel_registration"
+                )
+                keyboard = InlineKeyboardMarkup([[confirm_button], [cancel_button]])
+                
+                await update.message.reply_text(
+                    f"📱 Номер телефона: {telegram_phone}\n\n"
+                    f"❓ Аккаунт с этим номером не найден.\n\n"
+                    f"Создать новый аккаунт?",
+                    reply_markup=keyboard
+                )
+                
+                logger.info(f"Отправлен запрос на подтверждение регистрации для номера {telegram_phone}")
                 return
                 
             if verification_code.is_expired():
@@ -800,6 +852,36 @@ class TelegramBot:
                 )
                 
                 logger.info(f"Успешный вход через Telegram для пользователя {user.id}")
+                return
+            
+            # Специальная обработка для регистрации через Telegram
+            if verification_type == 'telegram_registration':
+                # Для регистрации через Telegram показываем кнопку подтверждения
+                logger.info(f"Обработка регистрации через Telegram для номера {telegram_phone}")
+                
+                # Сохраняем номер телефона в коде верификации
+                verification_code.telegram_phone = telegram_phone
+                await sync_to_async(verification_code.save)()
+                
+                # Создаем inline кнопку для подтверждения создания аккаунта
+                confirm_button = InlineKeyboardButton(
+                    text="✅ Да, согласен, создать новый аккаунт",
+                    callback_data=f"confirm_registration_{verification_code.id}"
+                )
+                cancel_button = InlineKeyboardButton(
+                    text="❌ Отмена",
+                    callback_data="cancel_registration"
+                )
+                keyboard = InlineKeyboardMarkup([[confirm_button], [cancel_button]])
+                
+                await update.message.reply_text(
+                    f"📱 Номер телефона: {telegram_phone}\n\n"
+                    f"❓ Аккаунт с этим номером не найден.\n\n"
+                    f"Создать новый аккаунт?",
+                    reply_markup=keyboard
+                )
+                
+                logger.info(f"Отправлен запрос на подтверждение регистрации для номера {telegram_phone}")
                 return
             
             # Специальная обработка для QR-регистрации
@@ -1020,7 +1102,208 @@ class TelegramBot:
         self.application.add_handler(CommandHandler("start", self.start_command))
         self.application.add_handler(CallbackQueryHandler(self.agree_sms_callback, pattern="agree_sms"))
         self.application.add_handler(CallbackQueryHandler(self.agree_phone_change_callback, pattern="agree_phone_change_.*"))
+        self.application.add_handler(CallbackQueryHandler(self.confirm_registration_callback, pattern="confirm_registration_.*"))
+        self.application.add_handler(CallbackQueryHandler(self.cancel_registration_callback, pattern="cancel_registration"))
         self.application.add_handler(MessageHandler(filters.CONTACT, self.handle_contact))
+    
+    async def confirm_registration_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Обработчик подтверждения создания нового аккаунта"""
+        query = update.callback_query
+        await query.answer()
+        
+        chat_id = query.from_user.id
+        callback_data = query.data
+        
+        try:
+            # Проверяем ограничение частоты регистрации
+            if not await self.check_registration_rate_limit(str(chat_id)):
+                await query.edit_message_text(
+                    "❌ Слишком много попыток регистрации.\n\n"
+                    "Попробуйте позже (через 5 минут)."
+                )
+                return
+            
+            # Извлекаем ID кода верификации из callback_data
+            verification_code_id = callback_data.replace("confirm_registration_", "")
+            
+            # Получаем код верификации с дополнительными проверками
+            verification_code = await sync_to_async(
+                TelegramVerificationCode.objects.get
+            )(id=verification_code_id, telegram_chat_id=str(chat_id), is_used=False)
+            
+            # Проверяем, что код не истек (максимум 1 час)
+            if verification_code.expires_at <= timezone.now():
+                await query.edit_message_text(
+                    "❌ Код верификации истек.\n\n"
+                    "Пожалуйста, повторите процесс регистрации."
+                )
+                return
+            
+            # Дополнительная проверка времени создания кода (не старше 1 часа)
+            if verification_code.created_at < timezone.now() - timedelta(hours=1):
+                await query.edit_message_text(
+                    "❌ Код верификации слишком старый.\n\n"
+                    "Пожалуйста, повторите процесс регистрации."
+                )
+                return
+            
+            # Получаем номер телефона из кода верификации
+            phone_number = verification_code.telegram_phone
+            if not phone_number:
+                await query.edit_message_text(
+                    "❌ Ошибка: номер телефона не найден.\n\n"
+                    "Пожалуйста, повторите процесс регистрации."
+                )
+                return
+            
+            # Создаем нового пользователя с минимальными данными
+            user = await self.create_telegram_user(
+                phone_number=phone_number,
+                chat_id=str(chat_id),
+                telegram_username=query.from_user.username
+            )
+            
+            # Привязываем пользователя к коду верификации, помечаем как использованный
+            # и меняем тип на 'login' для корректной работы API входа
+            verification_code.user = user
+            verification_code.is_used = True
+            verification_code.verification_type = 'login'
+            await sync_to_async(verification_code.save)()
+            
+            # Отправляем сообщение об успешной регистрации
+            await query.edit_message_text(
+                f"✅ Аккаунт успешно создан!\n\n"
+                f"📱 Номер телефона: {phone_number}\n\n"
+                f"💡 Рекомендуем заполнить профиль в личном кабинете на сайте.\n\n"
+                f"🔐 Для входа используйте свой номер телефона."
+            )
+            
+            logger.info(f"Успешно создан новый пользователь {user.id} через Telegram для номера {phone_number}")
+            
+        except TelegramVerificationCode.DoesNotExist:
+            await query.edit_message_text(
+                "❌ Код верификации не найден или уже использован.\n\n"
+                "Пожалуйста, повторите процесс регистрации."
+            )
+        except ValueError as ve:
+            # Обрабатываем ошибки валидации из create_telegram_user
+            logger.warning(f"Validation error in registration: {ve}")
+            await query.edit_message_text(
+                f"❌ {str(ve)}\n\n"
+                f"Попробуйте еще раз или обратитесь в поддержку."
+            )
+        except Exception as e:
+            logger.error(f"Ошибка при создании аккаунта: {e}")
+            await query.edit_message_text(
+                "❌ Произошла ошибка при создании аккаунта.\n\n"
+                "Пожалуйста, попробуйте позже."
+            )
+    
+    async def validate_phone_number(self, phone_number: str) -> bool:
+        """Валидация номера телефона"""
+        if not phone_number:
+            return False
+        
+        # Проверяем формат номера телефона
+        phone_pattern = re.compile(r'^\+?[1-9]\d{1,14}$')
+        if not phone_pattern.match(phone_number.replace(' ', '').replace('-', '')):
+            return False
+        
+        return True
+    
+    async def check_registration_rate_limit(self, chat_id: str) -> bool:
+        """Проверка ограничения частоты регистрации"""
+        try:
+            # Проверяем, не было ли попыток регистрации за последние 5 минут
+            recent_attempts = await sync_to_async(
+                TelegramVerificationCode.objects.filter
+            )(
+                telegram_chat_id=chat_id,
+                verification_type='telegram_registration',
+                created_at__gte=timezone.now() - timedelta(minutes=5)
+            )
+            
+            count = await sync_to_async(recent_attempts.count)()
+            return count < 3  # Максимум 3 попытки за 5 минут
+            
+        except Exception as e:
+            logger.error(f"Error checking rate limit: {e}")
+            return True  # В случае ошибки разрешаем продолжить
+    
+    async def create_telegram_user(self, phone_number: str, chat_id: str, telegram_username: str = None) -> User:
+        """Создает пользователя через Telegram регистрацию с минимальными данными"""
+        try:
+            # Валидация номера телефона
+            if not await self.validate_phone_number(phone_number):
+                raise ValueError("Некорректный формат номера телефона")
+            
+            # Проверяем, не существует ли уже пользователь с таким номером
+            existing_user = await sync_to_async(
+                User.objects.filter(phone=phone_number).first
+            )()
+            if existing_user:
+                raise ValueError("Пользователь с таким номером телефона уже существует")
+            
+            # Проверяем, не привязан ли уже этот chat_id к другому пользователю
+            existing_chat_user = await sync_to_async(
+                User.objects.filter(telegram_chat_id=chat_id).first
+            )()
+            if existing_chat_user:
+                raise ValueError("Этот Telegram аккаунт уже привязан к другому пользователю")
+            
+            # Генерируем временный email на основе номера телефона
+            # Это необходимо, так как email является USERNAME_FIELD
+            clean_phone = phone_number.replace('+', '').replace(' ', '').replace('-', '')
+            temp_email = f"telegram_{clean_phone}@temp.local"
+            
+            # Проверяем уникальность email
+            email_exists = await sync_to_async(
+                User.objects.filter(email=temp_email).exists
+            )()
+            if email_exists:
+                # Добавляем timestamp для уникальности
+                import time
+                temp_email = f"telegram_{clean_phone}_{int(time.time())}@temp.local"
+            
+            # Генерируем случайный пароль (пользователь сможет изменить его позже)
+            import secrets
+            import string
+            temp_password = ''.join(secrets.choice(string.ascii_letters + string.digits + '@$!%*?&') for _ in range(12))
+            
+            # Создаем пользователя напрямую, обходя валидации
+            user = await sync_to_async(User.objects.create_user)(
+                email=temp_email,
+                password=temp_password,
+                phone=phone_number,
+                telegram_chat_id=chat_id,
+                telegram_username=telegram_username or '',
+                is_telegram_verified=True,
+                is_active=True,
+                first_name='',  # Пустые имя и фамилия - пользователь сможет заполнить позже
+                last_name=''
+            )
+            
+            logger.info(f"Created new Telegram user with phone {phone_number} and chat_id {chat_id}")
+            return user
+            
+        except ValueError as ve:
+            logger.warning(f"Validation error creating Telegram user: {ve}")
+            raise
+        except Exception as e:
+            logger.error(f"Error creating Telegram user: {e}")
+            raise
+    
+    async def cancel_registration_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Обработчик отмены регистрации"""
+        query = update.callback_query
+        await query.answer()
+        
+        await query.edit_message_text(
+            "❌ Регистрация отменена.\n\n"
+            "Если вы передумаете, можете повторить процесс позже."
+        )
+        
+        logger.info(f"Пользователь {query.from_user.id} отменил регистрацию")
     
     async def agree_phone_change_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Обработчик согласия на смену номера телефона"""

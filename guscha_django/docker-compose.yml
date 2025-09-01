@@ -15,9 +15,9 @@ services:
     restart: unless-stopped
 
   django:
-    build: .
+    image: python:3.11-slim
     container_name: guscha-django
-    command: python start_django_server.py
+    command: bash -c "pip install -r requirements.txt && python start_django_server.py"
     volumes:
       - .:/app
     working_dir: /app
@@ -42,10 +42,9 @@ services:
 
 
   telegram-bot:
-    build:
-      context: .
-      dockerfile: Dockerfile.telegram
+    image: python:3.11-slim
     container_name: guscha-telegram-bot
+    command: bash -c "pip install -r requirements.txt && python manage.py run_telegram_bot"
     volumes:
       - .:/app
     working_dir: /app

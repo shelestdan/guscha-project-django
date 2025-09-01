@@ -162,6 +162,7 @@ class TelegramVerificationCode(models.Model):
         ('login', _('Вход в систему')),
         ('password_reset', _('Сброс пароля')),
         ('qr_registration', _('QR регистрация')),
+        ('telegram_registration', _('Регистрация через Telegram')),
         ('phone_change_current', _('Подтверждение текущего номера')),
         ('phone_change_new', _('Подтверждение нового номера')),
     ]

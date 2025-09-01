@@ -44,13 +44,13 @@ urlpatterns = [
     
     # Дополнительные API маршруты для совместимости с фронтендом
     path('api/preorders/', include(('apps.products.urls', 'products'), namespace='api-preorders')),
-    path('api/public/', include(('apps.core.urls', 'core'), namespace='api-public')),
+    path('api/public/', include(('apps.core.urls', 'core'), namespace='api-public-core')),
     
     # QR-trigger маршрут (должен быть перед catch-all)
     path('qr-trigger/<uuid:qr_id>/', qr_trigger, name='qr_trigger'),
     
     # Основные маршруты приложения
-    path('', include('apps.core.urls')),
+    path('', include(('apps.core.urls', 'core'), namespace='main')),
     
     # React-приложение должно быть последним (catch-all)
     # Исключаем admin, api, media и qr-trigger из перехвата React-приложением

@@ -684,8 +684,9 @@ def telegram_bot_activate(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@csrf_exempt
 def telegram_login_initiate(request):
-    """Инициация входа через Telegram"""
+    """Инициация входа через Telegram или регистрации нового пользователя"""
     try:
         phone_number = request.data.get('phone_number')
         verification_type = request.data.get('verification_type', 'login')
@@ -710,37 +711,63 @@ def telegram_login_initiate(request):
         # Проверяем, существует ли пользователь с нормализованным номером телефона
         try:
             user = User.objects.get(phone=normalized_phone)
+            
+            # Проверяем, привязан ли Telegram к аккаунту
+            if not user.telegram_chat_id:
+                return Response(
+                    {'error': 'Telegram не привязан к данному аккаунту'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Существующий пользователь - обычный процесс входа
+            telegram_service = TelegramService()
+            result = telegram_service.initiate_telegram_login(
+                user=user,
+                phone_number=normalized_phone
+            )
+            
+            if not result['success']:
+                return Response(
+                    {'error': result['error']},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            return Response({
+                'message': 'Запрос на вход отправлен в Telegram',
+                'verification_code': result.get('verification_code'),
+                'user_id': user.id,
+                'telegram_link': result.get('telegram_link')
+            })
+            
         except User.DoesNotExist:
-            return Response(
-                {'error': 'Пользователь с таким номером телефона не найден'},
-                status=status.HTTP_404_NOT_FOUND
+            # Пользователь не найден - инициируем процесс регистрации
+            telegram_service = TelegramService()
+            
+            # Создаем код верификации для регистрации
+            verification_code = TelegramVerificationCode.objects.create(
+                telegram_phone=normalized_phone,
+                verification_type='telegram_registration',
+                expires_at=timezone.now() + timezone.timedelta(minutes=10)
             )
-        
-        # Проверяем, привязан ли Telegram к аккаунту
-        if not user.telegram_chat_id:
-            return Response(
-                {'error': 'Telegram не привязан к данному аккаунту'},
-                status=status.HTTP_400_BAD_REQUEST
+            
+            # Отправляем запрос в Telegram бот для обработки регистрации
+            result = telegram_service.send_registration_request(
+                phone_number=normalized_phone,
+                verification_code=verification_code
             )
-        
-        telegram_service = TelegramService()
-        result = telegram_service.initiate_telegram_login(
-            user=user,
-            phone_number=normalized_phone
-        )
-        
-        if not result['success']:
-            return Response(
-                {'error': result['error']},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        return Response({
-            'message': 'Запрос на вход отправлен в Telegram',
-            'verification_code': result.get('verification_code'),
-            'user_id': user.id,
-            'telegram_link': result.get('telegram_link')
-        })
+            
+            if not result['success']:
+                return Response(
+                    {'error': result['error']},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            return Response({
+                'message': 'Запрос на регистрацию отправлен в Telegram',
+                'verification_code': verification_code.code,
+                'registration_mode': True,
+                'telegram_link': result.get('telegram_link')
+            })
         
     except Exception as e:
         logger.error(f'Error in telegram_login_initiate: {str(e)}')
@@ -752,6 +779,7 @@ def telegram_login_initiate(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@csrf_exempt
 def telegram_login_status(request):
     """Проверка статуса входа через Telegram"""
     try:
@@ -765,22 +793,84 @@ def telegram_login_status(request):
         
         # Нормализация номера телефона
         normalized_phone = ValidationUtils.normalize_phone_number(phone_number)
+        logger.info(f"Проверка статуса входа через Telegram для номера: {normalized_phone}")
         
         # Поиск пользователя по номеру телефона
         try:
             user = User.objects.get(phone=normalized_phone)
+            # Поиск последнего кода верификации для входа
+            verification_code = TelegramVerificationCode.objects.filter(
+                user=user,
+                verification_type='login',
+                telegram_phone=normalized_phone
+            ).order_by('-created_at').first()
         except User.DoesNotExist:
-            return Response({
-                'success': False,
-                'error': 'Пользователь с таким номером телефона не найден'
-            }, status=status.HTTP_404_NOT_FOUND)
-        
-        # Поиск последнего кода верификации для входа
-        verification_code = TelegramVerificationCode.objects.filter(
-            user=user,
-            verification_type='login',
-            telegram_phone=normalized_phone
-        ).order_by('-created_at').first()
+            # Пользователь не найден - ищем код верификации для регистрации
+            verification_code = TelegramVerificationCode.objects.filter(
+                verification_type='telegram_registration',
+                telegram_phone=normalized_phone
+            ).order_by('-created_at').first()
+            
+            if not verification_code:
+                return Response({
+                    'success': False,
+                    'error': 'Код верификации не найден'
+                }, status=status.HTTP_404_NOT_FOUND)
+            
+            # Проверка, использован ли код (создан ли пользователь)
+            logger.info(f"Код верификации найден: ID={verification_code.id}, тип={verification_code.verification_type}, использован={verification_code.is_used}")
+            
+            if verification_code.is_used:
+                # Ищем созданного пользователя
+                try:
+                    user = User.objects.get(phone=normalized_phone)
+                    # Создание JWT токена для автоматического входа
+                    from rest_framework_simplejwt.tokens import RefreshToken
+                    refresh = RefreshToken.for_user(user)
+                    access_token = str(refresh.access_token)
+                    refresh_token = str(refresh)
+                    
+                    logger.info(f"Успешная регистрация и вход через Telegram для пользователя {user.id}")
+                    
+                    response_data = {
+                        'success': True,
+                        'authenticated': True,
+                        'access_token': access_token,
+                        'refresh_token': refresh_token,
+                        'user': {
+                            'id': user.id,
+                            'email': user.email,
+                            'first_name': user.first_name,
+                            'last_name': user.last_name,
+                            'phone': user.phone
+                        }
+                    }
+                    logger.info(f"Возвращаем ответ с токенами: {response_data}")
+                    return Response(response_data)
+                except User.DoesNotExist:
+                    return Response({
+                        'success': False,
+                        'error': 'Ошибка создания пользователя'
+                    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            else:
+                logger.info(f"Код верификации НЕ использован, проверяем статус")
+                # Проверка, не истек ли код
+                if verification_code.is_expired():
+                    logger.info(f"Код верификации истек")
+                    return Response({
+                        'success': False,
+                        'authenticated': False,
+                        'message': 'Код верификации истек'
+                    })
+                
+                logger.info(f"Код верификации активен, ожидаем подтверждения")
+                response_data = {
+                    'success': True,
+                    'authenticated': False,
+                    'message': 'Ожидание подтверждения регистрации в Telegram'
+                }
+                logger.info(f"Возвращаем ответ ожидания: {response_data}")
+                return Response(response_data)
         
         if not verification_code:
             return Response({
@@ -791,13 +881,14 @@ def telegram_login_status(request):
         
         # Проверка, использован ли код (подтвержден ли вход)
         if verification_code.is_used:
+            logger.info(f"Найден использованный код верификации {verification_code.id} для пользователя {user.id if user else 'None'}")
             # Создание JWT токена для автоматического входа
             from rest_framework_simplejwt.tokens import RefreshToken
             refresh = RefreshToken.for_user(user)
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
             
-            logger.info(f"Успешный вход через Telegram для пользователя {user.id}")
+            logger.info(f"Успешный вход через Telegram для пользователя {user.id}, JWT токены созданы")
             
             return Response({
                 'success': True,
@@ -813,14 +904,17 @@ def telegram_login_status(request):
                 }
             })
         else:
+            logger.info(f"Код верификации {verification_code.id} не использован для номера {normalized_phone}")
             # Проверка, не истек ли код
             if verification_code.is_expired():
+                logger.info(f"Код верификации {verification_code.id} истек")
                 return Response({
                     'success': False,
                     'authenticated': False,
                     'message': 'Код верификации истек'
                 })
             
+            logger.info(f"Ожидание подтверждения для кода {verification_code.id}")
             return Response({
                 'success': True,
                 'authenticated': False,
@@ -861,7 +955,7 @@ def telegram_verify_code(request):
         result = telegram_service.verify_code_by_phone(
             verification_code=verification_code,
             phone_number=phone_number,
-            verification_type='qr_registration'
+            verification_type='telegram_registration'
         )
         
         if not result['success']:
@@ -878,12 +972,7 @@ def telegram_verify_code(request):
                 'success': True,
                 'requires_registration': True,
                 'message': 'Код успешно проверен. Пожалуйста, завершите регистрацию на сайте.',
-                'verification_code': {
-                    'code': verification_code.code_hash,  # Используем хеш кода для безопасности
-                    'is_used': verification_code.is_used,
-                    'expires_at': verification_code.expires_at.isoformat() if verification_code.expires_at else None,
-                    'created_at': verification_code.created_at.isoformat() if verification_code.created_at else None
-                }
+                'verification_code': result.get('verification_code', {})
             })
         
         if not user:

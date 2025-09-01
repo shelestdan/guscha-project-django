@@ -1,12 +1,16 @@
 # Dockerfile для Django приложения с предварительно собранным фронтендом
 FROM python:3.11-slim
 
-# Установка системных зависимостей
+# Устанавливаем системные зависимости
 RUN apt-get update && apt-get install -y \
     gcc \
     default-libmysqlclient-dev \
     pkg-config \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Обновляем pip и устанавливаем основные инструменты
+RUN pip install --upgrade pip
 
 # Устанавливаем рабочую директорию
 WORKDIR /app

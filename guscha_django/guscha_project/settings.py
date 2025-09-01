@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     # 'crispy_tailwind',  # Временно отключено для отладки
     # 'import_export',  # Временно отключено для отладки
     'djmoney',  # Django Money для работы с валютами
+    'axes',  # Защита от brute force атак
     
     # Google OAuth
     'allauth',
@@ -100,15 +101,23 @@ INSTALLED_APPS += [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'csp.middleware.CSPMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'apps.core.middleware.SecurityMonitoringMiddleware',  # Security monitoring
+    'apps.core.middleware.SecurityMetricsMiddleware',  # Security metrics
+    'apps.core.middleware.RateLimitBypassMiddleware',  # Before rate limiting
+    'apps.core.middleware.RateLimitMiddleware',  # Rate limiting
     'django.middleware.common.CommonMiddleware',
+    'apps.core.middleware.csrf_exempt.TelegramCSRFExemptMiddleware',  # CSRF exempt for Telegram
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'axes.middleware.AxesMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',  # Middleware для simple_history
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'apps.core.middleware.SecurityHeadersMiddleware',
+    'apps.core.middleware.SecurityAuditMiddleware',  # Security audit
     'allauth.account.middleware.AccountMiddleware',
 ]
 
@@ -213,9 +222,10 @@ TELEGRAM_BOT_USERNAME = os.getenv('TELEGRAM_BOT_USERNAME', 'GuschaBot')
 
 # Allauth settings
 ACCOUNT_EMAIL_VERIFICATION = 'none'
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
+# Новый API для методов входа (заменяет ACCOUNT_AUTHENTICATION_METHOD)
+ACCOUNT_LOGIN_METHODS = {'email'}
+# Заменяет ACCOUNT_EMAIL_REQUIRED и ACCOUNT_USERNAME_REQUIRED
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
 
 # Google OAuth settings
 GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
@@ -242,10 +252,6 @@ SOCIALACCOUNT_PROVIDERS = {
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_USER_MODEL_EMAIL_FIELD = 'email'
-
-# Новый API для методов входа (заменяет ACCOUNT_AUTHENTICATION_METHOD)
-# Заменяет ACCOUNT_EMAIL_REQUIRED и ACCOUNT_USERNAME_REQUIRED
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
 
 # Пользовательская модель аутентификации
 AUTH_USER_MODEL = 'accounts.User'
@@ -289,15 +295,18 @@ REST_FRAMEWORK = {
 # JWT Settings
 from datetime import timedelta
 
+# JWT Secret Key (отдельный от основного SECRET_KEY для безопасности)
+JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', SECRET_KEY)
+
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),  # Сокращено для безопасности
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
-    'UPDATE_LAST_LOGIN': False,
+    'UPDATE_LAST_LOGIN': True,  # Включено для аудита
 
     'ALGORITHM': 'HS256',
-    'SIGNING_KEY': SECRET_KEY,
+    'SIGNING_KEY': JWT_SECRET_KEY,
     'VERIFYING_KEY': None,
     'AUDIENCE': None,
     'ISSUER': None,
@@ -321,19 +330,26 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
-# Настройки CORS для разработки
+# Настройки CORS
 CORS_ALLOW_ALL_ORIGINS = DEBUG  # Только для разработки
-if not DEBUG:
+
+# Получаем разрешенные origins из переменных окружения
+CORS_ALLOWED_ORIGINS_ENV = os.environ.get('CORS_ALLOWED_ORIGINS', '')
+if CORS_ALLOWED_ORIGINS_ENV:
+    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in CORS_ALLOWED_ORIGINS_ENV.split(',')]
+else:
+    # Fallback для продакшена
     CORS_ALLOWED_ORIGINS = [
         "https://yourdomain.com",
         "https://www.yourdomain.com",
     ]
+
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 CORS_ALLOW_HEADERS = ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-CSRFToken', 'X-Session-ID']
 
-# Настройки CSRF
-CSRF_TRUSTED_ORIGINS = [
+# Настройки CSRF - используем те же origins что и для CORS
+CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS if not DEBUG else [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:8000",
@@ -344,7 +360,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1",
 ]
 CSRF_COOKIE_NAME = 'csrftoken'
-CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
+CSRF_HEADER_NAME = 'HTTP_X_CSRF_TOKEN'
 
 # Дополнительные настройки CORS для разработки
 CORS_ALLOWED_ORIGINS = [
@@ -361,6 +377,7 @@ CORS_ALLOWED_ORIGINS = [
 # Настройки безопасности
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 X_FRAME_OPTIONS = 'SAMEORIGIN'
@@ -378,10 +395,13 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
-# Исправление 6: Настройки сессий
+# Исправление 6: Настройки сессий для e-commerce
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-SESSION_COOKIE_AGE = 3600  # 1 час
+SESSION_COOKIE_AGE = 1800  # 30 минут для e-commerce безопасности
 SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'  # Защита от CSRF
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_HTTPONLY = False  # Разрешаем JavaScript доступ к CSRF токену для фронтенда
 
 # Создаем директорию для логов если она не существует
 import os
@@ -401,6 +421,22 @@ LOGGING = {
             'format': '{levelname} {message}',
             'style': '{',
         },
+        'security': {
+            'format': '[SECURITY] {asctime} {levelname} {name} - {message}',
+            'style': '{',
+        },
+        'audit': {
+            'format': '[AUDIT] {asctime} {levelname} - {message}',
+            'style': '{',
+        },
+    },
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
     },
     'handlers': {
         'console': {
@@ -412,12 +448,105 @@ LOGGING = {
             'filename': str(LOGS_DIR / 'django.log'),
             'formatter': 'verbose',
         },
+        'security_file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': str(LOGS_DIR / 'security.log'),
+            'maxBytes': 10 * 1024 * 1024,  # 10MB
+            'backupCount': 10,
+            'formatter': 'security',
+        },
+        'audit_file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': str(LOGS_DIR / 'audit.log'),
+            'maxBytes': 10 * 1024 * 1024,  # 10MB
+            'backupCount': 10,
+            'formatter': 'audit',
+        },
+        'threat_file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': str(LOGS_DIR / 'threats.log'),
+            'maxBytes': 10 * 1024 * 1024,  # 10MB
+            'backupCount': 10,
+            'formatter': 'security',
+        },
+        'error_file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': str(LOGS_DIR / 'errors.log'),
+            'maxBytes': 10 * 1024 * 1024,  # 10MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler',
+            'include_html': True,
+        },
     },
     'root': {
         'handlers': ['console'],
         'level': 'INFO',
     },
     'loggers': {
+        # Security monitoring loggers
+        'security': {
+            'handlers': ['security_file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'security.monitoring': {
+            'handlers': ['security_file', 'threat_file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'security.audit': {
+            'handlers': ['audit_file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'security.threats': {
+            'handlers': ['threat_file', 'mail_admins'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'security.authentication': {
+            'handlers': ['security_file', 'audit_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'security.authorization': {
+            'handlers': ['security_file', 'audit_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'security.ratelimit': {
+            'handlers': ['security_file', 'threat_file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        # Django security loggers
+        'django.security': {
+            'handlers': ['security_file', 'mail_admins'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.security.csrf': {
+            'handlers': ['security_file', 'threat_file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        # Django Axes logger
+        'axes': {
+            'handlers': ['security_file', 'console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console', 'file', 'error_file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        # Application loggers
         'apps.products': {
             'handlers': ['console', 'file'],
             'level': 'DEBUG',
@@ -439,17 +568,12 @@ LOGGING = {
             'propagate': False,
         },
         'apps.accounts': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console', 'file', 'audit_file'],
             'level': 'DEBUG',
             'propagate': False,
         },
         'apps.accounts.views': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'django.request': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console', 'file', 'audit_file'],
             'level': 'DEBUG',
             'propagate': False,
         },
@@ -471,6 +595,52 @@ RECAPTCHA_PRIVATE_KEY = os.environ.get('RECAPTCHA_PRIVATE_KEY', 'your-private-ke
 # Настройки для ratelimit
 RATELIMIT_ENABLE = True
 
+# Rate Limiting Configuration
+RATE_LIMITING_ENABLED = True
+RATE_LIMIT_IN_DEBUG = True  # Enable rate limiting in DEBUG mode for testing
+RATE_LIMIT_SKIP_SUPERUSER = True  # Skip rate limiting for superusers
+
+# Paths excluded from rate limiting
+RATE_LIMIT_EXCLUDED_PATHS = [
+    '/admin/jsi18n/',
+    '/static/',
+    '/media/',
+    '/favicon.ico',
+    '/health/',
+    '/ping/',
+    '/admin/login/',  # Allow admin login without rate limiting
+]
+
+# User agents excluded from rate limiting (bots, monitoring)
+RATE_LIMIT_EXCLUDED_USER_AGENTS = [
+    'GoogleBot',
+    'BingBot',
+    'YandexBot',
+    'facebookexternalhit',
+    'Twitterbot',
+    'LinkedInBot',
+    'WhatsApp',
+    'Telegram',
+    'UptimeRobot',
+    'Pingdom',
+]
+
+# Trusted IPs that bypass rate limiting (monitoring, load balancers)
+RATE_LIMIT_TRUSTED_IPS = [
+    '127.0.0.1',
+    '::1',
+    # Add your monitoring server IPs here
+    # '10.0.0.1',
+    # '192.168.1.100',
+]
+
+# API keys that bypass rate limiting (for trusted integrations)
+RATE_LIMIT_BYPASS_API_KEYS = [
+    # Add trusted API keys here
+    # 'monitoring-api-key-here',
+    # 'integration-api-key-here',
+]
+
 # Дополнительные настройки безопасности
 # SECURE_SSL_REDIRECT уже установлен выше в строке 230
 SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
@@ -479,6 +649,7 @@ SECURE_HSTS_PRELOAD = True
 
 # Authentication backends
 AUTHENTICATION_BACKENDS = (
+    'axes.backends.AxesStandaloneBackend',  # Django Axes для защиты от brute force
     'django.contrib.auth.backends.ModelBackend',  # Default backend
     'guardian.backends.ObjectPermissionBackend',  # Guardian backend для объектных разрешений
     'allauth.account.auth_backends.AuthenticationBackend',  # Allauth backend
@@ -792,13 +963,34 @@ TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
 # Поскольку фронтенд собирается в статические файлы и обслуживается Django
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:8000')
 
-# Content Security Policy настройки для Django Unfold
-# Разрешаем inline скрипты для корректной работы админки
-CSP_DEFAULT_SRC = ("'self'",)
-CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "'unsafe-eval'")
-CSP_STYLE_SRC = ("'self'", "'unsafe-inline'")
-CSP_IMG_SRC = ("'self'", "data:", "blob:")
-CSP_FONT_SRC = ("'self'", "data:")
-CSP_CONNECT_SRC = ("'self'",)
-CSP_FRAME_SRC = ("'self'",)
-CSP_MEDIA_SRC = ("'self'",)
+# Content Security Policy настройки
+# Разные политики для разработки и продакшена
+if DEBUG:
+    # Разрешительная политика для разработки (включая админку)
+    CSP_DEFAULT_SRC = ("'self'",)
+    CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "'unsafe-eval'")
+    CSP_STYLE_SRC = ("'self'", "'unsafe-inline'")
+    CSP_IMG_SRC = ("'self'", "data:", "blob:")
+    CSP_FONT_SRC = ("'self'", "data:")
+    CSP_CONNECT_SRC = ("'self'",)
+    CSP_FRAME_SRC = ("'self'",)
+    CSP_MEDIA_SRC = ("'self'",)
+else:
+    # Строгая политика для продакшена БЕЗ unsafe-inline и unsafe-eval
+    CSP_DEFAULT_SRC = ("'self'",)
+    CSP_SCRIPT_SRC = ("'self'", "https://accounts.google.com", "https://apis.google.com")
+    CSP_STYLE_SRC = ("'self'", "https://fonts.googleapis.com")
+    CSP_IMG_SRC = ("'self'", "data:", "https:")
+    CSP_FONT_SRC = ("'self'", "https://fonts.gstatic.com")
+    CSP_CONNECT_SRC = ("'self'", "https://accounts.google.com", "https://apis.google.com")
+    CSP_FRAME_SRC = ("'self'", "https://accounts.google.com")
+    CSP_MEDIA_SRC = ("'self'",)
+    CSP_OBJECT_SRC = ("'none'",)
+    CSP_BASE_URI = ("'self'",)
+    CSP_FORM_ACTION = ("'self'",)
+
+# Настройки Django Axes (защита от brute force)
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = 1  # час
+AXES_RESET_ON_SUCCESS = True
+AXES_ENABLE_ADMIN = True

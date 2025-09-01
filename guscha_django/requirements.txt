@@ -24,6 +24,9 @@ django-guardian
 django-security
 django-ratelimit
 django-recaptcha
+django-csp==3.8
+django-axes==6.4.0
+pip-audit
 
 # Django Unfold - современная админка
 django-unfold
@@ -48,6 +51,7 @@ django-money
 python-telegram-bot
 
 # Phone number validation
+pytz
 phonenumbers
 
 # JWT Authentication

@@ -1,9 +1,0 @@
-{
-  "first_name": "Test",
-  "last_name": "User", 
-  "email": "test@example.com",
-  "phone": "+79999999999",
-  "password": "Test123!@#",
-  "password_confirm": "Test123!@#",
-  "terms_accepted": true
-}

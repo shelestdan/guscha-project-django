@@ -371,7 +371,9 @@ class TelegramService:
             requires_registration = False
             
             if code_obj.user:
+                # Пользователь уже привязан к коду (например, после создания через Telegram бот)
                 user = code_obj.user
+                logger.info(f"Найден пользователь {user.id} для кода верификации {verification_code}")
             elif code_obj.pending_registration:
                 # Завершение регистрации для pending_registration
                 user = self.complete_telegram_registration(
@@ -611,6 +613,31 @@ class TelegramService:
             return {
                 'success': False,
                 'error': 'Ошибка инициации входа через Telegram'
+            }
+    
+    def send_registration_request(self, phone_number: str, verification_code: TelegramVerificationCode) -> Dict[str, Any]:
+        """Отправка запроса на регистрацию в Telegram бот"""
+        try:
+            # Генерируем deep link для Telegram бота с кодом регистрации
+            display_code = verification_code.generate_secure_code()
+            telegram_bot_username = getattr(settings, 'TELEGRAM_BOT_USERNAME', 'GuschaBot')
+            telegram_deep_link = f"https://t.me/{telegram_bot_username}?start=register_{display_code}"
+            
+            logger.info(f"Код верификации для регистрации создан для номера {phone_number} (code: {display_code})")
+            
+            return {
+                'success': True,
+                'message': 'Код верификации для регистрации создан. Перейдите в Telegram бот для завершения регистрации.',
+                'verification_code': display_code,
+                'telegram_link': telegram_deep_link,
+                'phone_number': phone_number
+            }
+                
+        except Exception as e:
+            logger.error(f"Ошибка при отправке запроса на регистрацию: {e}")
+            return {
+                'success': False,
+                'error': 'Ошибка отправки запроса на регистрацию'
             }
     
     def initiate_authenticated_password_reset(self, user: User, request) -> Dict[str, Any]:

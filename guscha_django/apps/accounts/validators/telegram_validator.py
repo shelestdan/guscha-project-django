@@ -97,7 +97,7 @@ class TelegramValidator:
         if not isinstance(verification_type, str):
             raise ValidationError(_('Тип верификации должен быть строкой'))
         
-        valid_types = ['registration', 'password_reset', 'login', 'link_account', 'qr_code', 'qr_registration', 'phone_change_current', 'phone_change_new']
+        valid_types = ['registration', 'password_reset', 'login', 'link_account', 'qr_code', 'qr_registration', 'telegram_registration', 'phone_change_current', 'phone_change_new']
         if verification_type not in valid_types:
             raise ValidationError(
                 _(f'Недействительный тип верификации. Допустимые: {", ".join(valid_types)}')
