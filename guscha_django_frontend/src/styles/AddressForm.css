@@ -18,6 +18,28 @@ body.modal-open {
   overflow-y: auto;
 }
 
+/* Стили для информации о пользователе */
+.user-info {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.user-info h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.user-info p {
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
 /* Обёртка для полей формы */
 .form-fields-container {
   display: flex;

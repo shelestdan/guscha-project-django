@@ -5,28 +5,21 @@ import "../../../styles/AddressForm.css";
 const AddressForm = ({ address, addressType, onSuccess, onCancel }) => {
   const [formData, setFormData] = useState({
     address_type: addressType || "shipping",
-    first_name: "",
-    last_name: "",
     address_line1: "",
     address_line2: "",
     city: "",
     postal_code: "",
     is_default: false
   });
+  const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Загружаем данные пользователя для автозаполнения только если не редактируем существующий адрес
+  // Загружаем данные пользователя для отображения информации
   useEffect(() => {
     const fetchUserData = async () => {
-      // Не загружаем данные пользователя, если редактируем существующий адрес
-      if (address) {
-        console.log('🏠 AddressForm: пропускаем загрузку данных пользователя, так как редактируем адрес');
-        return;
-      }
-      
       try {
-        console.log('🏠 AddressForm: загружаем данные пользователя для новой формы');
+        console.log('🏠 AddressForm: загружаем данные пользователя');
         const token = localStorage.getItem("token");
         if (token) {
           const response = await fetch(
@@ -38,14 +31,9 @@ const AddressForm = ({ address, addressType, onSuccess, onCancel }) => {
             }
           );
           if (response.ok) {
-            const userData = await response.json();
-            console.log('🏠 AddressForm: данные пользователя загружены:', userData);
-            setFormData((prev) => ({
-              ...prev,
-              first_name: userData.first_name || "",
-              last_name: userData.last_name || "",
-              phone: userData.phone || ""
-            }));
+            const user = await response.json();
+            console.log('🏠 AddressForm: данные пользователя загружены:', user);
+            setUserData(user);
           }
         }
       } catch (error) {
@@ -54,7 +42,7 @@ const AddressForm = ({ address, addressType, onSuccess, onCancel }) => {
     };
 
     fetchUserData();
-  }, [address]);
+  }, []);
 
   useEffect(() => {
     console.log('🏠 AddressForm: получен объект address для редактирования:', address);
@@ -66,13 +54,10 @@ const AddressForm = ({ address, addressType, onSuccess, onCancel }) => {
         console.log('🏠 AddressForm: заполняем форму полными данными:', address);
         setFormData({
           address_type: address.address_type || addressType || "shipping",
-          first_name: address.first_name || "",
-          last_name: address.last_name || "",
           address_line1: address.address_line1 || "",
           address_line2: address.address_line2 || "",
           city: address.city || "",
           postal_code: address.postal_code || "",
-          phone: address.phone || "",
           is_default: address.is_default || false
         });
       } else if (address.id) {
@@ -95,13 +80,10 @@ const AddressForm = ({ address, addressType, onSuccess, onCancel }) => {
       console.log('🏠 AddressForm: получены полные данные адреса:', addressData);
       setFormData({
         address_type: addressData.address_type || addressType || "shipping",
-        first_name: addressData.first_name || "",
-        last_name: addressData.last_name || "",
         address_line1: addressData.address_line1 || "",
         address_line2: addressData.address_line2 || "",
         city: addressData.city || "",
         postal_code: addressData.postal_code || "",
-        phone: addressData.phone || "",
         is_default: addressData.is_default || false
       });
     } catch (error) {
@@ -144,11 +126,12 @@ const AddressForm = ({ address, addressType, onSuccess, onCancel }) => {
 
     setLoading(true);
     try {
-      // Добавляем имя и фамилию из профиля пользователя
+      // Добавляем данные пользователя к данным формы
       const dataToSend = {
         ...formData,
-        first_name: formData.first_name || "Пользователь",
-        last_name: formData.last_name || "Системы"
+        first_name: userData?.first_name || "",
+        last_name: userData?.last_name || "",
+        phone: userData?.phone || ""
       };
 
       let savedAddress;
@@ -204,6 +187,15 @@ const AddressForm = ({ address, addressType, onSuccess, onCancel }) => {
 
   return (
     <form onSubmit={handleSubmit} className="address-form">
+      {/* Отображение информации о пользователе */}
+      {userData && (
+        <div className="user-info">
+          <h4>Пользователь:</h4>
+          <p>{userData.first_name} {userData.last_name}</p>
+          {userData.phone && <p>Телефон: {userData.phone}</p>}
+        </div>
+      )}
+
       {renderField("address_line1", "Адрес", "text", {
         required: true,
         placeholder: "Улица, номер дома"

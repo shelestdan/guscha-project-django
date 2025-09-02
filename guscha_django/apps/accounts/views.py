@@ -952,11 +952,20 @@ def telegram_verify_code(request):
         telegram_service = TelegramService()
         
         # Верификация кода по номеру телефона
+        # Сначала пробуем QR-регистрацию, затем обычную telegram-регистрацию
         result = telegram_service.verify_code_by_phone(
             verification_code=verification_code,
             phone_number=phone_number,
-            verification_type='telegram_registration'
+            verification_type='qr_registration'
         )
+        
+        # Если QR-код не найден, пробуем обычную telegram-регистрацию
+        if not result['success']:
+            result = telegram_service.verify_code_by_phone(
+                verification_code=verification_code,
+                phone_number=phone_number,
+                verification_type='telegram_registration'
+            )
         
         if not result['success']:
             return Response(

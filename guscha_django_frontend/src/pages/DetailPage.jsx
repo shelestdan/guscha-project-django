@@ -22,8 +22,8 @@ const DetailPage = ({ item, itemType }) => {
 
   if (!item) return null;
 
-  // Показываем только дополнительные изображения (исключаем товарные фото)
-  const extraImages = item.additional_images || [];
+  // Показываем только дополнительные изображения (тип 'additional')
+  const extraImages = (item.product_images || []).filter(img => img.image_type === 'additional');
 
   const AddButton = itemType === 'product' ? AddToCartButton : AddToPreorderButton;
   const addButtonProps = itemType === 'product' 

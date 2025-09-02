@@ -50,7 +50,8 @@ class Address(models.Model):
         ]
     
     def __str__(self):
-        return f"{self.first_name} {self.last_name}, {self.address_line1}, {self.city}"
+        name = self.full_name
+        return f"{name}, {self.address_line1}, {self.city}"
     
     def save(self, *args, **kwargs):
         """При сохранении адреса по умолчанию отключаем другие адреса по умолчанию"""
@@ -65,7 +66,9 @@ class Address(models.Model):
     
     @property
     def full_name(self):
-        """Полное имя"""
+        """Полное имя из профиля пользователя"""
+        if self.user and self.user.first_name and self.user.last_name:
+            return f"{self.user.first_name} {self.user.last_name}"
         return f"{self.first_name} {self.last_name}"
     
     @property

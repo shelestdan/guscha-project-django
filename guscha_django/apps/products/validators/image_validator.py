@@ -20,7 +20,7 @@ class ImageValidator:
     """
     
     def __init__(self):
-        self.max_file_size = 5 * 1024 * 1024  # 5MB
+        self.max_file_size = 10 * 1024 * 1024  # 10MB
         self.min_width = 100
         self.min_height = 100
         self.allowed_formats = ['JPEG', 'PNG', 'WEBP', 'GIF']

@@ -66,10 +66,10 @@ class PreorderImageAdmin(admin.ModelAdmin):
     Предоставляет отдельный интерфейс для управления изображениями предзаказов.
     Позволяет загружать файлы или указывать URL изображений.
     """
-    list_display = ['image_preview', 'preorder', 'alt_text', 'image_type', 'sort_order', 'is_primary']
-    list_filter = ['is_primary', 'image_type']
+    list_display = ['image_preview', 'preorder', 'alt_text', 'image_type', 'sort_order']
+    list_filter = ['image_type']
     search_fields = ['preorder__name', 'alt_text']
-    list_editable = ['sort_order', 'is_primary']
+    list_editable = ['sort_order']
     autocomplete_fields = ['preorder']
     
     fieldsets = (
@@ -82,8 +82,8 @@ class PreorderImageAdmin(admin.ModelAdmin):
             'description': 'Загрузите файл или укажите URL изображения (приоритет у загруженного файла)'
         }),
         (_('Настройки отображения'), {
-            'fields': ('image_type', 'is_primary', 'sort_order'),
-            'description': 'Тип изображения, основное изображение и порядок сортировки'
+            'fields': ('image_type', 'sort_order'),
+            'description': 'Тип изображения и порядок сортировки'
         }),
     )
     
@@ -138,7 +138,7 @@ class PreorderImageInline(BaseImageInline):
     can_delete = True
     show_change_link = True
     tab = True  # Отображать в отдельной вкладке
-    fields = ['image', 'image_url', 'alt_text', 'image_type', 'is_primary', 'sort_order', 'image_preview']
+    fields = ['image', 'image_url', 'alt_text', 'image_type', 'sort_order', 'image_preview']
     readonly_fields = ['image_preview']
 
 @admin.register(Preorder)

@@ -189,7 +189,7 @@ class ProductImage(BaseModel):
                 message='Поддерживаемые форматы: JPG, JPEG, PNG, WebP, GIF'
             )
         ],
-        help_text='Поддерживаемые форматы: JPG, JPEG, PNG, WebP, GIF. Максимальный размер: 5MB. Минимальный размер: 100x100px.'
+        help_text='Поддерживаемые форматы: JPG, JPEG, PNG, WebP, GIF. Максимальный размер: 10MB. Минимальный размер: 100x100px.'
     )
     image_url = models.URLField(max_length=500, blank=True, verbose_name='URL изображения',
                                help_text='Альтернатива загрузке файла - укажите прямую ссылку на изображение')
@@ -199,6 +199,11 @@ class ProductImage(BaseModel):
                                    help_text='Порядок отображения (меньшее число = выше в списке)')
     is_primary = models.BooleanField(default=False, verbose_name='Основное изображение',
                                    help_text='Отметьте для установки в качестве основного изображения товара')
+    image_type = models.CharField(max_length=20, choices=[
+        ('model', 'Модель'),
+        ('product', 'Товар'),
+        ('additional', 'Дополнительное')
+    ], default='additional', verbose_name='Тип изображения')
     
     class Meta:
         verbose_name = 'Изображение товара'

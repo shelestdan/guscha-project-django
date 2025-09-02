@@ -275,11 +275,12 @@ class ProductDetailSerializer(BaseSerializer):
                 'id': 'main',
                 'image_url': obj.image_url,
                 'alt_text': obj.name,
-                'is_primary': True
+                'is_primary': True,
+                'image_type': 'primary'
             })
         
         # Добавление изображений из связанной модели ProductImage
-        product_images = obj.product_images.all()
+        product_images = obj.product_images.all().order_by('sort_order')
         if product_images.exists():
             for img in product_images:
                 image_url = img.get_image_url
@@ -288,7 +289,8 @@ class ProductDetailSerializer(BaseSerializer):
                         'id': img.id,
                         'image_url': image_url,
                         'alt_text': img.alt_text or obj.name,
-                        'is_primary': img.is_primary
+                        'is_primary': img.is_primary,
+                        'image_type': img.image_type
                     })
         
         return images
@@ -465,13 +467,13 @@ class PreorderDetailSerializer(BaseSerializer):
     is_active_now = serializers.BooleanField(read_only=True)
     model_image = serializers.SerializerMethodField()
     product_image = serializers.SerializerMethodField()
-    additional_images = serializers.SerializerMethodField()
+    product_images = serializers.SerializerMethodField()
     
     class Meta:
         model = Preorder
         fields = [
             'id', 'name', 'slug', 'description', 'short_description',
-            'price', 'image_url', 'model_image', 'product_image', 'additional_images', 'is_active', 'is_featured', 
+            'price', 'image_url', 'model_image', 'product_image', 'product_images', 'is_active', 'is_featured', 
             'is_active_now', 'meta_title', 'meta_description', 'sizes', 
             'created_at', 'updated_at'
         ]
@@ -484,15 +486,33 @@ class PreorderDetailSerializer(BaseSerializer):
         """Получение изображения товара"""
         return obj.product_image
     
-    def get_additional_images(self, obj):
-        """Получение дополнительных изображений"""
-        additional_images = obj.preorder_images.filter(image_type='additional')
-        return [{
-            'id': img.id,
-            'image_url': img.get_image_url,
-            'alt_text': img.alt_text or obj.name,
-            'image_type': img.image_type
-        } for img in additional_images if img.get_image_url]
+    def get_product_images(self, obj):
+        """Получение всех изображений предзаказа (основное + дополнительные)"""
+        images = []
+        
+        # Добавляем основное изображение из image_url если есть
+        if obj.image_url:
+            images.append({
+                'id': None,
+                'image_url': obj.image_url,
+                'alt_text': obj.name,
+                'is_primary': True,
+                'image_type': 'primary'
+            })
+        
+        # Добавляем изображения из PreorderImage модели
+        preorder_images = obj.preorder_images.all().order_by('sort_order')
+        for img in preorder_images:
+            if img.get_image_url:
+                images.append({
+                    'id': img.id,
+                    'image_url': img.get_image_url,
+                    'alt_text': img.alt_text or obj.name,
+                    'is_primary': img.is_primary,
+                    'image_type': img.image_type
+                })
+        
+        return images
     
 
 

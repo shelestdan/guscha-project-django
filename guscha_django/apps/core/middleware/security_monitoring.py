@@ -102,7 +102,7 @@ class SecurityMonitoringMiddleware(MiddlewareMixin):
         # Add security headers
         self._add_security_headers(response)
         
-        return response
+        return None
     
     def process_exception(self, request: HttpRequest, exception: Exception) -> Optional[HttpResponse]:
         """Handle exceptions that might indicate security issues"""
@@ -156,7 +156,7 @@ class SecurityMonitoringMiddleware(MiddlewareMixin):
                 severity
             )
         
-        return response
+        return None
     
     def _detect_telegram_threats(self, request: HttpRequest) -> Optional[dict]:
         """

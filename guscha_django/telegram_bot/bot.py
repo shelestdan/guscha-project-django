@@ -989,11 +989,8 @@ class TelegramBot:
                 )
                 return
             
-            # Помечаем код как использованный после успешной генерации
-            verification_code.is_used = True
-            verification_code.used_at = timezone.now()
-            await sync_to_async(verification_code.save)()
-            logger.info(f"Код {verification_code.id} помечен как использованный после генерации SMS для обычной регистрации")
+            # Код будет помечен как использованный только после успешной верификации на backend
+            logger.info(f"Код {verification_code.id} сгенерирован и готов к использованию для обычной регистрации")
             
             # Отправляем код пользователю
             verification_type_display = await sync_to_async(verification_code.get_verification_type_display)()

@@ -214,9 +214,9 @@ class ProductImageForm(forms.ModelForm):
         
         # Проверяем размер файла
         if image and hasattr(image, 'size'):
-            if image.size > 5 * 1024 * 1024:  # 5MB
+            if image.size > 10 * 1024 * 1024:  # 10MB
                 raise forms.ValidationError(
-                    'Размер файла не должен превышать 5MB.'
+                    'Размер файла не должен превышать 10MB.'
                 )
         
         return cleaned_data
@@ -275,11 +275,11 @@ class ProductImageForm(forms.ModelForm):
             logger.debug(f"Тип содержимого: {content_type}")
             
             # Проверяем размер файла
-            max_size = 5 * 1024 * 1024  # 5MB
+            max_size = 10 * 1024 * 1024  # 10MB
             if image.size > max_size:
                 logger.warning(f"Файл слишком большой: {image.size} байт (максимум {max_size})")
                 raise forms.ValidationError(
-                    f'Размер файла не должен превышать 5MB. Текущий размер: {image.size / 1024 / 1024:.1f}MB'
+                    f'Размер файла не должен превышать 10MB. Текущий размер: {image.size / 1024 / 1024:.1f}MB'
                 )
             
             # Проверяем тип файла только если content_type доступен
@@ -334,7 +334,7 @@ class PreorderImageForm(forms.ModelForm):
     
     class Meta:
         model = PreorderImage
-        fields = ['image', 'image_url', 'alt_text', 'is_primary', 'image_type', 'sort_order']
+        fields = ['image', 'image_url', 'alt_text', 'image_type', 'sort_order']
         widgets = {
             'image': UnfoldAdminImageFieldWidget(attrs={
                 'accept': 'image/jpeg,image/png,image/webp,image/gif'
@@ -385,11 +385,11 @@ class PreorderImageForm(forms.ModelForm):
             logger.debug(f"Тип содержимого: {content_type}")
             
             # Проверяем размер файла
-            max_size = 5 * 1024 * 1024  # 5MB
+            max_size = 10 * 1024 * 1024  # 10MB
             if image.size > max_size:
                 logger.warning(f"Файл слишком большой: {image.size} байт (максимум {max_size})")
                 raise forms.ValidationError(
-                    f'Размер файла не должен превышать 5MB. Текущий размер: {image.size / 1024 / 1024:.1f}MB'
+                    f'Размер файла не должен превышать 10MB. Текущий размер: {image.size / 1024 / 1024:.1f}MB'
                 )
             
             # Проверяем тип файла только если content_type доступен
@@ -413,7 +413,6 @@ class PreorderImageForm(forms.ModelForm):
         self.fields['image'].label = 'Загрузить изображение'
         self.fields['image_url'].label = 'URL изображения'
         self.fields['alt_text'].label = 'Alt текст'
-        self.fields['is_primary'].label = 'Основное изображение'
         self.fields['image_type'].label = 'Тип изображения'
         self.fields['sort_order'].label = 'Порядок сортировки'
         
