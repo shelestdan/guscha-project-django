@@ -165,6 +165,7 @@ WSGI_APPLICATION = 'guscha_project.wsgi.application'
 
 # Используем PostgreSQL в Docker окружении, SQLite локально
 if os.getenv('DATABASE_URL') or os.getenv('POSTGRES_DB'):
+    import psycopg2.extensions
     # PostgreSQL конфигурация для Docker
     DATABASES = {
         'default': {
@@ -174,6 +175,10 @@ if os.getenv('DATABASE_URL') or os.getenv('POSTGRES_DB'):
             'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'guscha123'),
             'HOST': os.getenv('POSTGRES_HOST', 'db'),
             'PORT': os.getenv('POSTGRES_PORT', '5432'),
+            'OPTIONS': {
+                'isolation_level': psycopg2.extensions.ISOLATION_LEVEL_READ_COMMITTED,
+            },
+            'CONN_MAX_AGE': 600,  # Connection pooling
         }
     }
 else:
