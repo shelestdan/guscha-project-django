@@ -5,7 +5,11 @@ RUN apt-get update && apt-get install -y \
     gcc \
     default-libmysqlclient-dev \
     pkg-config \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Обновление pip
+RUN pip install --upgrade pip
 
 # Установка рабочей директории
 WORKDIR /app
@@ -14,8 +18,15 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копирование кода приложения
-COPY . .
+# Копирование необходимых файлов проекта
+COPY manage.py .
+COPY guscha_project/ ./guscha_project/
+COPY apps/ ./apps/
+COPY telegram_bot/ ./telegram_bot/
+COPY templates/ ./templates/
+
+# Создание необходимых директорий для логов
+RUN mkdir -p /app/logs /app/telegram_bot/logs
 
 # Создание пользователя для безопасности
 RUN useradd --create-home --shell /bin/bash app \

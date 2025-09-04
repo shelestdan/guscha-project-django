@@ -26,22 +26,23 @@ COPY apps/ ./apps/
 COPY telegram_bot/ ./telegram_bot/
 COPY templates/ ./templates/
 COPY static/ ./static/
-COPY *.py .
+COPY start_django_server.py .
+COPY test_security_monitoring.py .
+COPY security_audit.py .
 
 # Убеждаемся, что static_root и logs существуют
-RUN mkdir -p /app/static_root /app/logs
+RUN mkdir -p /app/static_root /app/logs /app/telegram_bot/logs
+
+# Копируем скрипт запуска
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
 
 # Создание пользователя для безопасности
 RUN useradd --create-home --shell /bin/bash app \
     && chown -R app:app /app
-USER app
 
 # Открываем порт
 EXPOSE 8000
-
-# Создаем скрипт запуска
-COPY --chown=app:app start.sh /app/start.sh
-RUN chmod +x /app/start.sh
 
 # Запускаем через скрипт
 CMD ["/app/start.sh"]

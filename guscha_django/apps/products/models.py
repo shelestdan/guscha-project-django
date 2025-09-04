@@ -58,9 +58,12 @@ class Category(BaseModel):
         return self.name
     
     def save(self, *args, **kwargs):
+        # logger.debug(f"Сохранение товара: {self.name}")
         if not self.slug:
+            # logger.debug(f"Генерация slug для товара: {self.name}")
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
+        # logger.debug(f"Товар сохранен с ID: {self.id}")
 
 
 class Product(BaseModel):

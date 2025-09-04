@@ -85,7 +85,7 @@ const BackgroundContent = () => {
       setError(null);
       setRetryCount(0);
       setHealthStatus('healthy');
-      console.log('✅ Фоновый контент успешно загружен:', data.title);
+      console.log('✅ Фоновый контент успешно загружен');
       
     } catch (err) {
       console.error('❌ Ошибка загрузки фонового контента:', err);
@@ -166,7 +166,7 @@ const BackgroundContent = () => {
           <div className="background-image">
             <img 
               src={backgroundData.image_url} 
-              alt={backgroundData.title}
+              alt="Фоновое изображение"
               className="background-img"
               onError={(e) => {
                 console.error('❌ Ошибка загрузки изображения:', e.target.src);
@@ -185,7 +185,7 @@ const BackgroundContent = () => {
           <div className="background-slideshow">
             <img 
               src={currentImage.image_url} 
-              alt={currentImage.alt_text || backgroundData.title}
+              alt={currentImage.alt_text || "Слайд фонового изображения"}
               className={`background-img slideshow-img ${currentImage.is_primary ? 'primary-image' : ''} ${isTransitioning ? 'fading-out' : ''}`}
               onError={(e) => {
                 console.error('❌ Ошибка загрузки слайда:', e.target.src);
@@ -278,13 +278,10 @@ const BackgroundContent = () => {
   return (
     <div className="background-content">
       {renderBackgroundContent()}
-      {backgroundData && (
+      {backgroundData && backgroundData.description && (
         <div className="background-overlay">
           <div className="background-info">
-            <h1 className="background-title">{backgroundData.title}</h1>
-            {backgroundData.description && (
-              <p className="background-description">{backgroundData.description}</p>
-            )}
+            <p className="background-description">{backgroundData.description}</p>
           </div>
         </div>
       )}

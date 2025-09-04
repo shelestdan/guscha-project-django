@@ -4,10 +4,21 @@ import { useState, useEffect, useCallback } from 'react';
  * Хук для управления аутентификацией пользователя
  * Обрабатывает вход, регистрацию, выход и обновление токенов
  */
+// Функция для получения базового URL
+const getBaseURL = () => {
+  // Проверяем переменную окружения
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+  
+  // Для контейнеризованного развертывания с nginx используем текущий origin
+  return window.location.origin;
+};
+
 export const useAuth = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [csrfToken, setCsrfToken] = useState(null);
 
   // Обновление токена доступа
@@ -19,8 +30,9 @@ export const useAuth = () => {
       // Определяем тип токена и соответствующий заголовок
       const authHeader = token.includes('.') ? `Bearer ${token}` : `Token ${token}`;
 
+      const baseURL = getBaseURL();
       const response = await fetch(
-        'http://localhost/api/accounts/users/me/',
+        `${baseURL}/api/accounts/users/me/`,
         {
           method: 'GET',
           headers: {
@@ -85,8 +97,9 @@ export const useAuth = () => {
   // Получение профиля пользователя
   const fetchUserProfile = useCallback(async () => {
     try {
+      const baseURL = getBaseURL();
       const response = await fetchWithAuth(
-        'http://localhost/api/accounts/users/me/'
+        `${baseURL}/api/accounts/users/me/`
       );
 
       if (response.ok) {
@@ -138,8 +151,9 @@ export const useAuth = () => {
   // Обработка входа
   const handleLogin = async (loginData) => {
     try {
+      const baseURL = getBaseURL();
       const response = await fetch(
-        'http://localhost/api/accounts/users/login/',
+        `${baseURL}/api/accounts/users/login/`,
         {
           method: 'POST',
           headers: {
@@ -168,8 +182,9 @@ export const useAuth = () => {
   // Обработка регистрации
   const handleRegister = async (registrationData) => {
     try {
+      const baseURL = getBaseURL();
       const response = await fetch(
-        'http://localhost/api/accounts/users/',
+        `${baseURL}/api/accounts/users/`,
         {
           method: 'POST',
           headers: {
@@ -221,7 +236,8 @@ export const useAuth = () => {
   // Обработка выхода
   const handleLogout = async () => {
     try {
-      await fetch('http://localhost/api/accounts/users/logout/', {
+      const baseURL = getBaseURL();
+      await fetch(`${baseURL}/api/accounts/users/logout/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -242,8 +258,9 @@ export const useAuth = () => {
   // Активация Telegram-бота
   const activateTelegramBot = async (verificationId, telegramChatId) => {
     try {
+      const baseURL = getBaseURL();
       const response = await fetch(
-        'http://localhost/api/accounts/telegram/activate/',
+        `${baseURL}/api/accounts/telegram/activate/`,
         {
           method: 'POST',
           headers: {
@@ -273,8 +290,9 @@ export const useAuth = () => {
   // Верификация Telegram-кода
   const verifyTelegramCode = async (phoneNumber, code) => {
     try {
+      const baseURL = getBaseURL();
       const response = await fetch(
-        'http://localhost/api/accounts/telegram/verify/',
+        `${baseURL}/api/accounts/telegram/verify/`,
         {
           method: 'POST',
           headers: {

@@ -18,6 +18,14 @@ const TelegramVerification = ({ verificationId, phoneNumber, onVerificationCompl
   const { verifyTelegramCode } = useAuth();
   const { showSuccess, showError } = useToast();
 
+  // 🛡️ ЗАЩИТА ОТ БОТОВ: Honeypot поля и время начала
+  const [honeypotData, setHoneypotData] = useState({
+    email: '',
+    username: '',
+    website: ''
+  });
+  const [verificationStartTime] = useState(Date.now());
+
   // Проверка статуса бота каждые 3 секунды в режиме ожидания
   useEffect(() => {
     // Очищаем предыдущий интервал
@@ -117,6 +125,22 @@ const TelegramVerification = ({ verificationId, phoneNumber, onVerificationCompl
 
   const handleCodeSubmit = async (e) => {
     e.preventDefault();
+    
+    // 🛡️ ЗАЩИТА ОТ БОТОВ: Проверка honeypot полей
+    if (honeypotData.email || honeypotData.username || honeypotData.website) {
+      console.warn('🚫 Обнаружен бот в Telegram верификации: заполнены honeypot поля');
+      showError('Ошибка верификации. Попробуйте позже.');
+      return;
+    }
+
+    // 🛡️ ЗАЩИТА ОТ БОТОВ: Проверка времени верификации
+    const verificationTime = Date.now() - verificationStartTime;
+    const minVerificationTime = 5000; // Минимум 5 секунд для верификации
+    if (verificationTime < minVerificationTime) {
+      console.warn(`🚫 Обнаружен бот в Telegram верификации: слишком быстрая верификация (${verificationTime}мс < ${minVerificationTime}мс)`);
+      showError('Пожалуйста, подождите немного перед отправкой кода.');
+      return;
+    }
     
     if (!telegramCode.trim() || telegramCode.length !== 6) {
       showError('Введите 6-значный код');
@@ -242,6 +266,37 @@ const TelegramVerification = ({ verificationId, phoneNumber, onVerificationCompl
                     maxLength={6}
                     disabled={isLoading}
                     autoFocus
+                  />
+                </div>
+                
+                {/* 🛡️ HONEYPOT ПОЛЯ - Скрытые поля для защиты от ботов */}
+                <div style={{ display: 'none' }}>
+                  <input
+                    type="email"
+                    name="email"
+                    value={honeypotData.email}
+                    onChange={(e) => setHoneypotData(prev => ({ ...prev, email: e.target.value }))}
+                    tabIndex="-1"
+                    autoComplete="off"
+                    aria-hidden="true"
+                  />
+                  <input
+                    type="text"
+                    name="username"
+                    value={honeypotData.username}
+                    onChange={(e) => setHoneypotData(prev => ({ ...prev, username: e.target.value }))}
+                    tabIndex="-1"
+                    autoComplete="off"
+                    aria-hidden="true"
+                  />
+                  <input
+                    type="url"
+                    name="website"
+                    value={honeypotData.website}
+                    onChange={(e) => setHoneypotData(prev => ({ ...prev, website: e.target.value }))}
+                    tabIndex="-1"
+                    autoComplete="off"
+                    aria-hidden="true"
                   />
                 </div>
                 

@@ -2,6 +2,7 @@ Django>=5.2,<5.3
 django-filter
 djangorestframework
 django-cors-headers
+psycopg2-binary
 str2bool
 Pillow
 python-slugify

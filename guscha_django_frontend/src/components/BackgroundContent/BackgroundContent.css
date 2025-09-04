@@ -368,13 +368,7 @@
   padding: 2rem;
 }
 
-.background-title {
-  font-size: 3.5rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-  line-height: 1.2;
-}
+
 
 .background-description {
   font-size: 1.3rem;
@@ -422,9 +416,7 @@
 
 /* Адаптивность */
 @media (max-width: 768px) {
-  .background-title {
-    font-size: 2.5rem;
-  }
+
   
   .background-description {
     font-size: 1.1rem;
@@ -445,9 +437,7 @@
 }
 
 @media (max-width: 480px) {
-  .background-title {
-    font-size: 2rem;
-  }
+
   
   .background-description {
     font-size: 1rem;

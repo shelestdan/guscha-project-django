@@ -163,8 +163,8 @@ class RateLimitMiddleware(MiddlewareMixin):
             self.security_logger.log_rate_limit_exceeded(
                 request,
                 endpoint_key,
-                rate_info.get('current_count', 0),
-                rate_info.get('limit', 0)
+                rate_info.get('requests_made', 0),
+                rate_info.get('requests_allowed', 0)
             )
             
             # Record in security monitoring system

@@ -49,6 +49,43 @@ coverage.xml
 .pytest_cache/
 cover/
 
+# Docker specific ignores
+.git/
+.gitignore
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+README*.md
+
+# Development files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs (will be mounted as volumes)
+logs/
+*.log
+
+# Environment files
+.env*
+!.env.example
+
+# Node.js (if any)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Frontend build artifacts
+guscha_django_frontend/
+static_root/
+
+# Security reports
+*security*.json
+bandit_report*.json
+
 # Translations
 *.mo
 *.pot

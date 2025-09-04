@@ -314,14 +314,9 @@ foreach ($file in $ReactFiles) {
     }
 }
 
-# Копирование статических ресурсов React в static_root/static/
-$StaticRootStaticDir = Join-Path $StaticRootDir "static"
-if (-not (Test-Path $StaticRootStaticDir)) {
-    New-Item -ItemType Directory -Path $StaticRootStaticDir -Force | Out-Null
-}
-
+# Копирование статических ресурсов React напрямую в static_root/ (для nginx /var/www/react/)
 if (Test-Path $BuildStaticDir) {
-    Copy-WithValidation "$BuildStaticDir\*" $StaticRootStaticDir "Статические ресурсы в static_root/static/"
+    Copy-WithValidation "$BuildStaticDir\*" $StaticRootDir "Статические ресурсы React в static_root/"
 }
 
 Write-Success "Все файлы React скопированы в обе директории"

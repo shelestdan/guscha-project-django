@@ -5,9 +5,14 @@ export async function getCartItems() {
   const sessionId = localStorage.getItem('cart_session_id');
   console.log('🛒 Frontend session ID:', sessionId);
 
+  const headers = {};
+  if (sessionId) {
+    headers['X-Session-ID'] = sessionId;
+  }
+
   try {
     // 1. Получаем основную информацию о корзине
-    const { data: cartData } = await axios.get('/api/cart/items/');
+    const { data: cartData } = await axios.get('/api/cart/items/', { headers });
     console.log('🛒 cartApi.getCartItems response:', cartData);
     return cartData;
   } catch (error) {
@@ -25,8 +30,13 @@ export async function addCartItem(productId, quantity = 1, sizeId = null) {
   console.log('🛒 cartApi.addCartItem request:', requestData);
   console.log('🛒 Frontend session ID for POST:', sessionId);
 
+  const headers = {};
+  if (sessionId) {
+    headers['X-Session-ID'] = sessionId;
+  }
+
   try {
-    const { data } = await axios.post('/api/cart/add/', requestData);
+    const { data } = await axios.post('/api/cart/add/', requestData, { headers });
     console.log('🛒 cartApi.addCartItem response:', data);
     return data;
   } catch (error) {
@@ -44,8 +54,13 @@ export async function addPreorderItem(preorderId, quantity = 1, sizeId = null) {
   console.log('🛒 cartApi.addPreorderItem request:', requestData);
   console.log('🛒 Frontend session ID for POST:', sessionId);
 
+  const headers = {};
+  if (sessionId) {
+    headers['X-Session-ID'] = sessionId;
+  }
+
   try {
-    const { data } = await axios.post('/api/cart/add_preorder/', requestData);
+    const { data } = await axios.post('/api/cart/add_preorder/', requestData, { headers });
     console.log('🛒 cartApi.addPreorderItem response:', data);
     return data;
   } catch (error) {
@@ -56,9 +71,15 @@ export async function addPreorderItem(preorderId, quantity = 1, sizeId = null) {
 
 export async function updateCartItem(itemId, quantity) {
   console.log(`🛒 cartApi.updateCartItem called for item ${itemId} with quantity ${quantity}`);
+  const sessionId = localStorage.getItem('cart_session_id');
+
+  const headers = {};
+  if (sessionId) {
+    headers['X-Session-ID'] = sessionId;
+  }
 
   try {
-    const { data } = await axios.put(`/api/cart/update/${itemId}/`, { quantity });
+    const { data } = await axios.put(`/api/cart/update/${itemId}/`, { quantity }, { headers });
     console.log('🛒 cartApi.updateCartItem response:', data);
     return data;
   } catch (error) {
@@ -73,9 +94,15 @@ export async function updateCartItem(itemId, quantity) {
 
 export async function removeCartItem(itemId) {
   console.log(`🛒 cartApi.removeCartItem called for item ${itemId}`);
+  const sessionId = localStorage.getItem('cart_session_id');
+
+  const headers = {};
+  if (sessionId) {
+    headers['X-Session-ID'] = sessionId;
+  }
 
   try {
-    const { data } = await axios.delete(`/api/cart/remove/${itemId}/`);
+    const { data } = await axios.delete(`/api/cart/remove/${itemId}/`, { headers });
     console.log('🛒 cartApi.removeCartItem response:', data);
     return data;
   } catch (error) {
@@ -91,9 +118,15 @@ export async function removeCartItem(itemId) {
 
 export async function clearCart() {
   console.log('🛒 cartApi.clearCart called');
+  const sessionId = localStorage.getItem('cart_session_id');
+
+  const headers = {};
+  if (sessionId) {
+    headers['X-Session-ID'] = sessionId;
+  }
 
   try {
-    const { data } = await axios.delete('/api/cart/clear/');
+    const { data } = await axios.delete('/api/cart/clear/', { headers });
     console.log('🛒 cartApi.clearCart response:', data);
     return data;
   } catch (error) {
@@ -107,8 +140,13 @@ export async function createCartReservations() {
   const sessionId = localStorage.getItem('cart_session_id');
   console.log('🛒 Frontend session ID for reservations:', sessionId);
 
+  const headers = {};
+  if (sessionId) {
+    headers['X-Session-ID'] = sessionId;
+  }
+
   try {
-    const { data } = await axios.post('/api/cart/create-reservations/');
+    const { data } = await axios.post('/api/cart/create-reservations/', {}, { headers });
     console.log('🛒 cartApi.createCartReservations response:', data);
     return data;
   } catch (error) {

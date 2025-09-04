@@ -25,8 +25,15 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
     phone: '',
     password: '',
     confirmPassword: '',
-    termsAccepted: true
+    termsAccepted: true,
+    // Honeypot поля для защиты от ботов
+    website: '', // Скрытое поле - боты часто заполняют
+    company: '', // Еще одно скрытое поле
+    address: ''  // Третье скрытое поле
   });
+
+  // Время начала заполнения формы для защиты от ботов
+  const [formStartTime] = useState(Date.now());
 
   const [validation, setValidation] = useState({
     firstName: { isValid: false, message: '' },
@@ -259,6 +266,22 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
   // Отправка формы
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // 🛡️ ЗАЩИТА ОТ БОТОВ: Проверка honeypot полей
+    if (formData.website || formData.company || formData.address) {
+      console.warn('🚫 Обнаружен бот: заполнены honeypot поля');
+      showError('Ошибка при регистрации. Попробуйте позже.');
+      return;
+    }
+
+    // 🛡️ ЗАЩИТА ОТ БОТОВ: Проверка времени заполнения формы
+    const formFillTime = Date.now() - formStartTime;
+    const minFillTime = 10000; // Минимум 10 секунд для заполнения формы
+    if (formFillTime < minFillTime) {
+      console.warn(`🚫 Обнаружен бот: форма заполнена слишком быстро (${formFillTime}мс < ${minFillTime}мс)`);
+      showError('Пожалуйста, заполните форму внимательнее.');
+      return;
+    }
     
     // Проверяем валидность всех полей
     if (!validation.firstName.isValid || !validation.lastName.isValid || 
@@ -619,6 +642,37 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
                 <span>{validation.termsAccepted.message}</span>
               </div>
             )}
+          </div>
+
+          {/* 🛡️ HONEYPOT ПОЛЯ - Скрытые поля для защиты от ботов */}
+          <div style={{ display: 'none' }}>
+            <input
+              type="text"
+              name="website"
+              value={formData.website}
+              onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
+              tabIndex="-1"
+              autoComplete="off"
+              aria-hidden="true"
+            />
+            <input
+              type="text"
+              name="company"
+              value={formData.company}
+              onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
+              tabIndex="-1"
+              autoComplete="off"
+              aria-hidden="true"
+            />
+            <input
+              type="text"
+              name="address"
+              value={formData.address}
+              onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+              tabIndex="-1"
+              autoComplete="off"
+              aria-hidden="true"
+            />
           </div>
 
           <button

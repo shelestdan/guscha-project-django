@@ -27,6 +27,9 @@ urlpatterns = [
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     
+    # Регистрация пользователей
+    path('register/', views.UserViewSet.as_view({'post': 'create'}), name='register'),
+    
     # Основные действия аутентификации (через UserViewSet)
     # POST /api/accounts/users/login/ - вход
     # POST /api/accounts/users/logout/ - выход

@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.admin import StackedInline, ModelAdmin, TabularInline
+from django.urls import reverse
 from unfold.contrib.forms.widgets import WysiwygWidget
 from unfold.widgets import (
     UnfoldAdminImageFieldWidget,
@@ -89,12 +90,69 @@ class EnhancedBackgroundContentForm(forms.ModelForm):
     
     class Meta:
         model = BackgroundContent
-        fields = ['content_type', 'is_active']
-        exclude = ['title']
+        fields = ['content_type', 'title', 'is_active']
 
 
 class UnifiedBackgroundContentForm(forms.ModelForm):
     """Унифицированная форма для всех типов фонового контента"""
+    
+    content_type = forms.ChoiceField(
+        choices=BackgroundContent.CONTENT_TYPES,
+        widget=UnfoldAdminSelectWidget(attrs={'class': 'content-type-selector'}),
+        label='Тип контента'
+    )
+    title = forms.CharField(
+        max_length=200,
+        widget=UnfoldAdminTextInputWidget(attrs={
+            'placeholder': 'Введите название фона',
+            'class': 'vLargeTextField'
+        }),
+        label='Название'
+    )
+    
+    # Поля для изображения
+    image = forms.ImageField(
+        required=False,
+        widget=UnfoldAdminImageFieldWidget(attrs={
+            'accept': 'image/jpeg,image/png,image/webp'
+        }),
+        label='Изображение'
+    )
+    width = forms.IntegerField(
+        required=False,
+        initial=1920,
+        widget=UnfoldAdminTextInputWidget(attrs={'type': 'number', 'min': '1'}),
+        label='Ширина'
+    )
+    height = forms.IntegerField(
+        required=False,
+        initial=1080,
+        widget=UnfoldAdminTextInputWidget(attrs={'type': 'number', 'min': '1'}),
+        label='Высота'
+    )
+    scaling_mode = forms.ChoiceField(
+        choices=[('cover', 'Покрыть'), ('contain', 'Вместить'), ('stretch', 'Растянуть')],
+        required=False,
+        initial='cover',
+        widget=UnfoldAdminSelectWidget(),
+        label='Режим масштабирования'
+    )
+    
+    # Поля для слайдшоу
+    interval = forms.IntegerField(
+        required=False,
+        initial=5000,
+        widget=UnfoldAdminTextInputWidget(attrs={'type': 'number', 'min': '1000'}),
+        label='Интервал смены (мс)',
+        help_text='Интервал между слайдами в миллисекундах'
+    )
+    transition_duration = forms.IntegerField(
+        required=False,
+        initial=1000,
+        widget=UnfoldAdminTextInputWidget(attrs={'type': 'number', 'min': '100'}),
+        label='Длительность перехода (мс)',
+        help_text='Длительность анимации перехода в миллисекундах'
+    )
     
     # Поля для видео
     video_url = forms.URLField(
@@ -131,8 +189,7 @@ class UnifiedBackgroundContentForm(forms.ModelForm):
     
     class Meta:
         model = BackgroundContent
-        fields = ['content_type', 'is_active']
-        exclude = ['title']
+        fields = ['content_type', 'title', 'is_active']
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -159,6 +216,18 @@ class UnifiedBackgroundContentForm(forms.ModelForm):
                 existing = self.fields[fld].widget.attrs.get('class', '')
                 self.fields[fld].widget.attrs['class'] = (existing + ' slideshow-field content-type-field').strip()
         # ---------- КОНЕЦ ДОБАВЛЕННОГО БЛОКА ----------
+    
+    def save(self, commit=True):
+        """Переопределяем сохранение для корректной обработки всех полей"""
+        instance = super().save(commit=False)
+        
+        # Явно устанавливаем title из cleaned_data
+        if 'title' in self.cleaned_data:
+            instance.title = self.cleaned_data['title']
+            
+        if commit:
+            instance.save()
+        return instance
 
 
 
@@ -194,6 +263,13 @@ class SlideshowImageInlineForSlideshow(TabularInline):
         js = ('background_content/js/multiple_image_inline.js',)
 
 
+
+
+
+# Удаляем проблемный inline класс - он будет заменен на SlideshowInline
+# который правильно работает с промежуточной моделью Slideshow
+
+
 class SlideshowInline(StackedInline):
     """Inline для настроек слайдшоу"""
     model = Slideshow
@@ -201,7 +277,42 @@ class SlideshowInline(StackedInline):
     min_num = 1
     max_num = 1
     can_delete = False
-    fields = ['interval', 'transition_duration']
+    fields = ['interval', 'transition_duration', 'images_info']
+    readonly_fields = ['images_info']
+    
+    formfield_overrides = {
+        models.PositiveIntegerField: {'widget': UnfoldAdminTextInputWidget(attrs={'type': 'number', 'min': '0'})},
+    }
+    
+    def images_info(self, obj):
+        """Информация об изображениях слайдшоу с ссылкой на редактирование"""
+        if obj and obj.pk:
+            images_count = obj.images.count()
+            if images_count > 0:
+                admin_url = reverse('admin:background_content_slideshow_change', args=[obj.pk])
+                return format_html(
+                    '<div style="padding: 10px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #007cba;">'
+                    '<strong>Изображений в слайдшоу: {}</strong><br>'
+                    '<a href="{}" target="_blank" style="color: #007cba; text-decoration: none; font-weight: 500;">'
+                    '📸 Управление изображениями слайдшоу →'
+                    '</a>'
+                    '</div>',
+                    images_count,
+                    admin_url
+                )
+            else:
+                admin_url = reverse('admin:background_content_slideshow_change', args=[obj.pk])
+                return format_html(
+                    '<div style="padding: 10px; background: #fff3cd; border-radius: 4px; border-left: 4px solid #ffc107;">'
+                    '<strong>⚠️ Изображения не добавлены</strong><br>'
+                    '<a href="{}" target="_blank" style="color: #856404; text-decoration: none; font-weight: 500;">'
+                    '➕ Добавить изображения для слайдшоу →'
+                    '</a>'
+                    '</div>',
+                    admin_url
+                )
+        return "Сохраните объект для управления изображениями"
+    images_info.short_description = "Изображения слайдшоу"
 
 
 
@@ -261,10 +372,15 @@ class BackgroundContentAdmin(ModelAdmin):
             'background_content/js/background_content_admin.js',
         )
     
-    # Исправленные fieldsets - только поля модели BackgroundContent и функциональность single_image
+    # Исправленные fieldsets - только поля модели BackgroundContent
     fieldsets = (
         ('Основная информация', {
-            'fields': ('content_type', 'is_active')
+            'fields': ('content_type', 'title', 'is_active')
+        }),
+        ('Настройки изображения', {
+            'fields': ('image', 'width', 'height', 'scaling_mode'),
+            'classes': ('collapse', 'image-section'),
+            'description': 'Настройки для фонового изображения'
         }),
         ('Настройки видео', {
             'fields': ('video_url', 'platform', 'autoplay', 'muted', 'loop'),
@@ -275,16 +391,15 @@ class BackgroundContentAdmin(ModelAdmin):
     
     def get_inlines(self, request, obj):
         """Динамически определяем инлайны в зависимости от типа контента"""
-        # Если объект существует, используем его тип контента
+        inlines = []
+        
         if obj:
-            if obj.content_type == 'slideshow':
-                return [SlideshowInline]
-            elif obj.content_type == 'image':
-                return [BackgroundImageInline]
-        else:
-            # Для новых объектов показываем все инлайны, они будут скрыты/показаны через JavaScript
-            return [BackgroundImageInline, SlideshowInline]
-        return []
+            if obj.content_type == 'image':
+                inlines.append(BackgroundImageInline)
+            elif obj.content_type == 'slideshow':
+                inlines.append(SlideshowInline)
+        
+        return inlines
     
     def save_model(self, request, obj, form, change):
         """Переопределяем сохранение модели для обработки различных типов контента"""
@@ -297,13 +412,6 @@ class BackgroundContentAdmin(ModelAdmin):
             self._save_video_data(obj, form)
         elif obj.content_type == 'slideshow':
             self._save_slideshow_data(obj, form)
-            # Автоматически создаем Slideshow если его нет
-            if not hasattr(obj, 'slideshow'):
-                Slideshow.objects.create(
-                    background_content=obj,
-                    interval=form.cleaned_data.get('interval', 5000),
-                    transition_duration=form.cleaned_data.get('transition_duration', 1000)
-                )
     
     def _save_image_data(self, obj, form):
         """Сохраняет данные для фонового изображения"""

@@ -1,0 +1,99 @@
+# Docker Compose для разработки
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: guscha-nginx-dev
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./static_root:/var/www/react
+      - ./static_root:/var/www/static
+      - ./media:/var/www/media
+    depends_on:
+      - django
+    restart: unless-stopped
+
+  django:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: guscha-django-dev
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+      - ./static_root:/app/static_root
+      - ./media:/app/media
+    ports:
+      - "8000:8000"  # Expose for direct access in dev
+    env_file:
+      - .env
+    environment:
+      - DEBUG=True
+      - DJANGO_SETTINGS_MODULE=guscha_project.settings
+      - POSTGRES_DB=guscha_dev
+      - POSTGRES_USER=guscha
+      - POSTGRES_PASSWORD=guscha123
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+    depends_on:
+      - redis
+      - db
+    restart: unless-stopped
+    command: python manage.py runserver 0.0.0.0:8000
+
+  db:
+    image: postgres:15-alpine
+    container_name: guscha-db-dev
+    environment:
+      POSTGRES_DB: guscha_dev
+      POSTGRES_USER: guscha
+      POSTGRES_PASSWORD: guscha123
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: guscha-redis-dev
+    ports:
+      - "6379:6379"  # Expose for direct access in dev
+    volumes:
+      - redis_data_dev:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+  telegram-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile.telegram
+    container_name: guscha-telegram-bot-dev
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+      - ./telegram_bot/logs:/app/telegram_bot/logs
+    env_file:
+      - .env
+    environment:
+      - DEBUG=True
+      - DJANGO_SETTINGS_MODULE=guscha_project.settings
+      - POSTGRES_DB=guscha_dev
+      - POSTGRES_USER=guscha
+      - POSTGRES_PASSWORD=guscha123
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+    depends_on:
+      - django
+      - redis
+      - db
+    restart: unless-stopped
+
+volumes:
+  redis_data_dev:
+  postgres_data_dev:

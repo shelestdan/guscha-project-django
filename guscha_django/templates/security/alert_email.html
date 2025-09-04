@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚨 Алерт безопасности - {{ alert.type }}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+        .alert-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .alert-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0;
+            color: #d32f2f;
+        }
+        .alert-subtitle {
+            font-size: 16px;
+            color: #666;
+            margin: 5px 0 0 0;
+        }
+        .severity {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 10px 0;
+        }
+        .severity-low { background: #e8f5e8; color: #2e7d32; }
+        .severity-medium { background: #fff3e0; color: #f57c00; }
+        .severity-high { background: #ffebee; color: #d32f2f; }
+        .severity-critical { background: #f3e5f5; color: #7b1fa2; }
+        .details {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        .details h3 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .metric:last-child {
+            border-bottom: none;
+        }
+        .metric-label {
+            font-weight: 500;
+        }
+        .metric-value {
+            font-weight: bold;
+            color: #d32f2f;
+        }
+        .ip-list {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .ip-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-family: monospace;
+        }
+        .ip-item:last-child {
+            border-bottom: none;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+        .timestamp {
+            color: #999;
+            font-size: 12px;
+        }
+        .action-button {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .action-button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="alert-icon">🚨</div>
+            <h1 class="alert-title">Алерт безопасности</h1>
+            <p class="alert-subtitle">{{ site_name }}</p>
+            <span class="severity severity-{{ alert.severity }}">{{ alert.severity|upper }}</span>
+        </div>
+
+        <div class="details">
+            <h3>Детали алерта</h3>
+            <div class="metric">
+                <span class="metric-label">Тип:</span>
+                <span class="metric-value">{{ alert.type }}</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Время обнаружения:</span>
+                <span class="metric-value">{{ alert.timestamp }}</span>
+            </div>
+            
+            {% if alert.type == 'mass_registration' %}
+                <div class="metric">
+                    <span class="metric-label">Временное окно:</span>
+                    <span class="metric-value">{{ alert.window_minutes }} минут</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Порог:</span>
+                    <span class="metric-value">{{ alert.threshold }} регистраций</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Всего регистраций:</span>
+                    <span class="metric-value">{{ alert.total_registrations }}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Подозрительных IP:</span>
+                    <span class="metric-value">{{ alert.detected_ips|length }}</span>
+                </div>
+                
+                {% if alert.detected_ips %}
+                    <h4>Подозрительные IP адреса:</h4>
+                    <div class="ip-list">
+                        {% for ip_data in alert.detected_ips %}
+                            <div class="ip-item">
+                                {{ ip_data.ip_address }} ({{ ip_data.count }} регистраций)
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            
+            {% elif alert.type == 'suspicious_activity' %}
+                <div class="metric">
+                    <span class="metric-label">Высокорисковых отчетов:</span>
+                    <span class="metric-value">{{ alert.high_risk_reports }}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Временное окно:</span>
+                    <span class="metric-value">{{ alert.time_window }}</span>
+                </div>
+                
+                {% if alert.suspicious_ips %}
+                    <h4>Подозрительные IP адреса:</h4>
+                    <div class="ip-list">
+                        {% for ip_data in alert.suspicious_ips %}
+                            <div class="ip-item">
+                                {{ ip_data.ip_address }} ({{ ip_data.count }} отчетов, средний риск: {{ ip_data.avg_risk|floatformat:2 }})
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            
+            {% elif alert.type == 'automation_attack' %}
+                <div class="metric">
+                    <span class="metric-label">Отчетов с автоматизацией:</span>
+                    <span class="metric-value">{{ alert.automation_reports }}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Временное окно:</span>
+                    <span class="metric-value">{{ alert.time_window }}</span>
+                </div>
+                
+                {% if alert.sources %}
+                    <h4>Источники атаки:</h4>
+                    <div class="ip-list">
+                        {% for source in alert.sources %}
+                            <div class="ip-item">
+                                {{ source.ip_address }} ({{ source.count }} попыток)
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            
+            {% elif alert.type == 'threat_pattern' %}
+                <div class="metric">
+                    <span class="metric-label">Всего угроз:</span>
+                    <span class="metric-value">{{ alert.total_threats }}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Временное окно:</span>
+                    <span class="metric-value">{{ alert.time_window }}</span>
+                </div>
+                
+                {% if alert.threat_types %}
+                    <h4>Типы угроз:</h4>
+                    <div class="ip-list">
+                        {% for threat_type in alert.threat_types %}
+                            <div class="ip-item">
+                                {{ threat_type.threat_type }}: {{ threat_type.count }} случаев
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            
+            {% elif alert.type == 'security_trend_alert' %}
+                <div class="metric">
+                    <span class="metric-label">Тренд:</span>
+                    <span class="metric-value">{{ alert.trend }}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Недавняя активность:</span>
+                    <span class="metric-value">{{ alert.recent_avg|floatformat:1 }} отчетов/день</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Предыдущая активность:</span>
+                    <span class="metric-value">{{ alert.earlier_avg|floatformat:1 }} отчетов/день</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Коэффициент роста:</span>
+                    <span class="metric-value">{{ alert.increase_factor|floatformat:1 }}x</span>
+                </div>
+            
+            {% elif alert.type == 'daily_security_report' %}
+                <div class="metric">
+                    <span class="metric-label">Период:</span>
+                    <span class="metric-value">{{ alert.report.period }}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Всего отчетов:</span>
+                    <span class="metric-value">{{ alert.report.total_reports }}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Всего угроз:</span>
+                    <span class="metric-value">{{ alert.report.total_threats }}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Высокорисковых:</span>
+                    <span class="metric-value">{{ alert.report.high_risk_reports }}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Автоматизация:</span>
+                    <span class="metric-value">{{ alert.report.automation_detected }}</span>
+                </div>
+            {% endif %}
+        </div>
+
+        <div style="text-align: center;">
+            <a href="#" class="action-button">Перейти в панель администратора</a>
+        </div>
+
+        <div class="footer">
+            <p>Это автоматическое уведомление от системы безопасности {{ site_name }}.</p>
+            <p class="timestamp">Отправлено: {{ timestamp }}</p>
+            <p><small>Если вы получили это сообщение по ошибке, обратитесь к администратору системы.</small></p>
+        </div>
+    </div>
+</body>
+</html>

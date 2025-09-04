@@ -244,13 +244,10 @@ class ProductImageForm(forms.ModelForm):
         self.fields['sort_order'].required = False
     
     def clean(self):
-        logger.debug("ProductImageForm.clean вызван")
+        # logger.debug("ProductImageForm.clean вызван")
         cleaned_data = super().clean()
         image = cleaned_data.get('image')
         image_url = cleaned_data.get('image_url')
-        
-        logger.debug(f"Загруженное изображение: {image.name if image else 'Отсутствует'}")
-        logger.debug(f"URL изображения: {image_url if image_url else 'Отсутствует'}")
         
         # Проверяем, что указано либо изображение, либо URL
         if not image and not image_url:
@@ -260,7 +257,6 @@ class ProductImageForm(forms.ModelForm):
             )
         
         if image:
-            logger.debug(f"Размер загруженного файла: {image.size} байт")
             
             # Получаем content_type безопасно для разных типов объектов
             content_type = None
@@ -272,7 +268,7 @@ class ProductImageForm(forms.ModelForm):
             if not content_type:
                 content_type = 'unknown'
             
-            logger.debug(f"Тип содержимого: {content_type}")
+            # logger.debug(f"Тип содержимого: {content_type}")
             
             # Проверяем размер файла
             max_size = 10 * 1024 * 1024  # 10MB
@@ -298,7 +294,7 @@ class ProductImageForm(forms.ModelForm):
     
     def save(self, commit=True):
         """Сохранение формы изображения товара"""
-        logger.debug("ProductImageForm.save вызван")
+        # logger.debug("ProductImageForm.save вызван")
         
         instance = super().save(commit=False)
         

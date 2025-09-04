@@ -53,6 +53,10 @@ class AddressSerializer(serializers.ModelSerializer):
 class AddressCreateSerializer(serializers.ModelSerializer):
     """Сериализатор для создания адреса"""
     
+    # Делаем поля имени и фамилии необязательными, так как они могут браться из профиля
+    first_name = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    last_name = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    
     class Meta:
         model = Address
         fields = [
@@ -63,7 +67,44 @@ class AddressCreateSerializer(serializers.ModelSerializer):
     
     def validate(self, data):
         """Валидация при создании"""
-        return super().validate(data)
+        user = self.context['request'].user
+        
+        # Автоматически заполняем имя и фамилию из профиля пользователя, если они не переданы
+        if not data.get('first_name') and user.first_name:
+            data['first_name'] = user.first_name
+        if not data.get('last_name') and user.last_name:
+            data['last_name'] = user.last_name
+        
+        # Проверяем обязательные поля
+        required_fields = ['first_name', 'last_name', 'address_line1', 'city', 'postal_code']
+        for field in required_fields:
+            if not data.get(field):
+                if field in ['first_name', 'last_name']:
+                    raise serializers.ValidationError({field: f'Поле {field} обязательно. Заполните его в профиле пользователя или укажите в адресе.'})
+                else:
+                    raise serializers.ValidationError({field: f'{field} обязателен для заполнения'})
+        
+        # Проверяем уникальность адреса по умолчанию
+        if data.get('is_default', False):
+            address_type = data.get('address_type', 'shipping')
+            
+            existing_default = Address.objects.filter(
+                user=user,
+                address_type=address_type,
+                is_default=True
+            )
+            
+            if existing_default.exists():
+                raise serializers.ValidationError({
+                    'is_default': 'У вас уже есть адрес по умолчанию для этого типа'
+                })
+        
+        return data
+    
+    def create(self, validated_data):
+        """Создание нового адреса"""
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
 
 
 class AddressUpdateSerializer(serializers.ModelSerializer):

@@ -173,45 +173,12 @@
             // Валидация в зависимости от типа контента
             switch(contentType) {
                 case 'image':
-                    if (!$('#id_image').val() && !$('#id_image').attr('src')) {
-                        isValid = false;
-                        errorMessage = 'Необходимо выбрать изображение';
-                        $('#id_image').closest('.form-row').append('<div class="validation-error errorlist"><li>' + errorMessage + '</li></div>');
-                    }
+                    // Для типа 'image' валидация не требуется, так как изображение загружается через инлайн
+                    // или может быть добавлено позже
                     break;
                 case 'slideshow':
-                    // Проверяем, что в инлайне слайдшоу есть хотя бы одно изображение (новое или существующее)
-                    var hasSlide = false;
-
-                    // Новые выбранные файлы
-                    $('.slideshow-fieldset input[type="file"][id*="image"]').each(function() {
-                        if (this.files && this.files.length > 0) {
-                            hasSlide = true;
-                        }
-                    });
-
-                    // Существующие файлы (ссылки на уже загруженные изображения)
-                    if (!hasSlide) {
-                        $('.slideshow-fieldset a').each(function() {
-                            var href = $(this).attr('href') || '';
-                            if (href.match(/\.(png|jpe?g|gif|webp|bmp|tiff?)$/i)) {
-                                hasSlide = true;
-                            }
-                        });
-                    }
-
-                    if (!hasSlide) {
-                        isValid = false;
-                        errorMessage = 'Добавьте хотя бы одно изображение в слайдшоу';
-                        // Пытаемся показать ошибку в области инлайна
-                        var $inline = $('.slideshow-fieldset').first();
-                        if ($inline.length) {
-                            $inline.append('<div class="validation-error errorlist"><li>' + errorMessage + '</li></div>');
-                        } else {
-                            // fallback
-                            $('form').prepend('<div class="validation-error errorlist"><li>' + errorMessage + '</li></div>');
-                        }
-                    }
+                    // Для слайдшоу валидация изображений не требуется при создании,
+                    // так как изображения могут быть добавлены после сохранения
                     break;
                 case 'video':
                     // Упрощённая валидация: требуется только URL видео
@@ -226,9 +193,12 @@
             if (!isValid) {
                 e.preventDefault();
                 // Прокручиваем к первой ошибке
-                $('html, body').animate({
-                    scrollTop: $('.validation-error').first().offset().top - 100
-                }, 500);
+                var firstError = $('.validation-error').first();
+                if (firstError.length > 0) {
+                    $('html, body').animate({
+                        scrollTop: firstError.offset().top - 100
+                    }, 500);
+                }
             }
         });
     }

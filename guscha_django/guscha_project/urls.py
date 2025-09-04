@@ -19,13 +19,19 @@ from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
+from django.http import JsonResponse
 from apps.accounts.views import qr_trigger
 
+def health_check(request):
+    """Simple health check endpoint"""
+    return JsonResponse({'status': 'healthy', 'service': 'django'})
+
 urlpatterns = [
+    # Health check endpoint
+    path('health/', health_check, name='health_check'),
+    
     # Админка должна быть первой, чтобы не перехватывалась React-приложением
     path('admin/', admin.site.urls),
-    
-
     
     # API маршруты
     path('api/products/', include('apps.products.urls')),
@@ -35,6 +41,7 @@ urlpatterns = [
     path('api/addresses/', include('apps.addresses.urls')),
     path('api/collections/', include('apps.collections.urls')),
     path('api/background/', include('apps.background_content.urls')),
+    path('security/', include('apps.security.urls')),
     path('api/auth/', include('allauth.urls')),
 
     path('api/admin/', include('apps.core.urls')),  # API для админки

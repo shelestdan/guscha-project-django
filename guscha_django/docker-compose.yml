@@ -15,12 +15,15 @@ services:
     restart: unless-stopped
 
   django:
-    image: python:3.11-slim
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: guscha-django
-    command: bash -c "pip install -r requirements.txt && python start_django_server.py"
     volumes:
-      - .:/app
-    working_dir: /app
+      - ./logs:/app/logs
+      - ./static_root:/app/static_root
+      - ./media:/app/media
+      - ./db.sqlite3:/app/db.sqlite3
     env_file:
       - .env
     expose:
@@ -28,6 +31,11 @@ services:
     depends_on:
       - redis
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   redis:
     image: redis:7-alpine
@@ -42,18 +50,27 @@ services:
 
 
   telegram-bot:
-    image: python:3.11-slim
+    build:
+      context: .
+      dockerfile: Dockerfile.telegram
     container_name: guscha-telegram-bot
-    command: bash -c "pip install -r requirements.txt && python manage.py run_telegram_bot"
     volumes:
-      - .:/app
-    working_dir: /app
+      - ./logs:/app/logs
+      - ./telegram_bot/logs:/app/telegram_bot/logs
+      - ./db.sqlite3:/app/db.sqlite3
     env_file:
       - .env
     depends_on:
-      - django
-      - redis
+      django:
+        condition: service_healthy
+      redis:
+        condition: service_started
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "manage.py", "check"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
 
 volumes:
   redis_data:

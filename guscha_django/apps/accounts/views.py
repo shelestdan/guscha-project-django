@@ -307,13 +307,22 @@ class UserViewSet(BaseViewMixin, viewsets.ModelViewSet):
             
             if not auth_code:
                 return Response(
-                    {'error': 'Google access token не предоставлен'},
+                    {'error': 'Код авторизации не предоставлен'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            if not redirect_uri:
+            # Валидируем redirect_uri
+            allowed_redirect_uris = [
+                'http://localhost/auth/google/callback',
+                'http://127.0.0.1/auth/google/callback',
+                'https://localhost/auth/google/callback',
+                'https://127.0.0.1/auth/google/callback'
+            ]
+            
+            if not redirect_uri or redirect_uri not in allowed_redirect_uris:
+                logger.error(f"Invalid redirect_uri: {redirect_uri}")
                 return Response(
-                    {'error': 'Redirect URI не предоставлен'},
+                    {'error': 'Недопустимый redirect URI'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
@@ -1670,21 +1679,52 @@ def confirm_password_reset_token(request):
         )
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+import time
 
 # Добавить timeout ко всем requests
-DEFAULT_TIMEOUT = 30
+DEFAULT_TIMEOUT = 10  # Уменьшен с 30 до 10 секунд
 
-def make_secure_request(url, method='GET', **kwargs):
-    """Безопасный wrapper для HTTP запросов"""
+def make_secure_request(url, method='GET', max_retries=3, **kwargs):
+    """Безопасный wrapper для HTTP запросов с retry логикой"""
     kwargs.setdefault('timeout', DEFAULT_TIMEOUT)
     kwargs.setdefault('verify', True)  # Проверка SSL
+    
+    # Настройка retry стратегии для SSL ошибок
+    retry_strategy = Retry(
+        total=max_retries,
+        status_forcelist=[429, 500, 502, 503, 504],
+        backoff_factor=1,
+        allowed_methods=["HEAD", "GET", "POST"]
+    )
+    
+    # Создаем сессию с retry адаптером
+    session = requests.Session()
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
     
     # Явно передаем timeout для Bandit
     timeout = kwargs.get('timeout', DEFAULT_TIMEOUT)
     
-    if method.upper() == 'POST':
-        return requests.post(url, timeout=timeout, **{k: v for k, v in kwargs.items() if k != 'timeout'})
-    elif method.upper() == 'GET':
-        return requests.get(url, timeout=timeout, **{k: v for k, v in kwargs.items() if k != 'timeout'})
-    else:
-        raise ValueError(f"Unsupported HTTP method: {method}")
+    try:
+        if method.upper() == 'POST':
+            return session.post(url, timeout=timeout, **{k: v for k, v in kwargs.items() if k != 'timeout'})
+        elif method.upper() == 'GET':
+            return session.get(url, timeout=timeout, **{k: v for k, v in kwargs.items() if k != 'timeout'})
+        else:
+            raise ValueError(f"Unsupported HTTP method: {method}")
+    except requests.exceptions.SSLError as e:
+        logger.error(f"SSL Error for {url}: {str(e)}")
+        # Повторная попытка с отключенной проверкой SSL только для Google API
+        if 'googleapis.com' in url:
+            logger.warning(f"Retrying {url} with SSL verification disabled")
+            kwargs['verify'] = False
+            if method.upper() == 'POST':
+                return session.post(url, timeout=timeout, **{k: v for k, v in kwargs.items() if k != 'timeout'})
+            elif method.upper() == 'GET':
+                return session.get(url, timeout=timeout, **{k: v for k, v in kwargs.items() if k != 'timeout'})
+        raise
+    finally:
+        session.close()

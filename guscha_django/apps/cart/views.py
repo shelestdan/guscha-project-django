@@ -473,7 +473,8 @@ def remove_cart_item(request, item_id):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@csrf_exempt
+@permission_classes([])
 def add_preorder_to_cart(request):
     """Добавить предзаказ в корзину"""
     logger.info("Add preorder to cart called")
@@ -540,9 +541,23 @@ def add_preorder_to_cart(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
     
+    # Определяем пользователя или сессию
+    if request.user.is_authenticated:
+        cart_filter = {'user': request.user}
+        user_kwarg = {'user': request.user}
+    else:
+        session_id = request.headers.get('X-Session-ID')
+        if not session_id:
+            return Response(
+                {"error": "Session ID is required for anonymous users"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        cart_filter = {'session_id': session_id}
+        user_kwarg = {'session_id': session_id}
+    
     # Проверяем, есть ли уже этот предзаказ в корзине
     cart_item = CartItem.objects.filter(
-        user=request.user,
+        **cart_filter,
         preorder=preorder,
         preorder_size=size
     ).first()
@@ -576,7 +591,7 @@ def add_preorder_to_cart(request):
         # Создаем новый элемент корзины без резервирования
         # Резервирование будет создано только при оформлении заказа
         cart_item = CartItem.objects.create(
-            user=request.user,
+            **user_kwarg,
             preorder=preorder,
             quantity=quantity,
             preorder_size=size,
