@@ -67,7 +67,9 @@ INSTALLED_APPS = [
     # 'crispy_tailwind',  # Временно отключено для отладки
     # 'import_export',  # Временно отключено для отладки
     'djmoney',  # Django Money для работы с валютами
-    'axes',  # Защита от brute force атак
+    'defender',  # Защита от brute force атак
+    'django_ratelimit',  # Ограничение частоты запросов
+    'honeypot',  # Защита от ботов
     
     # Google OAuth
     'allauth',
@@ -89,7 +91,6 @@ INSTALLED_APPS = [
     'apps.addresses.apps.AddressesConfig',
     'apps.collections.apps.CollectionsConfig',
     'apps.background_content.apps.BackgroundContentConfig',
-    'apps.security.apps.SecurityConfig',
     'telegram_bot',
 
 ]
@@ -127,7 +128,7 @@ else:
         'apps.core.middleware.csrf_exempt.TelegramCSRFExemptMiddleware',  # CSRF exempt for Telegram
         'django.middleware.csrf.CsrfViewMiddleware',
         'django.contrib.auth.middleware.AuthenticationMiddleware',
-        'axes.middleware.AxesMiddleware',
+        'defender.middleware.FailedLoginMiddleware',
         'simple_history.middleware.HistoryRequestMiddleware',  # Middleware для simple_history
         'django.contrib.messages.middleware.MessageMiddleware',
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -246,6 +247,17 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Django Sites Framework
 SITE_ID = 1
 
+# Cache configuration
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': os.getenv('REDIS_URL', 'redis://redis:6379/1'),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
+
 # Telegram Bot Settings
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '')
 TELEGRAM_BOT_USERNAME = os.getenv('TELEGRAM_BOT_USERNAME', 'GuschaBot')
@@ -285,6 +297,17 @@ ACCOUNT_USER_MODEL_EMAIL_FIELD = 'email'
 
 # Пользовательская модель аутентификации
 AUTH_USER_MODEL = 'accounts.User'
+
+# Настройки dj-rest-auth
+REST_USE_JWT = True
+JWT_AUTH_COOKIE = 'jwt-auth'
+JWT_AUTH_REFRESH_COOKIE = 'jwt-refresh'
+REST_AUTH_SERIALIZERS = {
+    'USER_DETAILS_SERIALIZER': 'apps.accounts.serializers.UserSerializer',
+}
+REST_AUTH_REGISTER_SERIALIZERS = {
+    'REGISTER_SERIALIZER': 'apps.accounts.serializers.CustomRegisterSerializer',
+}
 
 # Настройки Django REST Framework
 REST_FRAMEWORK = {
@@ -679,7 +702,6 @@ SECURE_HSTS_PRELOAD = True
 
 # Authentication backends
 AUTHENTICATION_BACKENDS = (
-    'axes.backends.AxesStandaloneBackend',  # Django Axes для защиты от brute force
     'django.contrib.auth.backends.ModelBackend',  # Default backend
     'guardian.backends.ObjectPermissionBackend',  # Guardian backend для объектных разрешений
     'allauth.account.auth_backends.AuthenticationBackend',  # Allauth backend
@@ -1014,13 +1036,40 @@ else:
     CSP_FONT_SRC = ("'self'", "https://fonts.gstatic.com")
     CSP_CONNECT_SRC = ("'self'", "https://accounts.google.com", "https://apis.google.com")
     CSP_FRAME_SRC = ("'self'", "https://accounts.google.com")
-    CSP_MEDIA_SRC = ("'self'",)
-    CSP_OBJECT_SRC = ("'none'",)
-    CSP_BASE_URI = ("'self'",)
-    CSP_FORM_ACTION = ("'self'",)
 
-# Настройки Django Axes (защита от brute force)
-AXES_FAILURE_LIMIT = 5
-AXES_COOLOFF_TIME = 1  # час
-AXES_RESET_ON_SUCCESS = True
+# Настройки Django Defender
+DEFENDER_REDIS_URL = os.getenv('REDIS_URL', 'redis://redis:6379/1')
+DEFENDER_LOGIN_FAILURE_LIMIT = 5
+DEFENDER_COOLOFF_TIME = 300  # 5 минут
+DEFENDER_LOCKOUT_TEMPLATE = 'defender/lockout.html'
+DEFENDER_STORE_ACCESS_ATTEMPTS = True
+DEFENDER_USE_CELERY = False  # Отключаем Celery, так как он не установлен
+DEFENDER_LOCKOUT_URL = '/api/auth/lockout/'
+DEFENDER_REVERSE_PROXY_HEADER = 'HTTP_X_FORWARDED_FOR'
+
+# Дополнительные CSP настройки
+CSP_MEDIA_SRC = ("'self'",)
+CSP_OBJECT_SRC = ("'none'",)
+CSP_BASE_URI = ("'self'",)
+CSP_FORM_ACTION = ("'self'",)
+
+# Настройки Django Axes (защита от brute force) - УСТАРЕЛО, используем defender
+# AXES_FAILURE_LIMIT = 5
+# AXES_COOLOFF_TIME = 1  # час
+# AXES_RESET_ON_SUCCESS = True
+
+# Настройки Django Ratelimit
+RATELIMIT_ENABLE = True
+RATELIMIT_USE_CACHE = 'default'
+RATELIMIT_VIEW = 'django_ratelimit.views.ratelimited'
+
+# Кастомные настройки для разных типов запросов
+API_RATELIMIT_RATE = '100/h'  # 100 запросов в час для API
+AUTH_RATELIMIT_RATE = '10/m'  # 10 попыток входа в минуту
+REGISTRATION_RATELIMIT_RATE = '5/h'  # 5 регистраций в час с одного IP
+
+# Настройки Django Honeypot
+HONEYPOT_FIELD_NAME = 'email_confirm'  # Имя поля-ловушки
+HONEYPOT_VALUE = ''  # Значение поля-ловушки (должно быть пустым)
+HONEYPOT_VERIFIER = 'honeypot.decorators.verify_honeypot_value'
 AXES_ENABLE_ADMIN = True

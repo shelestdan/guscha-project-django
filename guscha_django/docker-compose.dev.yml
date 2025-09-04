@@ -21,7 +21,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: development
     container_name: guscha-django-dev
     volumes:
       - .:/app

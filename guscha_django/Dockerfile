@@ -27,8 +27,6 @@ COPY telegram_bot/ ./telegram_bot/
 COPY templates/ ./templates/
 COPY static/ ./static/
 COPY start_django_server.py .
-COPY test_security_monitoring.py .
-COPY security_audit.py .
 
 # Убеждаемся, что static_root и logs существуют
 RUN mkdir -p /app/static_root /app/logs /app/telegram_bot/logs

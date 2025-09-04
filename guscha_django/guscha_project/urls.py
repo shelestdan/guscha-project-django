@@ -41,8 +41,10 @@ urlpatterns = [
     path('api/addresses/', include('apps.addresses.urls')),
     path('api/collections/', include('apps.collections.urls')),
     path('api/background/', include('apps.background_content.urls')),
-    path('security/', include('apps.security.urls')),
-    path('api/auth/', include('allauth.urls')),
+    # path('security/', include('apps.security.urls')),  # Удалено - заменено на django-allauth + dj-rest-auth
+    path('api/auth/', include('dj_rest_auth.urls')),
+    path('api/auth/registration/', include('dj_rest_auth.registration.urls')),
+    path('api/auth/social/', include('allauth.urls')),
 
     path('api/admin/', include('apps.core.urls')),  # API для админки
     
