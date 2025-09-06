@@ -14,11 +14,15 @@ class AccountsConfig(AppConfig):
     def ready(self):
         """Инициализация приложения при запуске Django."""
         try:
+            # Импорт admin.py для регистрации моделей в админке
+            from . import admin
+            logger.info("Admin модуль успешно импортирован")
+            
             # Временно отключаем импорт сигналов для диагностики
             # from . import signals
             logger.info("Приложение accounts успешно инициализировано (без сигналов)")
         except ImportError as e:
-            logger.warning(f"Не удалось импортировать сигналы: {e}")
+            logger.warning(f"Не удалось импортировать модули: {e}")
         except Exception as e:
             logger.error(f"Ошибка при инициализации приложения accounts: {e}")
             

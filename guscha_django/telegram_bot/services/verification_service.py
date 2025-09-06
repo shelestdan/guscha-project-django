@@ -36,37 +36,39 @@ class VerificationService:
             if verification_id:
                 logger.info(f"Поиск verification_code для ID: {verification_id}, is_login: {is_login}")
                 
-                # Сначала пытаемся найти QR-код по qr_id (только если это не login)
-                if not is_login:
-                    qr_code = await self.qr_repo.get_by_qr_id(verification_id)
-                    if qr_code and qr_code.verification_code:
-                        verification_code = qr_code.verification_code
-                        logger.info(f"Найден QR-код: {qr_code.qr_id}")
-                
-                # Если QR-код не найден, ищем обычным способом
-                if not verification_code:
-                    if is_login:
-                        # Для login ищем среди активных кодов входа
-                        logger.info(f"Поиск login кода среди активных кодов")
-                        active_login_codes = await self.verification_repo.get_active_login_codes()
-                        for code in active_login_codes:
-                            if await self.verification_repo.check_code_match(code, verification_id):
-                                verification_code = code
-                                logger.info(f"Найден login код: {code.id}")
-                                break
-                    else:
-                        # Для register параметров сначала пытаемся найти по ID записи
+                if is_login:
+                    # Для login ищем среди активных кодов входа
+                    logger.info(f"Поиск login кода среди активных кодов")
+                    active_login_codes = await self.verification_repo.get_active_login_codes()
+                    for code in active_login_codes:
+                        if await self.verification_repo.check_code_match(code, verification_id):
+                            verification_code = code
+                            logger.info(f"Найден login код: {code.id}")
+                            break
+                else:
+                    # Для register параметров сначала пытаемся найти по ID записи (если числовой)
+                    if verification_id.isdigit():
                         logger.info(f"Поиск кода верификации по ID записи: {verification_id}")
                         verification_code = await self.verification_repo.get_by_id(verification_id)
                         
                         if verification_code:
                             logger.info(f"Найден код по ID записи: {verification_code.id}, тип: {verification_code.verification_type}")
-                        else:
-                            # Если не найден по ID, пытаемся найти по коду
-                            logger.info(f"Код не найден по ID, ищем по коду: {verification_id}")
-                            verification_code = await self.verification_repo.get_by_code(verification_id)
-                            if verification_code:
-                                logger.info(f"Найден код по коду: {verification_code.id}, тип: {verification_code.verification_type}")
+                    else:
+                        # Если ID не числовой, пытаемся найти QR-код по qr_id (UUID)
+                        try:
+                            qr_code = await self.qr_repo.get_by_qr_id(verification_id)
+                            if qr_code and qr_code.verification_code:
+                                verification_code = qr_code.verification_code
+                                logger.info(f"Найден QR-код: {qr_code.qr_id}")
+                        except Exception as e:
+                            logger.warning(f"Ошибка поиска QR-кода по ID {verification_id}: {e}")
+                    
+                    # Если не найден по ID или QR, пытаемся найти по коду
+                    if not verification_code:
+                        logger.info(f"Код не найден по ID/QR, ищем по коду: {verification_id}")
+                        verification_code = await self.verification_repo.get_by_code(verification_id)
+                        if verification_code:
+                            logger.info(f"Найден код по коду: {verification_code.id}, тип: {verification_code.verification_type}")
             
             # Если не найден по ID, ищем по chat_id
             if not verification_code:

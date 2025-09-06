@@ -134,7 +134,8 @@ class RateLimiter:
 RATE_LIMITS = {
     # Authentication endpoints - /api/accounts/
     'auth_login': {'rate': '5/min', 'burst': 10},  # POST /api/accounts/login/
-    'auth_register': {'rate': '3/min', 'burst': 5},  # POST /api/accounts/register/
+    'auth_register': {'rate': '10/min', 'burst': 20},  # POST /api/accounts/register/
+    'user_create': {'rate': '10/min', 'burst': 20},  # POST /api/accounts/users/ (регистрация)
     'password_reset': {'rate': '3/min', 'burst': 5},  # POST /api/accounts/password/reset/
     'password_change': {'rate': '5/min', 'burst': 8},  # POST /api/accounts/password/change/
     'jwt_token': {'rate': '10/min', 'burst': 15},  # POST /api/accounts/token/
@@ -172,6 +173,12 @@ RATE_LIMITS = {
     # IP-based ограничения для Telegram (предотвращение обхода через разные номера)
     'telegram_ip_phone_limit': {'rate': '5/hour', 'burst': 8},  # Максимум 5 разных номеров с одного IP за час
     'telegram_ip_attempts': {'rate': '20/hour', 'burst': 30},   # Общий лимит попыток с одного IP
+    
+    # Product and catalog endpoints - higher limits for browsing
+    'products_list': {'rate': '500/min', 'burst': 800},     # GET /api/products/products/
+    'products_preorders': {'rate': '500/min', 'burst': 800}, # GET /api/products/preorders/
+    'cart_items': {'rate': '500/min', 'burst': 800},        # GET /api/cart/items/
+    'background_active': {'rate': '1200/min', 'burst': 2000}, # GET /api/background/active/
     
     # General API endpoints
     'api_general': {'rate': '100/min', 'burst': 150},
@@ -365,6 +372,8 @@ def get_endpoint_rate_limit(request_path: str, request_method: str) -> Optional[
         return 'auth_login'
     elif '/api/accounts/register/' in path and method == 'POST':
         return 'auth_register'
+    elif '/api/accounts/users/' in path and method == 'POST':
+        return 'user_create'
     elif '/api/accounts/password/reset/' in path and method == 'POST':
         return 'password_reset'
     elif '/api/accounts/password/change/' in path and method == 'POST':
@@ -391,7 +400,9 @@ def get_endpoint_rate_limit(request_path: str, request_method: str) -> Optional[
     
     # Cart endpoints
     elif '/api/cart/' in path:
-        if '/add/' in path and method == 'POST':
+        if '/items/' in path and method == 'GET':
+            return 'cart_items'
+        elif '/add/' in path and method == 'POST':
             return 'cart_add'
         elif '/update/' in path and method in ['PUT', 'PATCH']:
             return 'cart_update'
@@ -399,6 +410,18 @@ def get_endpoint_rate_limit(request_path: str, request_method: str) -> Optional[
             return 'cart_clear'
         elif '/create-reservations/' in path and method == 'POST':
             return 'cart_reservations'
+    
+    # Products endpoints
+    elif '/api/products/' in path:
+        if '/products/' in path and method == 'GET':
+            return 'products_list'
+        elif '/preorders/' in path and method == 'GET':
+            return 'products_preorders'
+    
+    # Background endpoints
+    elif '/api/background/' in path:
+        if '/active/' in path and method == 'GET':
+            return 'background_active'
     
     # Address endpoints
     elif '/api/addresses/' in path:

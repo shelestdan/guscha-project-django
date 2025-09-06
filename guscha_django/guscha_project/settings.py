@@ -17,7 +17,6 @@ from pathlib import Path
 from dotenv import load_dotenv
 from str2bool import str2bool
 from django.templatetags.static import static
-from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -82,6 +81,13 @@ INSTALLED_APPS = [
     'dj_rest_auth.registration',
 
     
+    # Система резервного копирования
+    'dbbackup',  # Django Database Backup
+    'django_otp',  # Двухфакторная аутентификация
+    'django_otp.plugins.otp_totp',  # TOTP плагин для OTP
+    'django_otp.plugins.otp_static',  # Статические токены для OTP
+    'apps.backup_system',
+    
     # Приложения проекта
     'apps.products.apps.ProductsConfig',
     'apps.accounts.apps.AccountsConfig',
@@ -119,7 +125,7 @@ else:
         'django.middleware.security.SecurityMiddleware',
         'csp.middleware.CSPMiddleware',
         'django.contrib.sessions.middleware.SessionMiddleware',
-        # 'corsheaders.middleware.CorsMiddleware',  # Временно отключено для тестов
+        'corsheaders.middleware.CorsMiddleware',  # CORS middleware для frontend-backend взаимодействия
         'apps.core.middleware.SecurityMonitoringMiddleware',  # Security monitoring
         'apps.core.middleware.SecurityMetricsMiddleware',  # Security metrics
         'apps.core.middleware.RateLimitBypassMiddleware',  # Before rate limiting
@@ -780,32 +786,32 @@ UNFOLD = {
                     {
                         "title": _("Дашборд"),
                         "icon": "dashboard",  # Иконка Material Design
-                        "link": reverse_lazy("admin:index"),
+                        "link": "/admin/",
                     },
                     {
                         "title": _("Пользователи"),
                         "icon": "people",
-                        "link": reverse_lazy("admin:accounts_user_changelist"),
+                        "link": "/admin/accounts/user/",
                     },
                     {
                         "title": _("Товары"),
                         "icon": "inventory",
-                        "link": reverse_lazy("admin:products_product_changelist"),
+                        "link": "/admin/products/product/",
                     },
                     {
                         "title": _("Предзаказы"),
                         "icon": "schedule",
-                        "link": reverse_lazy("admin:products_preorder_changelist"),
+                        "link": "/admin/products/preorder/",
                     },
                     {
                         "title": _("Заказы"),
                         "icon": "shopping_cart",
-                        "link": reverse_lazy("admin:orders_order_changelist"),
+                        "link": "/admin/orders/order/",
                     },
                     {
                         "title": _("Резервирования"),
                         "icon": "bookmark",
-                        "link": reverse_lazy("admin:cart_reservation_changelist"),
+                        "link": "/admin/cart/reservation/",
                     },
                     {
                          "title": _("Фоновый контент"),
@@ -815,29 +821,29 @@ UNFOLD = {
                     {
                         "title": _("Коллекции"),
                         "icon": "collections",
-                        "link": reverse_lazy("admin:collections_collection_changelist"),
+                        "link": "/admin/collections/collection/",
                     },
                 ],
             },
         ],
     },
-    "TABS": [
-        {
-            "models": [
-                "accounts.user",
-            ],
-            "items": [
-                {
-                    "title": _("Пользователи"),
-                    "link": reverse_lazy("admin:accounts_user_changelist"),
-                },
-                {
-                    "title": _("Группы"),
-                    "link": reverse_lazy("admin:auth_group_changelist"),
-                },
-            ],
-        },
-    ],
+    # "TABS": [
+    #     {
+    #         "models": [
+    #             "accounts.user",
+    #         ],
+    #         "items": [
+    #             {
+    #                 "title": _("Пользователи"),
+    #                 "link": reverse_lazy("admin:accounts_user_changelist"),
+    #             },
+    #             {
+    #                 "title": _("Группы"),
+    #                 "link": reverse_lazy("admin:auth_group_changelist"),
+    #             },
+    #         ],
+    #     },
+    # ],
 }
 
 # Функции обратного вызова для Unfold
@@ -1078,3 +1084,106 @@ HONEYPOT_FIELD_NAME = 'email_confirm'  # Имя поля-ловушки
 HONEYPOT_VALUE = ''  # Значение поля-ловушки (должно быть пустым)
 HONEYPOT_VERIFIER = 'honeypot.decorators.verify_honeypot_value'
 AXES_ENABLE_ADMIN = True
+
+# ============================================================================
+# DJANGO-DBBACKUP SETTINGS
+# ============================================================================
+
+# Основные настройки резервного копирования
+DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
+DBBACKUP_STORAGE_OPTIONS = {
+    'location': BASE_DIR / 'backups',
+}
+
+# Настройки для медиа-файлов
+DBBACKUP_MEDIA_STORAGE = DBBACKUP_STORAGE
+DBBACKUP_MEDIA_STORAGE_OPTIONS = DBBACKUP_STORAGE_OPTIONS
+
+# Шифрование резервных копий
+DBBACKUP_GPG_RECIPIENT = os.environ.get('BACKUP_GPG_RECIPIENT', '')
+DBBACKUP_GPG_ALWAYS_TRUST = True
+
+# Очистка старых резервных копий
+DBBACKUP_CLEANUP_KEEP = 30  # Хранить 30 последних копий
+DBBACKUP_CLEANUP_KEEP_MEDIA = 30
+
+# Настройки сжатия
+DBBACKUP_COMPRESS = True
+DBBACKUP_COMPRESS_MEDIA = True
+
+# Настройки для облачного хранения (AWS S3)
+if os.environ.get('AWS_ACCESS_KEY_ID'):
+    DBBACKUP_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    DBBACKUP_STORAGE_OPTIONS = {
+        'access_key': os.environ.get('AWS_ACCESS_KEY_ID'),
+        'secret_key': os.environ.get('AWS_SECRET_ACCESS_KEY'),
+        'bucket_name': os.environ.get('AWS_BACKUP_BUCKET_NAME', 'guscha-backups'),
+        'default_acl': 'private',
+        'location': 'database/',
+    }
+    
+    DBBACKUP_MEDIA_STORAGE = DBBACKUP_STORAGE
+    DBBACKUP_MEDIA_STORAGE_OPTIONS = {
+        'access_key': os.environ.get('AWS_ACCESS_KEY_ID'),
+        'secret_key': os.environ.get('AWS_SECRET_ACCESS_KEY'),
+        'bucket_name': os.environ.get('AWS_BACKUP_BUCKET_NAME', 'guscha-backups'),
+        'default_acl': 'private',
+        'location': 'media/',
+    }
+
+# ============================================================================
+# DJANGO-OTP SETTINGS (Двухфакторная аутентификация)
+# ============================================================================
+
+# Настройки OTP
+OTP_TOTP_ISSUER = 'Guscha Backup System'
+OTP_LOGIN_URL = '/admin/login/'
+
+# Добавляем OTP middleware для админки
+if not any('django_otp.middleware.OTPMiddleware' in str(middleware) for middleware in MIDDLEWARE):
+    MIDDLEWARE.append('django_otp.middleware.OTPMiddleware')
+
+# ============================================================================
+# CELERY SETTINGS (для планирования резервного копирования)
+# ============================================================================
+
+# Настройки Celery
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://redis:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://redis:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+
+# Настройки планировщика задач
+CELERY_BEAT_SCHEDULE = {
+    'daily-database-backup': {
+        'task': 'backup_system.tasks.create_database_backup',
+        'schedule': 86400.0,  # Каждые 24 часа
+    },
+    'weekly-media-backup': {
+        'task': 'backup_system.tasks.create_media_backup',
+        'schedule': 604800.0,  # Каждые 7 дней
+    },
+    'monthly-cleanup': {
+        'task': 'backup_system.tasks.cleanup_old_backups',
+        'schedule': 2592000.0,  # Каждые 30 дней
+    },
+}
+
+# ============================================================================
+# BACKUP SYSTEM CUSTOM SETTINGS
+# ============================================================================
+
+# Настройки безопасности для резервного копирования
+BACKUP_REQUIRE_2FA = True  # Требовать 2FA для доступа к резервным копиям
+BACKUP_ALLOWED_IPS = []  # Разрешенные IP для операций резервного копирования
+BACKUP_LOG_LEVEL = 'INFO'
+
+# Настройки уведомлений
+BACKUP_EMAIL_NOTIFICATIONS = True
+BACKUP_NOTIFICATION_EMAILS = [DEFAULT_FROM_EMAIL]
+
+# Настройки мониторинга
+BACKUP_HEALTH_CHECK_URL = os.environ.get('BACKUP_HEALTH_CHECK_URL', '')
+BACKUP_METRICS_ENABLED = True

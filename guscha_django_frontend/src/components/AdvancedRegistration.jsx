@@ -118,7 +118,8 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
           lowercase: false,
           number: false,
           special: false,
-          noSpaces: true
+          noSpaces: true,
+          noPersonalInfo: true
         }
       };
     }
@@ -134,8 +135,30 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
       lowercase: /[a-z]/.test(password),
       number: /\d/.test(password),
       special: /[!@#$%^&*()_\-+,.?":{}|<>]/.test(password),
-      noSpaces: !/\s/.test(password)
+      noSpaces: !/\s/.test(password),
+      noPersonalInfo: true
     };
+
+    // Проверка на содержание личной информации
+    const passwordLower = password.toLowerCase();
+    const emailLower = formData.email.toLowerCase();
+    const firstNameLower = formData.firstName.toLowerCase();
+    const lastNameLower = formData.lastName.toLowerCase();
+
+    if (emailLower && passwordLower.includes(emailLower)) {
+      errors.push('Пароль не должен содержать email');
+      checks.noPersonalInfo = false;
+    }
+    
+    if (firstNameLower && firstNameLower.length >= 3 && passwordLower.includes(firstNameLower)) {
+      errors.push('Пароль не должен содержать имя');
+      checks.noPersonalInfo = false;
+    }
+    
+    if (lastNameLower && lastNameLower.length >= 3 && passwordLower.includes(lastNameLower)) {
+      errors.push('Пароль не должен содержать фамилию');
+      checks.noPersonalInfo = false;
+    }
 
     // Минимальная длина
     if (!checks.length) {
@@ -254,9 +277,9 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
   // Проверка валидности всей формы
   useEffect(() => {
     const allFieldsValid = Object.values(validation).every(field => field.isValid);
-    // Проверяем все поля кроме termsAccepted (это boolean)
+    // Проверяем все поля кроме termsAccepted (это boolean) и honeypot полей
     const textFieldsFilled = Object.entries(formData)
-      .filter(([key]) => key !== 'termsAccepted')
+      .filter(([key]) => key !== 'termsAccepted' && key !== 'website' && key !== 'company' && key !== 'address')
       .every(([_key, value]) => value.trim() !== '');
     const termsAccepted = formData.termsAccepted;
     const noServerErrors = !serverErrors.email && !serverErrors.phone && !serverErrors.general;
@@ -467,6 +490,10 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
           <div className={`requirement ${validation.checks?.noSpaces ? 'met' : ''}`}>
             {validation.checks?.noSpaces ? <FiCheck /> : <FiX />}
             <span>Без пробелов</span>
+          </div>
+          <div className={`requirement ${validation.checks?.noPersonalInfo ? 'met' : ''}`}>
+            {validation.checks?.noPersonalInfo ? <FiCheck /> : <FiX />}
+            <span>Без личных данных</span>
           </div>
         </div>
       </div>

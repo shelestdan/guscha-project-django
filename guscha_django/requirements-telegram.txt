@@ -1,0 +1,64 @@
+Django>=5.2,<5.3
+django-filter
+djangorestframework
+django-cors-headers
+psycopg2-binary
+str2bool
+Pillow
+python-slugify
+python-dotenv
+requests
+urllib3
+requests
+cryptography
+bcrypt
+pyjwt
+pyotp
+markupsafe
+itsdangerous
+blinker
+
+structlog
+
+# Добавляем библиотеки для безопасности
+django-guardian
+django-security
+django-ratelimit
+django-recaptcha
+django-csp==3.8
+django-defender==0.9.8
+django-honeypot
+django-redis
+pip-audit
+
+# Django Unfold - современная админка
+django-unfold
+
+# История изменений моделей
+django-simple-history
+
+# WSGI сервер для продакшена
+gunicorn
+
+# Google OAuth
+django-allauth[socialaccount]
+dj-rest-auth[with_social]
+
+# Двухфакторная аутентификация
+django-otp
+
+# Дополнительные библиотеки для графиков и дашборда
+django-crispy-forms
+crispy-tailwind
+django-import-export
+django-money
+
+# Telegram Bot
+python-telegram-bot
+
+# Phone number validation
+pytz
+phonenumbers
+
+# JWT Authentication
+djangorestframework-simplejwt

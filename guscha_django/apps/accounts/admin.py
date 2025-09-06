@@ -33,7 +33,7 @@ from .models import (
     TelegramVerificationCode
 )
 
-User = get_user_model()
+# User = get_user_model()  # Убираем переопределение - используем импортированную модель
 
 
 class TelegramVerificationCodeInline(TabularInline):
@@ -76,9 +76,14 @@ class TelegramVerificationCodeInline(TabularInline):
     status_display.short_description = 'Статус'
 
 
+print("Регистрируем модель User в админке...")
+print(f"User модель: {User}")
+print(f"admin.site: {admin.site}")
+
 @admin.register(User)
-class UserAdmin(ModelAdmin):
+class UserAdmin(BaseUserAdmin):
     """Админка пользователей с Django Unfold"""
+    print("UserAdmin класс создан")
     
     # Основные настройки отображения
     list_display = (
@@ -112,7 +117,7 @@ class UserAdmin(ModelAdmin):
     # Группировка полей в табы
     fieldsets = (
         ('Основная информация', {
-            'fields': ('email', 'first_name', 'last_name'),
+            'fields': ('email', 'password', 'first_name', 'last_name'),
             'classes': ('tab',)
         }),
         ('Контактная информация', {
@@ -137,6 +142,18 @@ class UserAdmin(ModelAdmin):
             'fields': ('last_login', 'date_joined'),
             'classes': ('tab',)
         })
+    )
+    
+    # Поля для создания нового пользователя
+    add_fieldsets = (
+        ('Основная информация', {
+            'classes': ('wide',),
+            'fields': ('email', 'password1', 'password2', 'first_name', 'last_name'),
+        }),
+        ('Права доступа', {
+            'classes': ('wide',),
+            'fields': ('is_active', 'is_staff', 'is_superuser'),
+        }),
     )
     
     # Кастомные методы отображения

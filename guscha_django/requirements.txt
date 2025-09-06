@@ -44,6 +44,12 @@ gunicorn
 django-allauth[socialaccount]
 dj-rest-auth[with_social]
 
+# Система резервного копирования
+django-dbbackup
+boto3  # для AWS S3 интеграции
+celery  # для планирования задач
+django-otp  # для двухфакторной аутентификации
+
 # Дополнительные библиотеки для графиков и дашборда
 django-crispy-forms
 crispy-tailwind

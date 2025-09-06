@@ -47,6 +47,7 @@ urlpatterns = [
     path('api/auth/social/', include('allauth.urls')),
 
     path('api/admin/', include('apps.core.urls')),  # API для админки
+    path('api/backup/', include('apps.backup_system.urls')),  # Система резервного копирования
     
     # Server-Sent Events (закомментировано - пакет не установлен)
     # path('events/', include('django_eventstream.urls')),

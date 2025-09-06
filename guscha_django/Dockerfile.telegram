@@ -1,7 +1,24 @@
-FROM python:3.11-slim
+# Оптимизированный Dockerfile для Telegram бота
+# Многоступенчатая сборка для минимального размера образа
 
-# Установка системных зависимостей
-RUN apt-get update && apt-get install -y \
+# Стадия сборки
+FROM python:3.11.6-slim as builder
+
+# Метаданные образа
+LABEL maintainer="guscha@example.com" \
+      version="1.0" \
+      description="Telegram bot service with optimized Docker build" \
+      org.opencontainers.image.source="https://github.com/guscha/django-app" \
+      service="telegram-bot"
+
+# Переменные окружения для оптимизации Python
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Установка системных зависимостей в одном слое
+RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     default-libmysqlclient-dev \
     pkg-config \
@@ -11,27 +28,64 @@ RUN apt-get update && apt-get install -y \
 # Обновление pip
 RUN pip install --upgrade pip
 
+# Создание виртуального окружения
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Копирование и установка зависимостей
+COPY requirements-telegram.txt /tmp/
+RUN pip install --no-cache-dir -r /tmp/requirements-telegram.txt
+
+# Продакшн стадия
+FROM python:3.11.6-slim as production
+
+# Метаданные для продакшн образа
+LABEL stage="production"
+
+# Переменные окружения
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PATH="/opt/venv/bin:$PATH" \
+    APP_HOME=/app
+
+# Установка только runtime зависимостей (минимальный набор для бота)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    default-libmysqlclient-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Создание непривилегированного пользователя
+RUN groupadd --gid 1000 app \
+    && useradd --uid 1000 --gid app --shell /bin/bash --create-home app
+
+# Копирование виртуального окружения из стадии сборки
+COPY --from=builder /opt/venv /opt/venv
+
 # Установка рабочей директории
-WORKDIR /app
-
-# Копирование requirements и установка Python зависимостей
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Копирование необходимых файлов проекта
-COPY manage.py .
-COPY guscha_project/ ./guscha_project/
-COPY apps/ ./apps/
-COPY telegram_bot/ ./telegram_bot/
-COPY templates/ ./templates/
+WORKDIR $APP_HOME
 
 # Создание необходимых директорий для логов
-RUN mkdir -p /app/logs /app/telegram_bot/logs
+RUN mkdir -p $APP_HOME/logs $APP_HOME/telegram_bot/logs \
+    && chown -R app:app $APP_HOME
 
-# Создание пользователя для безопасности
-RUN useradd --create-home --shell /bin/bash app \
-    && chown -R app:app /app
+# Переключение на непривилегированного пользователя
 USER app
+
+# Копирование файлов проекта (оптимизированный порядок для кэширования)
+# Копируем только необходимые для бота файлы
+COPY --chown=app:app manage.py $APP_HOME/
+COPY --chown=app:app guscha_project/ $APP_HOME/guscha_project/
+COPY --chown=app:app apps/ $APP_HOME/apps/
+COPY --chown=app:app telegram_bot/ $APP_HOME/telegram_bot/
+# Исключаем templates и static файлы - они не нужны для бота
+
+# Устанавливаем переменную окружения для настроек Telegram бота
+ENV DJANGO_SETTINGS_MODULE=guscha_project.settings_telegram
+
+# Healthcheck для мониторинга состояния бота
+HEALTHCHECK --interval=60s --timeout=10s --start-period=10s --retries=3 \
+    CMD python -c "import os; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'guscha_project.settings_telegram'); import django; django.setup(); from telegram_bot.models import TelegramUser; print('Bot health check passed')" || exit 1
 
 # Команда для запуска Telegram бота
 CMD ["python", "manage.py", "run_telegram_bot"]
