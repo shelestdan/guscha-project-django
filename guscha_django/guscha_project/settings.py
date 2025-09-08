@@ -88,6 +88,10 @@ INSTALLED_APPS = [
     'django_otp.plugins.otp_static',  # Статические токены для OTP
     'apps.backup_system',
     
+    # Оптимизация производительности
+    'silk',  # Профилирование и мониторинг SQL запросов
+    'cachalot',  # Автоматическое кэширование ORM запросов
+    
     # Приложения проекта
     'apps.products.apps.ProductsConfig',
     'apps.accounts.apps.AccountsConfig',
@@ -121,8 +125,9 @@ if 'test' in sys.argv:
         'allauth.account.middleware.AccountMiddleware',
     ]
 elif DEBUG:
-    # Упрощенная middleware цепочка для разработки
+    # Middleware для разработки
     MIDDLEWARE = [
+        'silk.middleware.SilkyMiddleware',  # Django Silk профилирование (должен быть первым)
         'django.middleware.security.SecurityMiddleware',
         'django.contrib.sessions.middleware.SessionMiddleware',
         'corsheaders.middleware.CorsMiddleware',  # CORS middleware для frontend-backend взаимодействия
@@ -1230,3 +1235,53 @@ BACKUP_NOTIFICATION_EMAILS = [DEFAULT_FROM_EMAIL]
 # Настройки мониторинга
 BACKUP_HEALTH_CHECK_URL = os.environ.get('BACKUP_HEALTH_CHECK_URL', '')
 BACKUP_METRICS_ENABLED = True
+
+# ===== НАСТРОЙКИ ОПТИМИЗАЦИИ ПРОИЗВОДИТЕЛЬНОСТИ =====
+
+# Django Silk - профилирование и мониторинг
+if DEBUG:
+    SILKY_PYTHON_PROFILER = True
+    SILKY_PYTHON_PROFILER_BINARY = True
+    SILKY_PYTHON_PROFILER_RESULT_PATH = BASE_DIR / 'profiles'
+    SILKY_INTERCEPT_PERCENT = 50  # Профилировать 50% запросов
+    SILKY_MAX_REQUEST_BODY_SIZE = 1024  # 1KB
+    SILKY_MAX_RESPONSE_BODY_SIZE = 1024  # 1KB
+    SILKY_MAX_RECORDED_REQUESTS = 10000
+    SILKY_MAX_RECORDED_REQUESTS_CHECK_PERCENT = 10
+    SILKY_ANALYZE_QUERIES = True
+    # SILKY_DYNAMIC_PROFILING отключено до создания ProductListView
+    # SILKY_DYNAMIC_PROFILING = [{
+    #     'module': 'apps.products.views',
+    #     'function': 'ProductListView.get_queryset'
+    # }]
+
+# Django Cachalot - автоматическое кэширование ORM
+CACHALOT_ENABLED = True
+CACHALOT_CACHE = 'default'  # Использовать Redis кэш
+CACHALOT_TIMEOUT = 3600  # 1 час TTL для кэша
+CACHALOT_CACHE_RANDOM = True  # Добавлять случайность к TTL
+CACHALOT_INVALIDATE_RAW = True  # Инвалидировать при raw SQL
+CACHALOT_ONLY_CACHABLE_TABLES = [
+    'products_product',
+    'products_category', 
+    'collections_collection',
+    'accounts_user',
+]
+
+# Настройки Redis кэша с TTL
+CACHES['default']['TIMEOUT'] = 3600  # 1 час по умолчанию
+CACHES['default']['OPTIONS']['CONNECTION_POOL_KWARGS'] = {
+    'max_connections': 50,
+    'retry_on_timeout': True,
+}
+
+# Database connection pooling для sync_to_async операций
+DATABASE_ROUTERS = []
+DATABASES['default']['CONN_HEALTH_CHECKS'] = True
+# Удалены неподдерживаемые PostgreSQL параметры MAX_CONNS и MIN_CONNS
+# Connection pooling настраивается через CONN_MAX_AGE выше
+
+# Настройки для асинхронных операций Telegram bot
+ASYNC_DATABASE_TIMEOUT = 30  # Таймаут для async операций
+ASYNC_CONNECTION_MAX_AGE = 300  # 5 минут для async соединений
+ASYNC_DATABASE_POOL_SIZE = 10  # Размер пула для async операций

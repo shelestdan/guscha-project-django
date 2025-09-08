@@ -232,3 +232,108 @@ class CategoryRepository:
             )
         
         return all_descendants
+    
+    @staticmethod
+    def get_category_tree_with_products():
+        """
+        Получение дерева категорий с продуктами.
+        
+        Returns:
+            QuerySet: Дерево категорий с предзагруженными продуктами
+        """
+        return Category.objects.prefetch_related(
+            'products',
+            'children__products'
+        ).filter(parent__isnull=True)
+    
+    @staticmethod
+    def bulk_process_categories(chunk_size=1000):
+        """
+        Обработка категорий по частям для экономии памяти.
+        
+        Args:
+            chunk_size: Размер чанка для обработки
+            
+        Yields:
+            Category: Категории по одной
+        """
+        queryset = Category.objects.all().select_related('parent').order_by('id')
+        
+        # Используем iterator() для экономии памяти
+        for category in queryset.iterator(chunk_size=chunk_size):
+            yield category
+    
+    @staticmethod
+    def bulk_process_categories_with_products(chunk_size=500):
+        """
+        Обработка категорий с продуктами по частям.
+        
+        Args:
+            chunk_size: Размер чанка для обработки
+            
+        Yields:
+            Category: Категории с предзагруженными продуктами
+        """
+        queryset = Category.objects.all().select_related('parent').prefetch_related(
+            'products'
+        ).order_by('id')
+        
+        for category in queryset.iterator(chunk_size=chunk_size):
+            yield category
+    
+    @staticmethod
+    def bulk_update_categories_in_chunks(updates_data, chunk_size=500):
+        """
+        Массовое обновление категорий по частям.
+        
+        Args:
+            updates_data: Список кортежей (category_id, update_fields)
+            chunk_size: Размер чанка для обновления
+        """
+        from django.db import transaction
+        
+        # Разбиваем на чанки
+        for i in range(0, len(updates_data), chunk_size):
+            chunk = updates_data[i:i + chunk_size]
+            
+            with transaction.atomic():
+                categories_to_update = []
+                category_ids = [item[0] for item in chunk]
+                
+                # Получаем категории для обновления
+                categories = Category.objects.filter(id__in=category_ids)
+                
+                for category in categories:
+                    # Находим соответствующие данные для обновления
+                    for category_id, update_fields in chunk:
+                        if category.id == category_id:
+                            for field, value in update_fields.items():
+                                setattr(category, field, value)
+                            categories_to_update.append(category)
+                            break
+                
+                # Массовое обновление
+                if categories_to_update:
+                    Category.objects.bulk_update(
+                        categories_to_update, 
+                        list(update_fields.keys())
+                    )
+    
+    @staticmethod
+    def get_categories_for_export(chunk_size=2000):
+        """
+        Получение категорий для экспорта с минимальным использованием памяти.
+        
+        Args:
+            chunk_size: Размер чанка для обработки
+            
+        Yields:
+            Category: Категории для экспорта
+        """
+        queryset = Category.objects.all().select_related(
+            'parent'
+        ).order_by('id')
+        
+        # Используем iterator для больших объемов данных
+        for category in queryset.iterator(chunk_size=chunk_size):
+            yield category

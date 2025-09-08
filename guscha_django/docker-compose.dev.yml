@@ -103,7 +103,7 @@ services:
       options:
         max-size: "50m"
         max-file: "5"
-    command: python manage.py runserver 0.0.0.0:8000
+    command: sh -c "python manage.py collectstatic --noinput && python manage.py runserver 0.0.0.0:8000"
 
   db:
     image: postgres:15.4-alpine

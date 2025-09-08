@@ -24,7 +24,7 @@ class VerificationService:
     
     async def find_verification_code(
         self,
-        chat_id: str,
+        chat_id: Optional[str],
         verification_id: Optional[str] = None,
         is_login: bool = False
     ) -> Optional[TelegramVerificationCode]:
@@ -70,8 +70,8 @@ class VerificationService:
                         if verification_code:
                             logger.info(f"Найден код по коду: {verification_code.id}, тип: {verification_code.verification_type}")
             
-            # Если не найден по ID, ищем по chat_id
-            if not verification_code:
+            # Если не найден по ID, ищем по chat_id (только если chat_id не None)
+            if not verification_code and chat_id is not None:
                 logger.info(f"Код не найден по ID, ищем по chat_id: {chat_id}")
                 verification_code = await self.verification_repo.get_by_chat_id(chat_id)
                 if verification_code:
@@ -267,6 +267,33 @@ class VerificationService:
         except Exception as e:
             logger.error(f"Ошибка очистки истекших кодов: {e}")
             return 0
+    
+    async def get_by_chat_id(self, chat_id: str, only_active: bool = True) -> Optional[TelegramVerificationCode]:
+        """Получает код верификации по chat_id."""
+        try:
+            logger.info(f"Поиск кода верификации по chat_id: {chat_id}")
+            verification_code = await self.verification_repo.get_by_chat_id(chat_id)
+            
+            if verification_code and only_active:
+                # Проверяем, что код активен (не использован и не истек)
+                if verification_code.is_used:
+                    logger.info(f"Код {verification_code.id} уже использован")
+                    return None
+                    
+                if verification_code.expires_at and verification_code.expires_at <= timezone.now():
+                    logger.info(f"Код {verification_code.id} истек")
+                    return None
+            
+            if verification_code:
+                logger.info(f"Найден код верификации: {verification_code.id}, тип: {verification_code.verification_type}")
+            else:
+                logger.info(f"Код верификации не найден для chat_id: {chat_id}")
+                
+            return verification_code
+            
+        except Exception as e:
+            logger.error(f"Ошибка поиска кода по chat_id {chat_id}: {e}")
+            return None
     
     async def get_verification_stats(self) -> dict:
         """Получает статистику по кодам верификации."""

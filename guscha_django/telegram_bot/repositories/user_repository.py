@@ -6,12 +6,14 @@ from asgiref.sync import sync_to_async
 from apps.accounts.models import User
 from ..exceptions import DatabaseError, UserNotFoundError
 from ..utils.validators import PhoneValidator
+from ..utils.database_pool import async_db_operation, async_db_transaction, async_db_monitored
 
 
 class UserRepository:
     """Репозиторий для работы с пользователями."""
     
     @staticmethod
+    @async_db_monitored()
     async def get_by_id(user_id: int) -> Optional[User]:
         """Получает пользователя по ID."""
         try:
@@ -22,6 +24,7 @@ class UserRepository:
             raise DatabaseError(f"Ошибка получения пользователя по ID: {e}")
     
     @staticmethod
+    @async_db_monitored()
     async def get_by_phone(phone: str) -> Optional[User]:
         """Получает пользователя по номеру телефона."""
         try:
@@ -35,6 +38,7 @@ class UserRepository:
             raise DatabaseError(f"Ошибка получения пользователя по телефону: {e}")
     
     @staticmethod
+    @async_db_monitored()
     async def get_by_chat_id(chat_id: str) -> Optional[User]:
         """Получает пользователя по Telegram chat_id."""
         try:
@@ -45,6 +49,7 @@ class UserRepository:
             raise DatabaseError(f"Ошибка получения пользователя по chat_id: {e}")
     
     @staticmethod
+    @async_db_monitored()
     async def get_by_email(email: str) -> Optional[User]:
         """Получает пользователя по email."""
         try:
@@ -55,6 +60,7 @@ class UserRepository:
             raise DatabaseError(f"Ошибка получения пользователя по email: {e}")
     
     @staticmethod
+    @async_db_transaction()
     async def create_telegram_user(
         phone: str,
         chat_id: str,
@@ -122,8 +128,9 @@ class UserRepository:
         except Exception as e:
             raise DatabaseError(f"Ошибка создания пользователя через Telegram: {e}")
     
-    @staticmethod
+    @async_db_transaction()
     async def update_telegram_info(
+        self,
         user: User,
         chat_id: str,
         username: Optional[str] = None
@@ -137,8 +144,9 @@ class UserRepository:
         except Exception as e:
             raise DatabaseError(f"Ошибка обновления Telegram информации: {e}")
     
-    @staticmethod
+    @async_db_transaction()
     async def update_phone(
+        self,
         user: User,
         new_phone: str
     ) -> None:
@@ -152,7 +160,7 @@ class UserRepository:
             normalized_phone = validation_result.normalized_value
             
             # Проверяем, не занят ли номер другим пользователем
-            existing_user = await UserRepository.get_by_phone(normalized_phone)
+            existing_user = await self.get_by_phone(normalized_phone)
             if existing_user and existing_user.id != user.id:
                 raise ValueError("Номер телефона уже используется другим пользователем")
             
@@ -163,8 +171,9 @@ class UserRepository:
         except Exception as e:
             raise DatabaseError(f"Ошибка обновления номера телефона: {e}")
     
-    @staticmethod
+    @async_db_transaction()
     async def verify_telegram(
+        self,
         user: User
     ) -> None:
         """Помечает пользователя как верифицированного через Telegram."""
@@ -175,6 +184,7 @@ class UserRepository:
             raise DatabaseError(f"Ошибка верификации через Telegram: {e}")
     
     @staticmethod
+    @async_db_monitored()
     async def phone_exists(phone: str) -> bool:
         """Проверяет, существует ли пользователь с таким номером телефона."""
         try:
@@ -186,6 +196,7 @@ class UserRepository:
             raise DatabaseError(f"Ошибка проверки существования номера телефона: {e}")
     
     @staticmethod
+    @async_db_monitored()
     async def chat_id_exists(chat_id: str) -> bool:
         """Проверяет, существует ли пользователь с таким chat_id."""
         try:
@@ -196,6 +207,7 @@ class UserRepository:
             raise DatabaseError(f"Ошибка проверки существования chat_id: {e}")
     
     @staticmethod
+    @async_db_monitored()
     async def email_exists(email: str) -> bool:
         """Проверяет, существует ли пользователь с таким email."""
         try:

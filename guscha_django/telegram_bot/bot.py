@@ -215,17 +215,17 @@ class TelegramBot:
             
             # Команды
             self.application.add_handler(
-                CommandHandler("start", self.start_handler)
+                CommandHandler("start", self.start_handler.handle)
             )
             
             # Callback запросы
             self.application.add_handler(
-                CallbackQueryHandler(self.callback_handler)
+                CallbackQueryHandler(self.callback_handler.handle)
             )
             
             # Контакты
             self.application.add_handler(
-                MessageHandler(filters.CONTACT, self.contact_handler)
+                MessageHandler(filters.CONTACT, self.contact_handler.handle)
             )
             
             # Обработчик ошибок

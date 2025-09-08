@@ -8,6 +8,7 @@ from asgiref.sync import sync_to_async
 from apps.accounts.models import TelegramVerificationCode, User, PendingUserRegistration
 from ..exceptions import DatabaseError, VerificationCodeError
 from ..utils.validators import ValidationResult
+from ..utils.database_pool import async_db_operation, async_db_transaction, async_db_monitored
 
 
 class VerificationCodeRepository:
@@ -19,11 +20,9 @@ class VerificationCodeRepository:
         try:
             # Проверяем, является ли ID числовым (обычный ID записи)
             if verification_id.isdigit():
-                return await sync_to_async(
-                    TelegramVerificationCode.objects.filter(
-                        id=int(verification_id)
-                    ).select_related('user', 'pending_registration').first
-                )()
+                return await TelegramVerificationCode.objects.filter(
+                    id=int(verification_id)
+                ).select_related('user', 'pending_registration').afirst()
             else:
                 # Если ID не числовой, возвращаем None
                 # UUID должны обрабатываться через QRCodeRepository
@@ -35,13 +34,11 @@ class VerificationCodeRepository:
     async def get_by_code(code: str) -> Optional[TelegramVerificationCode]:
         """Получает код верификации по коду."""
         try:
-            return await sync_to_async(
-                TelegramVerificationCode.objects.filter(
-                    code=code,
-                    is_used=False,
-                    expires_at__gt=timezone.now()
-                ).select_related('user', 'pending_registration').first
-            )()
+            return await TelegramVerificationCode.objects.filter(
+                code=code,
+                is_used=False,
+                expires_at__gt=timezone.now()
+            ).select_related('user', 'pending_registration').afirst()
         except Exception as e:
             raise DatabaseError(f"Ошибка получения кода верификации по коду: {e}")
     
@@ -66,9 +63,7 @@ class VerificationCodeRepository:
                     expires_at__gt=timezone.now()
                 )
             
-            return await sync_to_async(
-                queryset.order_by('-created_at').first
-            )()
+            return await queryset.order_by('-created_at').afirst()
         except Exception as e:
             raise DatabaseError(f"Ошибка получения кода верификации по chat_id: {e}")
     
@@ -93,9 +88,7 @@ class VerificationCodeRepository:
                     expires_at__gt=timezone.now()
                 )
             
-            return await sync_to_async(
-                queryset.order_by('-created_at').first
-            )()
+            return await queryset.order_by('-created_at').afirst()
         except Exception as e:
             raise DatabaseError(f"Ошибка получения кода верификации по пользователю: {e}")
     
@@ -103,15 +96,12 @@ class VerificationCodeRepository:
     async def get_active_login_codes() -> List[TelegramVerificationCode]:
         """Получает все активные коды входа."""
         try:
-            return await sync_to_async(
-                list
-            )(
-                TelegramVerificationCode.objects.filter(
-                    verification_type='login',
-                    is_used=False,
-                    expires_at__gt=timezone.now()
-                ).select_related('user', 'pending_registration').order_by('-created_at')
-            )
+            queryset = TelegramVerificationCode.objects.filter(
+                verification_type='login',
+                is_used=False,
+                expires_at__gt=timezone.now()
+            ).select_related('user', 'pending_registration').order_by('-created_at')
+            return [code async for code in queryset]
         except Exception as e:
             raise DatabaseError(f"Ошибка получения активных кодов входа: {e}")
     
@@ -128,9 +118,7 @@ class VerificationCodeRepository:
         try:
             expires_at = timezone.now() + timedelta(minutes=expires_in_minutes)
             
-            verification_code = await sync_to_async(
-                TelegramVerificationCode.objects.create
-            )(
+            verification_code = await TelegramVerificationCode.objects.acreate(
                 verification_type=verification_type,
                 telegram_chat_id=chat_id,
                 user=user,
@@ -143,50 +131,49 @@ class VerificationCodeRepository:
         except Exception as e:
             raise DatabaseError(f"Ошибка создания кода верификации: {e}")
     
-    @staticmethod
     async def update_chat_id(
+        self,
         verification_code: TelegramVerificationCode,
         chat_id: str
     ) -> TelegramVerificationCode:
         """Обновляет chat_id для кода верификации."""
         try:
             verification_code.telegram_chat_id = chat_id
-            await sync_to_async(verification_code.save)()
+            await verification_code.asave()
             return verification_code
         except Exception as e:
             raise DatabaseError(f"Ошибка обновления chat_id: {e}")
     
-    @staticmethod
     async def update_phone(
+        self,
         verification_code: TelegramVerificationCode,
         phone: str
     ) -> TelegramVerificationCode:
         """Обновляет номер телефона для кода верификации."""
         try:
             verification_code.telegram_phone = phone
-            await sync_to_async(verification_code.save)()
+            await verification_code.asave()
             return verification_code
         except Exception as e:
             raise DatabaseError(f"Ошибка обновления номера телефона: {e}")
     
-    @staticmethod
-    async def mark_as_used(verification_code: TelegramVerificationCode) -> None:
+    async def mark_as_used(self, verification_code: TelegramVerificationCode) -> None:
         """Помечает код верификации как использованный."""
         try:
             verification_code.is_used = True
-            await sync_to_async(verification_code.save)()
+            await verification_code.asave()
         except Exception as e:
             raise DatabaseError(f"Ошибка пометки кода как использованного: {e}")
     
-    @staticmethod
     async def link_user(
+        self,
         verification_code: TelegramVerificationCode,
         user: User
     ) -> None:
         """Связывает код верификации с пользователем."""
         try:
             verification_code.user = user
-            await sync_to_async(verification_code.save)()
+            await verification_code.asave()
         except Exception as e:
             raise DatabaseError(f"Ошибка связывания кода с пользователем: {e}")
     
@@ -237,13 +224,11 @@ class VerificationCodeRepository:
         """Подсчитывает количество недавних попыток."""
         try:
             since = timezone.now() - timedelta(minutes=minutes)
-            return await sync_to_async(
-                TelegramVerificationCode.objects.filter(
-                    telegram_chat_id=chat_id,
-                    verification_type=verification_type,
-                    created_at__gte=since
-                ).count
-            )()
+            return await TelegramVerificationCode.objects.filter(
+                telegram_chat_id=chat_id,
+                verification_type=verification_type,
+                created_at__gte=since
+            ).acount()
         except Exception as e:
             raise DatabaseError(f"Ошибка подсчета недавних попыток: {e}")
     
@@ -254,8 +239,8 @@ class VerificationCodeRepository:
             expired_codes = TelegramVerificationCode.objects.filter(
                 expires_at__lt=timezone.now()
             )
-            count = await sync_to_async(expired_codes.count)()
-            await sync_to_async(expired_codes.delete)()
+            count = await expired_codes.acount()
+            await expired_codes.adelete()
             return count
         except Exception as e:
             raise DatabaseError(f"Ошибка очистки истекших кодов: {e}")

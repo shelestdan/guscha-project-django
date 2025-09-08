@@ -268,14 +268,11 @@ class CallbackHandler(BaseHandler):
             )
             
             # Привязываем пользователя к коду верификации
-            from ..repositories import VerificationCodeRepository
-            await VerificationCodeRepository.link_user(verification_code, user)
+            await self.verification_service.verification_repo.link_user(verification_code, user)
             await self.verification_service.mark_as_used(verification_code)
             
-            # Меняем тип на 'login' для корректной работы API входа
-            verification_code.verification_type = 'login'
-            from ..repositories import VerificationCodeRepository
-            await VerificationCodeRepository.update_chat_id(verification_code, chat_id)
+            # Обновляем chat_id для кода верификации
+            await self.verification_service.verification_repo.update_chat_id(verification_code, chat_id)
             
             # Отправляем сообщение об успешной регистрации
             success_text = (

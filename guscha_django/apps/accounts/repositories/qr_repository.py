@@ -236,6 +236,65 @@ class QRRepository:
         """Получение оптимизированного QuerySet для QR-кодов"""
         return QRCodeScan.objects.select_related('verification_code')
     
+    def bulk_process_qr_codes(self, chunk_size: int = 1000) -> models.QuerySet[QRCodeScan]:
+        """Обработка QR-кодов по частям для экономии памяти"""
+        queryset = QRCodeScan.objects.all().select_related('verification_code').order_by('id')
+        
+        # Используем iterator() для экономии памяти
+        for qr_code in queryset.iterator(chunk_size=chunk_size):
+            yield qr_code
+    
+    def bulk_process_scanned_qr_codes(self, chunk_size: int = 1000) -> models.QuerySet[QRCodeScan]:
+        """Обработка отсканированных QR-кодов по частям"""
+        queryset = QRCodeScan.objects.filter(
+            scanned_at__isnull=False
+        ).select_related('verification_code').order_by('id')
+        
+        for qr_code in queryset.iterator(chunk_size=chunk_size):
+            yield qr_code
+    
+    def bulk_update_qr_codes_in_chunks(self, updates_data: List[tuple], chunk_size: int = 500) -> None:
+        """Массовое обновление QR-кодов по частям"""
+        from django.db import transaction
+        
+        # Разбиваем на чанки
+        for i in range(0, len(updates_data), chunk_size):
+            chunk = updates_data[i:i + chunk_size]
+            
+            with transaction.atomic():
+                qr_codes_to_update = []
+                qr_ids = [item[0] for item in chunk]
+                
+                # Получаем QR-коды для обновления
+                qr_codes = QRCodeScan.objects.filter(id__in=qr_ids)
+                
+                for qr_code in qr_codes:
+                    # Находим соответствующие данные для обновления
+                    for qr_id, update_fields in chunk:
+                        if qr_code.id == qr_id:
+                            for field, value in update_fields.items():
+                                setattr(qr_code, field, value)
+                            qr_codes_to_update.append(qr_code)
+                            break
+                
+                # Массовое обновление
+                if qr_codes_to_update:
+                    QRCodeScan.objects.bulk_update(
+                        qr_codes_to_update, 
+                        list(update_fields.keys())
+                    )
+                    logger.info(f"Массово обновлено QR-кодов в чанке: {len(qr_codes_to_update)}")
+    
+    def get_qr_codes_for_export(self, chunk_size: int = 2000) -> models.QuerySet[QRCodeScan]:
+        """Получение QR-кодов для экспорта с минимальным использованием памяти"""
+        queryset = QRCodeScan.objects.all().select_related(
+            'verification_code'
+        ).order_by('id')
+        
+        # Используем iterator для больших объемов данных
+        for qr_code in queryset.iterator(chunk_size=chunk_size):
+            yield qr_code
+    
     def get_qr_conversion_funnel(self) -> Dict[str, Any]:
         """Получение воронки конверсии QR-кодов"""
         total = QRCodeScan.objects.count()

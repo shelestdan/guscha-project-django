@@ -49,6 +49,9 @@ urlpatterns = [
     path('api/admin/', include('apps.core.urls')),  # API для админки
     path('api/backup/', include('apps.backup_system.urls')),  # Система резервного копирования
     
+    # Django Silk профилирование (только в DEBUG режиме)
+    *([path('silk/', include('silk.urls', namespace='silk'))] if settings.DEBUG else []),
+    
     # Server-Sent Events (закомментировано - пакет не установлен)
     # path('events/', include('django_eventstream.urls')),
     

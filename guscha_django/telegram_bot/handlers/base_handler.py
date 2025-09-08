@@ -183,38 +183,44 @@ class BaseHandler(ABC):
     
 
     
-    async def _find_comprehensive_verification_code(self, identifier: str) -> Optional[object]:
-        """Находит активный код верификации по chat_id или verification_id.
-        
-        Args:
-            identifier: chat_id или verification_id для поиска
-            
-        Returns:
-            TelegramVerificationCode или None если не найден
-        """
+    async def _find_comprehensive_verification_code(
+        self, 
+        chat_id: str, 
+        verification_id: Optional[str] = None
+    ) -> Optional[object]:
+        """Комплексный поиск кода верификации по chat_id и verification_id."""
         try:
-            # Определяем, является ли identifier chat_id (обычно числовой)
-            # или verification_id (может быть строкой или числом)
-            
-            # Сначала пытаемся найти по chat_id
-            verification_code = await self.verification_service.find_verification_code(
-                chat_id=identifier,
-                verification_id=None,
-                is_login=False
+            # Сначала пытаемся найти по chat_id напрямую
+            verification_code = await self.verification_service.get_by_chat_id(
+                chat_id=chat_id,
+                only_active=True
             )
             
-            # Если не найден по chat_id, пытаемся найти по verification_id
-            if not verification_code:
+            if verification_code:
+                return verification_code
+            
+            # Если передан verification_id, ищем по нему с is_login=False
+            if verification_id:
                 verification_code = await self.verification_service.find_verification_code(
-                    chat_id="",  # Пустой chat_id для поиска только по ID
-                    verification_id=identifier,
+                    verification_id=verification_id,
+                    chat_id=chat_id,
                     is_login=False
+                )
+                
+                if verification_code:
+                    return verification_code
+                
+                # Если не найден, пытаемся найти по verification_id с is_login=True
+                verification_code = await self.verification_service.find_verification_code(
+                    verification_id=verification_id,
+                    chat_id=chat_id,
+                    is_login=True
                 )
             
             return verification_code
             
         except Exception as e:
-            self.logger.error(f"Ошибка при поиске кода верификации для {identifier}: {e}")
+            self.logger.error(f"Ошибка при поиске кода верификации: {e}")
             return None
 
     @abstractmethod

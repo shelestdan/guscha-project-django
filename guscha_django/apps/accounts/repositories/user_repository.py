@@ -302,6 +302,61 @@ class UserRepository:
         """Получение оптимизированного QuerySet для пользователей"""
         return User.objects.select_related().prefetch_related()
     
+    def bulk_process_users(self, chunk_size: int = 1000) -> models.QuerySet[User]:
+        """Обработка пользователей по частям для экономии памяти"""
+        queryset = User.objects.filter(is_active=True).order_by('id')
+        
+        # Используем iterator() для экономии памяти
+        for user in queryset.iterator(chunk_size=chunk_size):
+            yield user
+    
+    def bulk_process_all_users(self, chunk_size: int = 1000) -> models.QuerySet[User]:
+        """Обработка всех пользователей по частям"""
+        queryset = User.objects.all().order_by('id')
+        
+        for user in queryset.iterator(chunk_size=chunk_size):
+            yield user
+    
+    def bulk_update_users_in_chunks(self, updates_data: List[tuple], chunk_size: int = 500) -> None:
+        """Массовое обновление пользователей по частям"""
+        from django.db import transaction
+        
+        # Разбиваем на чанки
+        for i in range(0, len(updates_data), chunk_size):
+            chunk = updates_data[i:i + chunk_size]
+            
+            with transaction.atomic():
+                users_to_update = []
+                user_ids = [item[0] for item in chunk]
+                
+                # Получаем пользователей для обновления
+                users = User.objects.filter(id__in=user_ids)
+                
+                for user in users:
+                    # Находим соответствующие данные для обновления
+                    for user_id, update_fields in chunk:
+                        if user.id == user_id:
+                            for field, value in update_fields.items():
+                                setattr(user, field, value)
+                            users_to_update.append(user)
+                            break
+                
+                # Массовое обновление
+                if users_to_update:
+                    User.objects.bulk_update(
+                        users_to_update, 
+                        list(update_fields.keys())
+                    )
+                    logger.info(f"Массово обновлено пользователей в чанке: {len(users_to_update)}")
+    
+    def get_users_for_export(self, chunk_size: int = 2000) -> models.QuerySet[User]:
+        """Получение пользователей для экспорта с минимальным использованием памяти"""
+        queryset = User.objects.all().order_by('id')
+        
+        # Используем iterator для больших объемов данных
+        for user in queryset.iterator(chunk_size=chunk_size):
+            yield user
+    
     def exists_by_email(self, email: str) -> bool:
         """Проверка существования пользователя по email"""
         return User.objects.filter(email=email).exists()

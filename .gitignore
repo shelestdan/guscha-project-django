@@ -8,6 +8,11 @@ db.sqlite3
 db.sqlite3-journal
 media
 
+# Django static files and data
+guscha_django/static/
+guscha_django/static_root/
+guscha_django/data/
+
 # Flask
 instance/
 .webassets-cache

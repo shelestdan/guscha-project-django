@@ -6,34 +6,33 @@ from django.utils import timezone
 
 from apps.accounts.models import QRCodeScan, TelegramVerificationCode
 from ..exceptions import DatabaseError
+from ..utils.database_pool import async_db_operation, async_db_transaction, async_db_monitored
 
 
 class QRCodeRepository:
     """Репозиторий для работы с QR-кодами."""
     
     @staticmethod
+    @async_db_monitored()
     async def get_by_qr_id(qr_id: str) -> Optional[QRCodeScan]:
         """Получает QR-код по ID."""
         try:
-            return await sync_to_async(
-                QRCodeScan.objects.filter(
-                    qr_id=qr_id
-                ).select_related('verification_code').first
-            )()
+            return await QRCodeScan.objects.filter(
+                qr_id=qr_id
+            ).select_related('verification_code').afirst()
         except Exception as e:
             raise DatabaseError(f"Ошибка получения QR-кода по ID: {e}")
     
     @staticmethod
+    @async_db_monitored()
     async def get_by_verification_code(
         verification_code: TelegramVerificationCode
     ) -> Optional[QRCodeScan]:
         """Получает QR-код по коду верификации."""
         try:
-            return await sync_to_async(
-                QRCodeScan.objects.filter(
-                    verification_code=verification_code
-                ).first
-            )()
+            return await QRCodeScan.objects.filter(
+                verification_code=verification_code
+            ).afirst()
         except Exception as e:
             raise DatabaseError(f"Ошибка получения QR-кода по коду верификации: {e}")
     
@@ -41,14 +40,11 @@ class QRCodeRepository:
     async def get_active_qr_codes() -> List[QRCodeScan]:
         """Получает все активные QR-коды."""
         try:
-            return await sync_to_async(
-                list
-            )(
-                QRCodeScan.objects.filter(
-                    verification_code__is_used=False,
-                    verification_code__expires_at__gt=timezone.now()
-                ).select_related('verification_code').order_by('-created_at')
-            )
+            queryset = QRCodeScan.objects.filter(
+                verification_code__is_used=False,
+                verification_code__expires_at__gt=timezone.now()
+            ).select_related('verification_code').order_by('-created_at')
+            return [qr async for qr in queryset]
         except Exception as e:
             raise DatabaseError(f"Ошибка получения активных QR-кодов: {e}")
     
@@ -75,6 +71,7 @@ class QRCodeRepository:
             raise DatabaseError(f"Ошибка поиска соответствующего QR-кода: {e}")
     
     @staticmethod
+    @async_db_transaction()
     async def mark_bot_started(qr_code: QRCodeScan) -> None:
         """Отмечает запуск бота для QR-кода."""
         try:
@@ -94,20 +91,18 @@ class QRCodeRepository:
     async def get_qr_codes_by_chat_id(chat_id: str) -> List[QRCodeScan]:
         """Получает QR-коды по chat_id из связанного кода верификации."""
         try:
-            return await sync_to_async(
-                list
-            )(
-                QRCodeScan.objects.filter(
-                    verification_code__telegram_chat_id=chat_id,
-                    verification_code__verification_type='qr_registration',
-                    verification_code__is_used=False,
-                    verification_code__expires_at__gt=timezone.now()
-                ).select_related('verification_code').order_by('-created_at')
-            )
+            queryset = QRCodeScan.objects.filter(
+                verification_code__telegram_chat_id=chat_id,
+                verification_code__verification_type='qr_registration',
+                verification_code__is_used=False,
+                verification_code__expires_at__gt=timezone.now()
+            ).select_related('verification_code').order_by('-created_at')
+            return [qr async for qr in queryset]
         except Exception as e:
             raise DatabaseError(f"Ошибка получения QR-кодов по chat_id: {e}")
     
     @staticmethod
+    @async_db_transaction()
     async def cleanup_expired_qr_codes() -> int:
         """Удаляет QR-коды с истекшими кодами верификации."""
         try:
@@ -121,6 +116,7 @@ class QRCodeRepository:
             raise DatabaseError(f"Ошибка очистки истекших QR-кодов: {e}")
     
     @staticmethod
+    @async_db_monitored()
     async def get_qr_code_stats() -> dict:
         """Получает статистику по QR-кодам."""
         try:

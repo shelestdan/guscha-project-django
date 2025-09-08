@@ -63,9 +63,9 @@ class TelegramRepository:
                 verification_type=verification_type,
                 is_used=False
             )
-            # Проверяем каждый код с помощью verify_code
+            # Проверяем каждый код с помощью check_code_match
             for verification_code in codes:
-                if verification_code.verify_code(code):
+                if verification_code.check_code_match(code):
                     return verification_code
             return None
         except Exception as e:
@@ -87,9 +87,9 @@ class TelegramRepository:
                     is_used=False,
                     expires_at__gt=timezone.now()
                 )
-                # Проверяем каждый код с помощью verify_code
+                # Проверяем каждый код с помощью check_code_match
                 for verification_code in codes:
-                    if verification_code.verify_code(code):
+                    if verification_code.check_code_match(code):
                         return verification_code
                 return None
             else:
@@ -99,9 +99,9 @@ class TelegramRepository:
                     is_used=False,
                     expires_at__gt=timezone.now()
                 )
-                # Проверяем каждый код с помощью verify_code
+                # Проверяем каждый код с помощью check_code_match
                 for verification_code in codes:
-                    if verification_code.verify_code(code):
+                    if verification_code.check_code_match(code):
                         return verification_code
                 return None
         except Exception as e:
