@@ -109,7 +109,7 @@ class ProductSizeForm(forms.ModelForm):
     
     class Meta:
         model = ProductSize
-        fields = ['size_name', 'stock_quantity', 'max_quantity', 'limit', 'is_sold_out', 'is_active']
+        fields = ['size_name', 'stock_quantity', 'max_quantity', 'is_sold_out', 'is_active']
         widgets = {
             'size_name': UnfoldAdminTextInputWidget(attrs={
                 'placeholder': 'Например: S, M, L, XL'
@@ -121,12 +121,7 @@ class ProductSizeForm(forms.ModelForm):
             'max_quantity': UnfoldAdminTextInputWidget(attrs={
                 'type': 'number',
                 'min': '1',
-                'placeholder': 'Максимум в заказе'
-            }),
-            'limit': UnfoldAdminTextInputWidget(attrs={
-                'type': 'number',
-                'min': '1',
-                'placeholder': 'Ограничение корзины'
+                'placeholder': 'Лимит для заказа'
             })
         }
     
@@ -135,13 +130,11 @@ class ProductSizeForm(forms.ModelForm):
         self.fields['size_name'].label = 'Название размера'
         self.fields['stock_quantity'].label = 'Количество на складе'
         self.fields['max_quantity'].label = 'Лимит для заказа'
-        self.fields['limit'].label = 'Ограничение для корзины'
         self.fields['is_sold_out'].label = 'Распродано'
         self.fields['is_active'].label = 'Активен'
         
-        # Делаем max_quantity и limit необязательными
+        # Делаем max_quantity необязательным
         self.fields['max_quantity'].required = False
-        self.fields['limit'].required = False
 
 
 class PreorderSizeForm(forms.ModelForm):

@@ -154,10 +154,8 @@ class ProductSize(BaseModel):
                                 verbose_name='Метка размера')
     stock_quantity = models.IntegerField(default=0, verbose_name='Количество на складе')
     max_quantity = models.IntegerField(null=True, blank=True, 
-                                     verbose_name='Максимальное количество для заказа')
-    limit = models.IntegerField(null=True, blank=True, 
-                               verbose_name='Ограничение для корзины',
-                               help_text='Максимальное количество данного размера, которое можно добавить в корзину')
+                                     verbose_name='Лимит для заказа',
+                                     help_text='Максимальное количество данного размера, которое можно добавить в заказ')
     is_active = models.BooleanField(default=True, verbose_name='Активен')
     is_sold_out = models.BooleanField(default=False, verbose_name='Распродано')
     sort_order = models.IntegerField(default=0, verbose_name='Порядок сортировки')

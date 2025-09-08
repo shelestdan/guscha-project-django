@@ -139,11 +139,11 @@ def add_to_cart(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
     
-    # Проверяем лимит для корзины
-    if size and size.limit is not None:
-        if quantity > size.limit:
+    # Проверяем максимальное количество для корзины
+    if size and size.max_quantity is not None:
+        if quantity > size.max_quantity:
             return Response(
-                {"error": f"Максимальное количество для корзины: {size.limit}"},
+                {"error": f"Максимальное количество для корзины: {size.max_quantity}"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -169,10 +169,10 @@ def add_to_cart(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Проверяем лимит для корзины
-        if size and size.limit is not None and new_quantity > size.limit:
+        # Проверяем максимальное количество для корзины
+        if size and size.max_quantity is not None and new_quantity > size.max_quantity:
             return Response(
-                {"error": f"Максимальное количество для корзины: {size.limit}. В корзине уже {cart_item.quantity} шт."},
+                {"error": f"Максимальное количество для корзины: {size.max_quantity}. В корзине уже {cart_item.quantity} шт."},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -385,11 +385,11 @@ def update_cart_item(request, item_id):
                 status=status.HTTP_400_BAD_REQUEST
             )
     
-    # Проверяем лимит для корзины для товара
-    if cart_item.product_size and cart_item.product_size.limit is not None:
-        if quantity > cart_item.product_size.limit:
+    # Проверяем максимальное количество для корзины для товара
+    if cart_item.product_size and cart_item.product_size.max_quantity is not None:
+        if quantity > cart_item.product_size.max_quantity:
             return Response(
-                {"error": f"Максимальное количество для корзины: {cart_item.product_size.limit}"},
+                {"error": f"Максимальное количество для корзины: {cart_item.product_size.max_quantity}"},
                 status=status.HTTP_400_BAD_REQUEST
             )
     

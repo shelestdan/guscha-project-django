@@ -8,6 +8,18 @@ const DetailPage = ({ item, itemType }) => {
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState(null);
 
+  // Получаем максимальное доступное количество для выбранного размера
+  const getMaxAvailableQuantity = () => {
+    if (!selectedSize) return MAX_QUANTITY;
+    
+    // Если установлено ограничение max_quantity для размера, используем его
+    if (selectedSize.max_quantity && selectedSize.max_quantity > 0) {
+      return Math.min(selectedSize.max_quantity, MAX_QUANTITY);
+    }
+    
+    return MAX_QUANTITY;
+  };
+
   useEffect(() => {
     if (item && item.sizes && item.sizes.length > 0) {
       const firstAvailable = item.sizes.find(s => s.is_available && s.stock_quantity > 0) || item.sizes[0];
@@ -65,17 +77,24 @@ const DetailPage = ({ item, itemType }) => {
             <div className="pdp-control-group">
               <span className="pdp-control-label">QUANTITY</span>
               <div className="pdp-picker">
-                {Array.from({ length: MAX_QUANTITY }, (_, i) => i + 1).map(q => (
-                  <button
-                    key={q}
-                    className={`pdp-picker-btn quantity${quantity === q ? ' selected' : ''}`}
-                    onClick={() => handleQuantityClick(q)}
-                    disabled={selectedSize && (!selectedSize.is_available || selectedSize.stock_quantity < q)}
-                    title={`Выбрать количество: ${q}`}
-                  >
-                    {q}
-                  </button>
-                ))}
+                {Array.from({ length: MAX_QUANTITY }, (_, i) => i + 1).map(q => {
+                  const maxAvailable = getMaxAvailableQuantity();
+                  const isDisabledByStock = selectedSize && (!selectedSize.is_available || selectedSize.stock_quantity < q);
+                  const isDisabledByLimit = q > maxAvailable;
+                  const isDisabled = isDisabledByStock || isDisabledByLimit;
+                  
+                  return (
+                    <button
+                      key={q}
+                      className={`pdp-picker-btn quantity${quantity === q ? ' selected' : ''}${isDisabled ? ' disabled' : ''}`}
+                      onClick={() => !isDisabled && handleQuantityClick(q)}
+                      disabled={isDisabled}
+                      title={`Выбрать количество: ${q}`}
+                    >
+                      {q}
+                    </button>
+                  );
+                })}
               </div>
             </div>
             <AddButton

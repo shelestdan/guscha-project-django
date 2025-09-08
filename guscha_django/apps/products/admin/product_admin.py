@@ -42,10 +42,10 @@ class ProductSizeAdmin(admin.ModelAdmin):
     Предоставляет отдельный интерфейс для управления размерами товаров.
     Каждый размер имеет свой собственный запас и настройки.
     """
-    list_display = ['product', 'size_name', 'size_label', 'stock_quantity', 'limit', 'is_active', 'is_sold_out']
+    list_display = ['product', 'size_name', 'size_label', 'stock_quantity', 'max_quantity', 'is_active', 'is_sold_out']
     list_filter = ['size_name', 'is_active', 'is_sold_out', 'product__category']
     search_fields = ['product__name', 'size_name', 'size_label']
-    list_editable = ['stock_quantity', 'limit', 'is_active', 'is_sold_out']
+    list_editable = ['stock_quantity', 'max_quantity', 'is_active', 'is_sold_out']
     autocomplete_fields = ['product']
     
     fieldsets = (
@@ -54,8 +54,8 @@ class ProductSizeAdmin(admin.ModelAdmin):
             'description': 'Базовые данные размера товара'
         }),
         (_('Управление запасами'), {
-            'fields': ('stock_quantity', 'limit'),
-            'description': 'Количество на складе и ограничения корзины'
+            'fields': ('stock_quantity', 'max_quantity'),
+            'description': 'Количество на складе и лимит для заказа'
         }),
         (_('Статусы и сортировка'), {
             'fields': ('is_active', 'is_sold_out', 'sort_order'),
@@ -121,7 +121,7 @@ class ProductSizeInline(BaseSizeInline):
     min_num = 0  # Минимальное количество форм
     max_num = 20  # Максимальное количество форм
     tab = True  # Отображать в отдельной вкладке
-    fields = ['size_name', 'stock_quantity', 'max_quantity', 'limit', 'is_active', 'is_sold_out']
+    fields = ['size_name', 'stock_quantity', 'max_quantity', 'is_active', 'is_sold_out']
     show_change_link = True  # Показывать ссылку для редактирования
     can_delete = True  # Разрешить удаление
     

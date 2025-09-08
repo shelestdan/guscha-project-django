@@ -10,9 +10,7 @@ input:focus {
 .field-name input:hover,
 .field-name input:focus,
 .field-quantity input:hover,
-.field-quantity input:focus,
-.field-limit input:hover,
-.field-limit input:focus {
+.field-quantity input:focus {
     background-color: transparent !important;
 }
 
@@ -97,8 +95,6 @@ input:focus,
 .field-name input:focus,
 .field-quantity input:hover,
 .field-quantity input:focus,
-.field-limit input:hover,
-.field-limit input:focus,
 .vTextField:hover,
 .vTextField:focus,
 .vIntegerField:hover,

@@ -120,7 +120,24 @@ if 'test' in sys.argv:
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
         'allauth.account.middleware.AccountMiddleware',
     ]
+elif DEBUG:
+    # Упрощенная middleware цепочка для разработки
+    MIDDLEWARE = [
+        'django.middleware.security.SecurityMiddleware',
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'corsheaders.middleware.CorsMiddleware',  # CORS middleware для frontend-backend взаимодействия
+        'django.middleware.common.CommonMiddleware',
+        'apps.core.middleware.csrf_exempt.TelegramCSRFExemptMiddleware',  # CSRF exempt for Telegram
+        'apps.core.middleware.csrf_debug.CSRFDebugMiddleware',  # CSRF debug logging
+        'django.middleware.csrf.CsrfViewMiddleware',
+        'django.contrib.auth.middleware.AuthenticationMiddleware',
+        'simple_history.middleware.HistoryRequestMiddleware',  # Middleware для simple_history
+        'django.contrib.messages.middleware.MessageMiddleware',
+        'django.middleware.clickjacking.XFrameOptionsMiddleware',
+        'allauth.account.middleware.AccountMiddleware',
+    ]
 else:
+    # Полная middleware цепочка для продакшена
     MIDDLEWARE = [
         'django.middleware.security.SecurityMiddleware',
         'csp.middleware.CSPMiddleware',
@@ -422,9 +439,21 @@ CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS if not DEBUG else [
     "http://localhost",
     "http://127.0.0.1:80",
     "http://127.0.0.1",
+    # Контейнерные адреса
+    "http://nginx:80",
+    "http://nginx",
+    "http://frontend:3000",
+    "http://frontend",
+    "http://backend:8000",
+    "http://backend",
+    # Docker внутренние сети
+    "http://172.17.0.1",
+    "http://172.18.0.1",
+    "http://172.19.0.1",
+    "http://172.20.0.1",
 ]
 CSRF_COOKIE_NAME = 'csrftoken'
-CSRF_HEADER_NAME = 'HTTP_X_CSRF_TOKEN'
+CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
 
 # Дополнительные настройки CORS для разработки
 CORS_ALLOWED_ORIGINS = [
@@ -461,7 +490,7 @@ if not DEBUG:
 
 # Исправление 6: Настройки сессий для e-commerce
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-SESSION_COOKIE_AGE = 1800  # 30 минут для e-commerce безопасности
+SESSION_COOKIE_AGE = 7200  # 2 часа для улучшения пользовательского опыта
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'  # Защита от CSRF
 CSRF_COOKIE_SAMESITE = 'Lax'
@@ -526,6 +555,14 @@ LOGGING = {
             'backupCount': 10,
             'formatter': 'audit',
         },
+        'csrf_debug_file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': str(LOGS_DIR / 'csrf_debug.log'),
+            'maxBytes': 5 * 1024 * 1024,  # 5MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+            'filters': ['require_debug_true'],
+        },
         'threat_file': {
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': str(LOGS_DIR / 'threats.log'),
@@ -581,6 +618,12 @@ LOGGING = {
         'security.authorization': {
             'handlers': ['security_file', 'audit_file'],
             'level': 'INFO',
+            'propagate': False,
+        },
+        # CSRF debug logger (only in DEBUG mode)
+        'csrf_debug': {
+            'handlers': ['csrf_debug_file'],
+            'level': 'DEBUG',
             'propagate': False,
         },
         'security.ratelimit': {

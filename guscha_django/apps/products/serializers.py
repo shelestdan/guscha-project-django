@@ -80,8 +80,8 @@ class ProductSizeSerializer(BaseSerializer):
     class Meta:
         model = ProductSize
         fields = [
-            'id', 'size_name', 'size_label', 'stock_quantity',
-            'limit', 'is_active', 'is_sold_out', 'is_available'
+            'id', 'size_name', 'size_label', 'stock_quantity', 'max_quantity',
+            'is_active', 'is_sold_out', 'is_available'
         ]
 
 
