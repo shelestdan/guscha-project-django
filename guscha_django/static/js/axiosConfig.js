@@ -1,4 +1,4 @@
-// Автоматическое определение baseURL в зависимости от того, откуда загружен фронтенд
+﻿// Автоматическое определение baseURL в зависимости от того, откуда загружен фронтенд
 const getBaseURL = () => {
   const currentHost = window.location.host;
   const currentProtocol = window.location.protocol;
@@ -50,3 +50,4 @@ function getCSRFToken() {
 
 window.getCSRFToken = getCSRFToken;
 window.getBaseURL = getBaseURL;
+

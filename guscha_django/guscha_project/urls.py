@@ -20,17 +20,31 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
 from django.http import JsonResponse
+from django.views.static import serve
 from apps.accounts.views import qr_trigger
+import os
 
 def health_check(request):
     """Simple health check endpoint"""
     return JsonResponse({'status': 'healthy', 'service': 'django'})
 
+def robots_txt(request):
+    """Serve robots.txt from config directory"""
+    robots_path = os.path.join(settings.BASE_DIR, 'config', 'robots.txt')
+    return serve(request, os.path.basename(robots_path), document_root=os.path.dirname(robots_path))
+
 urlpatterns = [
     # Health check endpoint
     path('health/', health_check, name='health_check'),
     
-    # Админка должна быть первой, чтобы не перехватывалась React-приложением
+    # Robots.txt from config directory
+    path('robots.txt', robots_txt, name='robots_txt'),
+    
+    # ============================================================================
+    # SECURITY URLS - ГОТОВОЕ РЕШЕНИЕ ДЛЯ БЕЗОПАСНОСТИ
+    # ============================================================================
+    
+    # Стандартная админка Django
     path('admin/', admin.site.urls),
     
     # API маршруты

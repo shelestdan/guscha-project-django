@@ -13,6 +13,13 @@ guscha_django/static/
 guscha_django/static_root/
 guscha_django/data/
 
+# Django profiling files
+profiles/
+*.prof
+
+# Django debug toolbar
+debug_toolbar/
+
 # Flask
 instance/
 .webassets-cache
@@ -82,6 +89,12 @@ PIPFILE_LOCK
 
 # Trae AI specific
 .trae/
+
+# Frontend build artifacts
+guscha_django_frontend/
+build/
+dist/
+*.map
 
 # Embedded git repositories
 guscha_project/

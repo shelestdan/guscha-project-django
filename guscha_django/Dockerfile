@@ -75,7 +75,7 @@ COPY templates/ $APP_HOME/templates/
 COPY static/ $APP_HOME/static/
 
 # Копирование и настройка скрипта запуска
-COPY start.sh $APP_HOME/start.sh
+COPY scripts/start.sh $APP_HOME/start.sh
 RUN chmod +x $APP_HOME/start.sh
 
 # Устанавливаем права доступа для пользователя app

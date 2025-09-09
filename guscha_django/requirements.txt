@@ -1,15 +1,19 @@
+# Core Django
 Django>=5.2,<5.3
-django-filter
 djangorestframework
+django-filter
 django-cors-headers
+
+# Database
 psycopg2-binary
+
+# Utilities
 str2bool
 Pillow
 python-slugify
 python-dotenv
 requests
 urllib3
-requests
 cryptography
 bcrypt
 pyjwt
@@ -17,7 +21,6 @@ pyotp
 markupsafe
 itsdangerous
 blinker
-
 structlog
 
 # Добавляем библиотеки для безопасности
@@ -28,6 +31,8 @@ django-recaptcha
 django-csp==3.8
 django-defender==0.9.8
 django-honeypot
+django-axes>=6.4.0  # Защита от брутфорса
+# django-admin-honeypot - убран из-за несовместимости с Django 5.2
 django-redis
 pip-audit
 

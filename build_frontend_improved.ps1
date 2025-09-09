@@ -353,17 +353,9 @@ if ($staticRootBackups.Count -gt 0) {
     Restore-ImportantFiles $StaticRootDir $staticRootBackups
 }
 
-# Копирование axiosConfig.js в обе директории
-$SourceAxiosConfig = Join-Path $DjangoDir "axiosConfig.js"
+# Копирование axiosConfig.js из static/js/ в static_root/js/
+$SourceAxiosConfig = Join-Path $StaticDir "js\axiosConfig.js"
 if (Test-Path $SourceAxiosConfig) {
-    # В static/js/
-    $JsDir = Join-Path $StaticDir "js"
-    if (-not (Test-Path $JsDir)) {
-        New-Item -ItemType Directory -Path $JsDir -Force | Out-Null
-    }
-    $DestAxiosConfig = Join-Path $JsDir "axiosConfig.js"
-    Copy-Item -Path $SourceAxiosConfig -Destination $DestAxiosConfig -Force
-    
     # В static_root/js/
     $JsRootDir = Join-Path $StaticRootDir "js"
     if (-not (Test-Path $JsRootDir)) {
@@ -372,9 +364,9 @@ if (Test-Path $SourceAxiosConfig) {
     $DestAxiosConfigRoot = Join-Path $JsRootDir "axiosConfig.js"
     Copy-Item -Path $SourceAxiosConfig -Destination $DestAxiosConfigRoot -Force
     
-    Write-Success "axiosConfig.js скопирован в обе директории"
+    Write-Success "axiosConfig.js скопирован из static/js/ в static_root/js/"
 } else {
-    Write-Warning "axiosConfig.js не найден в $SourceAxiosConfig"
+    Write-Warning "axiosConfig.js не найден в static/js/. Проверьте, что файл находится в правильном месте."
 }
 
 # Шаг 4: Обновление index.html файлов
@@ -555,7 +547,7 @@ Write-ColorLog "  • static_root/ - для продакшена (Docker)" -Fore
 if (-not $DevMode -and -not $SkipDocker) {
     Write-ColorLog "\n🌐 Приложение доступно по адресам:" -ForegroundColor Cyan
     Write-ColorLog "  • http://localhost - основное приложение" -ForegroundColor White
-    Write-ColorLog "  • http://localhost/admin - Django админка" -ForegroundColor White
+    Write-ColorLog "  • http://localhost/secure-admin-guscha-2024/ - Django админка" -ForegroundColor White
     Write-ColorLog "  • http://localhost/nginx-health - проверка nginx" -ForegroundColor White
 } else {
     Write-ColorLog "\n🔧 Для запуска в продакшене выполните:" -ForegroundColor Cyan

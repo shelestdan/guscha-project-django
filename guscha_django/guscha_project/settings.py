@@ -18,6 +18,7 @@ from dotenv import load_dotenv
 from str2bool import str2bool
 from django.templatetags.static import static
 from django.utils.translation import gettext_lazy as _
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -62,9 +63,9 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'django_filters',
     'corsheaders',
-    # 'crispy_forms',  # Временно отключено для отладки
-    # 'crispy_tailwind',  # Временно отключено для отладки
-    # 'import_export',  # Временно отключено для отладки
+    'crispy_forms',
+    'crispy_tailwind',
+    'import_export',
     'djmoney',  # Django Money для работы с валютами
     'defender',  # Защита от brute force атак
     'django_ratelimit',  # Ограничение частоты запросов
@@ -110,6 +111,8 @@ INSTALLED_APPS += [
     'guardian',
     'django_recaptcha',
     'simple_history',  # История изменений моделей
+    'axes',  # django-axes для защиты от brute-force атак
+    # 'admin_honeypot',  # django-admin-honeypot убран из-за несовместимости с Django 5.2
 ]
 
 # Минимальный набор middleware для тестов
@@ -136,6 +139,7 @@ elif DEBUG:
         'apps.core.middleware.csrf_debug.CSRFDebugMiddleware',  # CSRF debug logging
         'django.middleware.csrf.CsrfViewMiddleware',
         'django.contrib.auth.middleware.AuthenticationMiddleware',
+        'axes.middleware.AxesMiddleware',  # Axes middleware для защиты от брутфорса
         'simple_history.middleware.HistoryRequestMiddleware',  # Middleware для simple_history
         'django.contrib.messages.middleware.MessageMiddleware',
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -210,11 +214,15 @@ if os.getenv('DATABASE_URL') or os.getenv('POSTGRES_DB'):
         }
     }
 else:
-    # SQLite конфигурация для локальной разработки
+    # Fallback к PostgreSQL с локальными настройками
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'guscha_dev',
+            'USER': 'guscha',
+            'PASSWORD': 'guscha123',
+            'HOST': 'localhost',
+            'PORT': '5432',
         }
     }
 
@@ -761,6 +769,7 @@ SECURE_HSTS_PRELOAD = True
 
 # Authentication backends
 AUTHENTICATION_BACKENDS = (
+    'axes.backends.AxesStandaloneBackend',  # Axes backend для защиты от брутфорса
     'django.contrib.auth.backends.ModelBackend',  # Default backend
     'guardian.backends.ObjectPermissionBackend',  # Guardian backend для объектных разрешений
     'allauth.account.auth_backends.AuthenticationBackend',  # Allauth backend
@@ -770,11 +779,26 @@ AUTHENTICATION_BACKENDS = (
 CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
 CRISPY_TEMPLATE_PACK = "tailwind"
 
+# Валидация критически важных переменных окружения
+if not os.environ.get('ADMIN_URL'):
+    raise ImproperlyConfigured(
+        "ADMIN_URL environment variable is required for security. "
+        "Set it to a random, hard-to-guess path (e.g., 'my-secret-admin-path-123/')"
+    )
+
+# Проверяем, что ADMIN_URL не содержит очевидных значений
+ADMIN_URL = os.environ['ADMIN_URL']
+if ADMIN_URL.lower() in ['admin/', 'admin', 'administrator/', 'panel/', 'control/']:
+    raise ImproperlyConfigured(
+        "ADMIN_URL should not use obvious values like 'admin'. "
+        "Use a random, hard-to-guess path for security."
+    )
+
 # Конфигурация Django Unfold
 UNFOLD = {
     "SITE_TITLE": "Guscha Admin",
     "SITE_HEADER": "Панель управления Guscha",
-    "SITE_URL": "/",
+    "SITE_URL": f"/{ADMIN_URL}",
     "SITE_ICON": {
         "light": lambda request: static("images/logo-light.svg"),  # Светлая тема
         "dark": lambda request: static("images/logo-dark.svg"),  # Тёмная тема
@@ -794,10 +818,8 @@ UNFOLD = {
         "redirect_after": lambda request: reverse_lazy("admin:index"),
     },
     "STYLES": [
-        # lambda request: static("admin/css/custom-admin.css"),  # Временно отключено для отладки
     ],
     "SCRIPTS": [
-        # lambda request: static("admin/js/fix_inline_buttons.js"),  # Временно отключено для отладки
     ],
     "COLORS": {
         "primary": {
@@ -1283,5 +1305,78 @@ DATABASES['default']['CONN_HEALTH_CHECKS'] = True
 
 # Настройки для асинхронных операций Telegram bot
 ASYNC_DATABASE_TIMEOUT = 30  # Таймаут для async операций
+
+# ============================================================================
+# SECURITY SETTINGS - ГОТОВОЕ РЕШЕНИЕ ДЛЯ БЕЗОПАСНОСТИ
+# ============================================================================
+
+# Django Axes - защита от brute-force атак
+AXES_ENABLED = True
+AXES_FAILURE_LIMIT = 5  # Максимум 5 неудачных попыток
+AXES_COOLOFF_TIME = 1  # Блокировка на 1 час
+# AXES_LOCKOUT_CALLABLE = 'axes.helpers.lockout'  # Функция блокировки (отключено, используется по умолчанию)
+AXES_RESET_ON_SUCCESS = True  # Сброс счетчика при успешном входе
+# Современные настройки вместо устаревших
+AXES_LOCKOUT_PARAMETERS = ['ip_address', 'username']  # Блокировка по IP + пользователь
+AXES_ENABLE_ADMIN = True  # Включить защиту админки
+AXES_VERBOSE = True  # Подробное логирование
+AXES_HANDLER = 'axes.handlers.database.AxesDatabaseHandler'  # Хранение в БД
+
+# Admin Honeypot - защита админки (отключено из-за несовместимости)
+# ADMIN_HONEYPOT_EMAIL_ADMINS = True  # Уведомления на email
+# ADMIN_HONEYPOT_IP_WHITELIST = []  # Белый список IP (пустой = все проверяются)
+
+# Кастомный URL для настоящей админки (устанавливается через переменную окружения)
+ADMIN_URL = os.environ.get('ADMIN_URL', 'secure-admin-panel/')  # По умолчанию secure-admin-panel/
+
+# IP Whitelist для админки (через переменные окружения)
+ADMIN_IP_WHITELIST = os.environ.get('ADMIN_IP_WHITELIST', '').split(',') if os.environ.get('ADMIN_IP_WHITELIST') else []
+
+# Настройки логирования безопасности
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'security': {
+            'format': '[SECURITY] {asctime} {levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'security_file': {
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'security.log',
+            'formatter': 'security',
+        },
+    },
+    'loggers': {
+        'axes': {
+            'handlers': ['console', 'security_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        # 'admin_honeypot': {  # Отключено из-за несовместимости
+        #     'handlers': ['console', 'security_file'],
+        #     'level': 'WARNING',
+        #     'propagate': False,
+        # },
+        'security': {
+            'handlers': ['console', 'security_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
+# Создаем директорию для логов если её нет
+os.makedirs(BASE_DIR / 'logs', exist_ok=True)
 ASYNC_CONNECTION_MAX_AGE = 300  # 5 минут для async соединений
 ASYNC_DATABASE_POOL_SIZE = 10  # Размер пула для async операций

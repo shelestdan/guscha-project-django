@@ -54,7 +54,7 @@ guscha_django/
 ├── core/                    # Основное Django приложение
 ├── static_root/             # Собранные статические файлы
 ├── Dockerfile              # Docker конфигурация
-├── docker-compose.yml      # Docker Compose конфигурация
+├── docker-compose.dev.yml  # Docker Compose конфигурация для разработки
 ├── build_and_run.ps1       # PowerShell скрипт сборки
 ├── build_and_run.sh        # Bash скрипт сборки
 └── requirements.txt        # Python зависимости
@@ -122,4 +122,4 @@ python manage.py runserver 0.0.0.0:8000
 Используйте предоставленные скрипты для автоматической сборки и запуска:
 - `build_and_run.ps1` для Windows
 - `build_and_run.sh` для Linux/macOS
-- `docker-compose.yml` для контейнеризации
+- `docker-compose.dev.yml` для контейнеризации
