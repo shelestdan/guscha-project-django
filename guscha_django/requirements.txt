@@ -65,6 +65,9 @@ crispy-tailwind
 django-import-export
 django-money
 
+# Обновление setuptools для устранения CVE-2025-47273
+setuptools>=78.1.1
+
 # Telegram Bot
 python-telegram-bot
 

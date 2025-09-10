@@ -311,16 +311,30 @@ class UserViewSet(BaseViewMixin, viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            # Валидируем redirect_uri
-            allowed_redirect_uris = [
-                'http://localhost/auth/google/callback',
-                'http://127.0.0.1/auth/google/callback',
-                'https://localhost/auth/google/callback',
-                'https://127.0.0.1/auth/google/callback'
-            ]
+            # Валидируем redirect_uri через переменные окружения
+            import os
+            from django.conf import settings
+            allowed_redirect_uris_env = os.environ.get('GOOGLE_OAUTH_ALLOWED_REDIRECT_URIS', '')
+            
+            if allowed_redirect_uris_env:
+                allowed_redirect_uris = [uri.strip() for uri in allowed_redirect_uris_env.split(',')]
+            else:
+                # Fallback для разработки (только в DEBUG режиме)
+                if settings.DEBUG:
+                    allowed_redirect_uris = [
+                        'http://localhost/auth/google/callback',
+                        'http://127.0.0.1/auth/google/callback',
+                        'https://localhost/auth/google/callback',
+                        'https://127.0.0.1/auth/google/callback',
+                        'http://localhost:3000/auth/google/callback',
+                        'http://127.0.0.1:3000/auth/google/callback'
+                    ]
+                else:
+                    # В продакшене без переменной окружения - блокируем все
+                    allowed_redirect_uris = []
             
             if not redirect_uri or redirect_uri not in allowed_redirect_uris:
-                logger.error(f"Invalid redirect_uri: {redirect_uri}")
+                logger.error(f"Invalid redirect_uri: {redirect_uri}. Allowed URIs: {allowed_redirect_uris}")
                 return Response(
                     {'error': 'Недопустимый redirect URI'},
                     status=status.HTTP_400_BAD_REQUEST

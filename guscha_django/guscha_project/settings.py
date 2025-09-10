@@ -468,17 +468,31 @@ CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS if not DEBUG else [
 CSRF_COOKIE_NAME = 'csrftoken'
 CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
 
-# Дополнительные настройки CORS для разработки
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-    "http://localhost:80",
-    "http://localhost",
-    "http://127.0.0.1:80",
-    "http://127.0.0.1",
-]
+# CORS настройки для разработки (только в DEBUG режиме)
+if DEBUG:
+    # В режиме разработки добавляем localhost адреса к существующим CORS_ALLOWED_ORIGINS
+    CORS_ALLOWED_ORIGINS.extend([
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "http://localhost:80",
+        "http://localhost",
+        "http://127.0.0.1:80",
+        "http://127.0.0.1",
+        # Контейнерные адреса
+        "http://nginx:80",
+        "http://nginx",
+        "http://frontend:3000",
+        "http://frontend",
+        "http://backend:8000",
+        "http://backend",
+        # Docker внутренние сети
+        "http://172.17.0.1",
+        "http://172.18.0.1",
+        "http://172.19.0.1",
+        "http://172.20.0.1",
+    ])
 
 # Настройки безопасности
 SECURE_CONTENT_TYPE_NOSNIFF = True

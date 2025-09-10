@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.password_validation import validate_password, ValidationError as PasswordValidationError
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from datetime import timedelta
@@ -20,6 +21,11 @@ class UserManager(BaseUserManager):
             raise ValueError(_('Email должен быть указан'))
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
+        if password:
+            try:
+                validate_password(password, user=user)
+            except PasswordValidationError as e:
+                raise ValueError(str(e))
         user.set_password(password)
         user.save(using=self._db)
         return user

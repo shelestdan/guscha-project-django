@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model, authenticate
 from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth.password_validation import validate_password, ValidationError as PasswordValidationError
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils import timezone
@@ -57,6 +58,10 @@ class AuthRepository:
     
     def set_password(self, user: User, password: str) -> User:
         """Установка нового пароля"""
+        try:
+            validate_password(password, user=user)
+        except PasswordValidationError as e:
+            raise ValueError(str(e))
         user.set_password(password)
         user.save()
         logger.info(f"Пароль изменен для пользователя: {user.email}")

@@ -1,14 +1,14 @@
 # Импортируем сервисы для работы с изображениями
 from .services.image_service import ImageService
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.contrib.admin.views.decorators import staff_member_required
 
 # Создаем экземпляр сервиса
 image_service = ImageService()
 
 @staff_member_required
-@csrf_exempt
+@csrf_protect
 def upload_product_image(request):
     """Загрузка изображений товара через сервис"""
     if request.method != 'POST':
@@ -33,7 +33,7 @@ def get_product_images(request, product_id):
 
 
 @staff_member_required
-@csrf_exempt
+@csrf_protect
 def reorder_product_images(request):
     """Изменение порядка изображений товара через сервис"""
     if request.method != 'POST':
@@ -48,7 +48,7 @@ def reorder_product_images(request):
 
 
 @staff_member_required
-@csrf_exempt
+@csrf_protect
 def set_primary_image(request):
     """Установка основного изображения товара через сервис"""
     if request.method != 'POST':

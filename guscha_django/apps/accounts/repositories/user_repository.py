@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password, ValidationError as PasswordValidationError
 from django.utils import timezone
 from django.db.models import Q, Count, Avg
 from typing import Optional, List, Dict, Any, Tuple
@@ -104,6 +105,10 @@ class UserRepository:
     
     def set_password(self, user: User, password: str) -> User:
         """Установка пароля пользователя"""
+        try:
+            validate_password(password, user=user)
+        except PasswordValidationError as e:
+            raise ValueError(str(e))
         user.set_password(password)
         user.save()
         logger.info(f"Пароль изменен для пользователя: {user.email}")

@@ -110,3 +110,9 @@ $RECYCLE.BIN/
 # VS Code directories that might contain sensitive data
 .history/
 .ionide/
+
+# Strix AI Security Scanner files
+agent_runs/
+.strix.env
+run_security_scan.ps1
+STRIX_SETUP_GUIDE.md

@@ -43,11 +43,10 @@ class BaseSerializer(serializers.Serializer):
     
     def validate_password(self, value):
         """Валидация пароля"""
-        validation_result = SecurityUtils.validate_password_strength(value)
-        if not validation_result['is_valid']:
-            raise serializers.ValidationError(
-                validation_result['errors']
-            )
+        try:
+            validate_password(value)
+        except ValidationError as e:
+            raise serializers.ValidationError(e.messages)
         return value
     
     def validate_name(self, value, field_name='name'):

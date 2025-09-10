@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth.password_validation import validate_password, ValidationError as PasswordValidationError
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.core.mail import send_mail
@@ -183,6 +184,10 @@ class AuthService:
             
             # Установка нового пароля
             with transaction.atomic():
+                try:
+                    validate_password(new_password, user=user)
+                except PasswordValidationError as e:
+                    raise ValidationError(str(e))
                 user.set_password(new_password)
                 user.save()
                 
