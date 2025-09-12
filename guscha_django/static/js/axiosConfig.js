@@ -51,3 +51,13 @@ function getCSRFToken() {
 window.getCSRFToken = getCSRFToken;
 window.getBaseURL = getBaseURL;
 
+
+
+
+
+
+
+
+
+
+

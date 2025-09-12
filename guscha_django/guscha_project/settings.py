@@ -597,6 +597,13 @@ LOGGING = {
             'backupCount': 10,
             'formatter': 'security',
         },
+        'telegram_security_file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': str(LOGS_DIR / 'telegram_security.log'),
+            'maxBytes': 10 * 1024 * 1024,  # 10MB
+            'backupCount': 10,
+            'formatter': 'security',
+        },
         'error_file': {
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': str(LOGS_DIR / 'errors.log'),
@@ -655,6 +662,16 @@ LOGGING = {
         },
         'security.ratelimit': {
             'handlers': ['security_file', 'threat_file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'security.telegram': {
+            'handlers': ['telegram_security_file', 'security_file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'security.telegram.suspicious': {
+            'handlers': ['telegram_security_file', 'threat_file', 'mail_admins'],
             'level': 'WARNING',
             'propagate': False,
         },

@@ -6,7 +6,6 @@ import { HomePage } from './pages';
 import { CartSidebar } from './components/features/cart';
 
 import { useCartStore } from './store/cartStore';
-import { useAuth } from './hooks/useAuth';
 import ToastContainer from './components/ui/ToastContainer';
 import scrollBackgroundToggle from './utils/scrollBackgroundToggle';
 
@@ -23,20 +22,14 @@ const PasswordResetConfirm = lazy(() => import('./components/PasswordResetConfir
 const GoogleOAuthCallback = lazy(() => import('./components/GoogleOAuthCallback'));
 
 function AppContent() {
-  console.log('🚀 APP CONTENT RENDERED!');
   const location = useLocation();
   const isHome = location.pathname === '/';
-  console.log('🏠 isHome:', isHome, 'pathname:', location.pathname);
   const fetchCart = useCartStore((state) => state.fetchCart);
   const mainRef = useRef(null);
   const [isBurgerMenuOpen, setIsBurgerMenuOpen] = useState(false);
 
-  // Инициализируем аутентификацию для проверки токена при загрузке
-  const { loading } = useAuth();
-
   // Загружаем корзину при инициализации приложения
   useEffect(() => {
-    console.log('🛒 Initializing cart on app start');
     fetchCart();
   }, [fetchCart]);
 

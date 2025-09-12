@@ -47,31 +47,18 @@ const ProductCard = ({ product, showAddToCart = true }) => {
   };
 
   return (
-    <div className="product-card" data-testid="product-card" onClick={handleCardClick}>
-      <div className="product-card__image">
-        <Link to={`/products/${product.slug}`}>
-          <img 
-            src={product.primary_image || '/default-product.jpg'} 
-            alt={product.name}
-            loading="lazy"
-          />
-        </Link>
+    <div className="product-card" onClick={handleCardClick}>
+      <div className="product-image">
+        <img 
+          src={product.primary_image || '/default-product.jpg'} 
+          alt={product.name}
+          loading="lazy"
+        />
       </div>
       
-      <div className="product-card__content">
-        <h3 className="product-card__title truncate">
-          <Link to={`/products/${product.slug}`}>
-            {product.name}
-          </Link>
-        </h3>
-        
-        {product.category && (
-          <p className="product-card__category">
-            {product.category.name}
-          </p>
-        )}
-        
-        <div className="product-card__price">
+      <div className="product-info">
+        <h3 className="product-name">{product.name}</h3>
+        <div className="product-price">
           {product.discounted_price ? (
             <>
               <span className="discounted-price">{formatPrice(product.discounted_price)}</span>
@@ -82,34 +69,19 @@ const ProductCard = ({ product, showAddToCart = true }) => {
           )}
         </div>
         
-        {!product.is_available && (
-          <div className="product-card__status">
-            Нет в наличии
-          </div>
-        )}
-        
-        {product.description && (
-          <p className="product-card__description">
-            {product.description}
-          </p>
-        )}
-        
         {showAddToCart && (
-          <div className="product-card__actions">
+          <div className="product-actions">
             {product.sizes && product.sizes.length > 0 && (
-              <div className="product-card__sizes">
-                <label htmlFor={`size-${product.id}`}>Размер:</label>
+              <div className="product-sizes">
                 <select
-                  id={`size-${product.id}`}
                   value={selectedSize}
                   onChange={(e) => {
                     e.stopPropagation();
                     setSelectedSize(e.target.value);
                   }}
                   onClick={(e) => e.stopPropagation()}
-                  className="product-card__size-select"
                 >
-                  <option value="">Выберите размер</option>
+                  <option value="">Размер</option>
                   {product.sizes.map(size => (
                     <option key={size.id} value={size.id}>
                       {size.name}
@@ -120,14 +92,12 @@ const ProductCard = ({ product, showAddToCart = true }) => {
             )}
             
             <button
+              className="add-to-cart-btn"
               onClick={(e) => {
                 e.stopPropagation();
                 handleAddToCart();
               }}
               disabled={!product.is_available || isLoading}
-              className={`product-card__add-btn ${
-                !product.is_available ? 'product-card__add-btn--disabled' : ''
-              }`}
             >
               {isLoading ? 'Добавление...' : 
                !product.is_available ? 'Недоступен' : 'В корзину'}

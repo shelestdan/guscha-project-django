@@ -3,6 +3,9 @@ from django.utils.translation import gettext_lazy as _
 from typing import Dict, Any, Optional
 import re
 import logging
+import hmac
+import hashlib
+import secrets
 
 logger = logging.getLogger(__name__)
 
@@ -16,8 +19,14 @@ class TelegramValidator:
     MAX_TELEGRAM_USERNAME_LENGTH = 32
     MAX_CHAT_ID_LENGTH = 20
     MAX_MESSAGE_LENGTH = 4096  # Лимит Telegram
+    MAX_INPUT_LENGTH = 1000  # Максимальная длина пользовательского ввода
+    MAX_CODE_LENGTH = 20  # Максимальная длина кода верификации
     MIN_CHAT_ID = -999999999999
     MAX_CHAT_ID = 999999999999
+    
+    def __init__(self):
+        self.logger = logging.getLogger('security.telegram')
+        self.suspicious_logger = logging.getLogger('security.telegram.suspicious')
     
     def validate_telegram_username(self, username: str) -> None:
         """Валидация Telegram username"""
@@ -67,27 +76,115 @@ class TelegramValidator:
         if chat_id_int < self.MIN_CHAT_ID or chat_id_int > self.MAX_CHAT_ID:
             raise ValidationError(_('Недействительный Chat ID'))
     
-    def validate_verification_code(self, code: str) -> None:
-        """Валидация кода верификации"""
+    def validate_verification_code(self, code: str, user_id: Optional[int] = None, chat_id: Optional[int] = None) -> None:
+        """Валидация кода верификации с логированием подозрительной активности"""
         if not code:
+            self.suspicious_logger.warning(
+                f"Empty verification code attempt - user_id: {user_id}, chat_id: {chat_id}"
+            )
             raise ValidationError(_('Код верификации обязателен'))
         
         if not isinstance(code, str):
+            self.suspicious_logger.warning(
+                f"Non-string verification code attempt - user_id: {user_id}, chat_id: {chat_id}"
+            )
             raise ValidationError(_('Код верификации должен быть строкой'))
         
+        # Логируем попытку валидации
+        self.logger.info(
+            f"Verification code validation attempt - user_id: {user_id}, chat_id: {chat_id}"
+        )
+        
         if len(code) < self.MIN_VERIFICATION_CODE_LENGTH:
+            self.suspicious_logger.warning(
+                f"Undersized verification code attempt ({len(code)} chars) - user_id: {user_id}, chat_id: {chat_id}"
+            )
             raise ValidationError(
                 _(f'Код верификации должен содержать минимум {self.MIN_VERIFICATION_CODE_LENGTH} символов')
             )
         
         if len(code) > self.MAX_VERIFICATION_CODE_LENGTH:
+            self.suspicious_logger.warning(
+                f"Oversized verification code attempt ({len(code)} chars) - user_id: {user_id}, chat_id: {chat_id}"
+            )
             raise ValidationError(
                 _(f'Код верификации не может быть длиннее {self.MAX_VERIFICATION_CODE_LENGTH} символов')
             )
         
+        # Дополнительная проверка на экстремально большие коды (потенциальная атака)
+        if len(code) > self.MAX_CODE_LENGTH:
+            self.suspicious_logger.warning(
+                f"Extremely oversized verification code attempt ({len(code)} chars) - user_id: {user_id}, chat_id: {chat_id}"
+            )
+            raise ValidationError(
+                _(f'Код верификации превышает максимально допустимый размер')
+            )
+        
         # Проверяем, что код содержит только цифры и буквы
         if not re.match(r'^[A-Za-z0-9]+$', code):
+            self.suspicious_logger.warning(
+                f"Invalid characters in verification code - user_id: {user_id}, chat_id: {chat_id}"
+            )
             raise ValidationError(_('Код верификации может содержать только буквы и цифры'))
+    
+    def secure_code_compare(self, code1: str, code2: str, user_id: Optional[int] = None, chat_id: Optional[int] = None) -> bool:
+        """Безопасное сравнение кодов верификации для защиты от timing атак"""
+        if not isinstance(code1, str) or not isinstance(code2, str):
+            self.suspicious_logger.warning(
+                f"Non-string code comparison attempt - user_id: {user_id}, chat_id: {chat_id}"
+            )
+            return False
+        
+        # Логируем попытку сравнения
+        self.logger.info(
+            f"Secure code comparison - user_id: {user_id}, chat_id: {chat_id}"
+        )
+        
+        # Используем hmac.compare_digest для constant-time сравнения
+        is_valid = hmac.compare_digest(code1.encode('utf-8'), code2.encode('utf-8'))
+        
+        if not is_valid:
+            self.suspicious_logger.warning(
+                f"Failed code comparison - user_id: {user_id}, chat_id: {chat_id}"
+            )
+        else:
+            self.logger.info(
+                f"Successful code comparison - user_id: {user_id}, chat_id: {chat_id}"
+            )
+            
+        return is_valid
+    
+    def sanitize_telegram_input(self, input_data: str) -> str:
+        """Санитизация пользовательского ввода из Telegram"""
+        if not isinstance(input_data, str):
+            self.suspicious_logger.warning(
+                f"Non-string input received for sanitization: {type(input_data)}"
+            )
+            return ""
+        
+        # Удаляем null-байты и control символы
+        sanitized = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', input_data)
+        
+        # Удаляем потенциально опасные HTML/JS символы
+        sanitized = re.sub(r'[<>"\'\/;]', '', sanitized)
+        
+        # Удаляем SQL инъекции
+        sanitized = re.sub(r'(--|union|select|drop|delete|insert|update|create|alter|exec)', '', sanitized, flags=re.IGNORECASE)
+        
+        # Удаляем javascript: протокол
+        sanitized = re.sub(r'javascript:', '', sanitized, flags=re.IGNORECASE)
+        
+        # Удаляем script теги
+        sanitized = re.sub(r'script', '', sanitized, flags=re.IGNORECASE)
+        
+        # Ограничиваем длину
+        if len(sanitized) > self.MAX_INPUT_LENGTH:
+            sanitized = sanitized[:self.MAX_INPUT_LENGTH]
+        
+        # Удаляем лишние пробелы и обрезаем
+        sanitized = ' '.join(sanitized.split())
+        
+        return sanitized.strip()
     
     def validate_verification_type(self, verification_type: str) -> None:
         """Валидация типа верификации"""
