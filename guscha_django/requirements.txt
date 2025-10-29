@@ -53,6 +53,9 @@ dj-rest-auth[with_social]
 django-dbbackup
 boto3  # для AWS S3 интеграции
 celery  # для планирования задач
+django-celery-beat  # для периодических задач
+django-celery-results  # для хранения результатов задач
+redis  # для Celery broker
 
 # Оптимизация производительности и мониторинг
 django-silk>=5.0.0  # профилирование и мониторинг SQL запросов
@@ -66,7 +69,7 @@ django-import-export
 django-money
 
 # Обновление setuptools для устранения CVE-2025-47273
-setuptools>=78.1.1
+setuptools>=76.0.0
 
 # Telegram Bot
 python-telegram-bot

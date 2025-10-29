@@ -52,6 +52,12 @@ crispy-tailwind
 django-import-export
 django-money
 
+# Celery для фоновых задач
+celery
+django-celery-beat
+django-celery-results
+redis
+
 # Telegram Bot
 python-telegram-bot
 
