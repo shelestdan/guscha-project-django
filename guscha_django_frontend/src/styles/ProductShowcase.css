@@ -1,3 +1,42 @@
+/* CSS Custom Properties для адаптивной системы */
+:root {
+  /* Размеры изображений */
+  --showcase-model-width: clamp(280px, 45vw, 640px);
+  --showcase-model-height: clamp(200px, 42vw, 600px);
+  --showcase-product-width: clamp(240px, 25vw, 360px);
+  --showcase-product-height: clamp(300px, 33vw, 480px);
+  
+  /* Отступы и промежутки */
+  --showcase-padding: clamp(16px, 4vw, 64px);
+  --showcase-gap: clamp(8px, 2vw, 32px);
+  --showcase-margin-overlap: clamp(-40px, -8vw, -120px);
+  --showcase-arrow-margin: clamp(16px, 4vw, 64px);
+  
+  /* Размеры текста - улучшенная адаптивная типографика */
+  --showcase-title-size: clamp(20px, 4.5vw, 52px);
+  --showcase-title-line-height: clamp(1.1, 1.15, 1.2);
+  --showcase-title-letter-spacing: clamp(0.5px, 0.15vw, 2.5px);
+  --showcase-price-size: clamp(18px, 3.2vw, 36px);
+  --showcase-price-line-height: 1.3;
+  --showcase-button-size: clamp(16px, 2.8vw, 20px);
+  --showcase-button-line-height: 1.4;
+  
+  /* Отступы текста - оптимизированные для всех устройств */
+  --showcase-title-margin: clamp(16px, 2.5vw, 32px);
+  --showcase-price-margin: clamp(20px, 3.5vw, 48px);
+  --showcase-button-padding-v: clamp(12px, 1.5vw, 20px);
+  --showcase-button-padding-h: clamp(24px, 4vw, 56px);
+  --showcase-button-margin: clamp(8px, 1.5vw, 16px);
+  
+  /* Размеры контейнеров */
+  --showcase-right-width: clamp(300px, 40vw, 600px);
+  --showcase-min-height: clamp(400px, 50vh, 700px);
+  
+  /* Радиусы скругления */
+  --showcase-border-radius: clamp(0px, 1vw, 16px);
+  --showcase-button-radius: clamp(4px, 0.5vw, 8px);
+}
+
 .product-showcase-root {
   position: relative;
   left: 0;
@@ -7,10 +46,10 @@
   justify-content: flex-start;
   align-items: center;
   width: 100%;
-  min-height: 700px;
+  min-height: var(--showcase-min-height);
   margin: 0;
   background: #f1f1f1;
-  padding: 64px 5% 96px 5%;
+  padding: var(--showcase-padding) clamp(20px, 8vw, 120px) calc(var(--showcase-padding) * 1.5) clamp(20px, 8vw, 120px);
   box-sizing: border-box;
   border-radius: 0;
   box-shadow: 0 8px 32px rgba(0,0,0,0.04);
@@ -23,26 +62,544 @@ body {
   background: #232323;
 }
 
+/* Детальные breakpoints для максимальной адаптивности */
+
+/* Desktop Large: 1400px+ - Оригинальный дизайн */
+@media (min-width: 1400px) {
+  :root {
+    --showcase-title-size: 52px;
+    --showcase-price-size: 36px;
+    --showcase-button-size: 20px;
+    --showcase-title-margin: 32px;
+    --showcase-price-margin: 48px;
+  }
+  
+  .product-showcase-root {
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--showcase-gap);
+    padding: var(--showcase-padding) 120px calc(var(--showcase-padding) * 1.5) 120px;
+  }
+  
+  .product-showcase-images {
+    flex-direction: row;
+    align-items: flex-end;
+    min-width: 800px;
+  }
+  
+  .product-showcase-left {
+    width: 640px;
+    height: 600px;
+    margin-right: -120px;
+    margin-bottom: 32px;
+  }
+  
+  .product-showcase-center {
+    width: 360px;
+    height: 480px;
+    top: 48px;
+    left: -60px;
+  }
+  
+  .product-showcase-right {
+    margin-left: 120px;
+    width: 600px;
+    min-width: 600px;
+    max-width: 600px;
+    text-align: left;
+    align-items: flex-start;
+  }
+  
+  .product-showcase-title {
+    max-width: 580px;
+  }
+  
+  .product-showcase-preorder {
+    min-width: 160px;
+    min-height: 48px;
+  }
+}
+
+/* Desktop: 1200px-1399px - Адаптированный desktop */
+@media (min-width: 1200px) and (max-width: 1399px) {
+  :root {
+    --showcase-model-width: 500px;
+    --showcase-model-height: 400px;
+    --showcase-product-width: 320px;
+    --showcase-product-height: 420px;
+    --showcase-right-width: 500px;
+    --showcase-margin-overlap: -80px;
+    --showcase-title-size: 46px;
+    --showcase-price-size: 32px;
+    --showcase-button-size: 18px;
+    --showcase-title-margin: 28px;
+    --showcase-price-margin: 42px;
+  }
+  
+  .product-showcase-root {
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    padding: var(--showcase-padding) 80px calc(var(--showcase-padding) * 1.5) 80px;
+  }
+  
+  .product-showcase-images {
+    flex-direction: row;
+    align-items: flex-end;
+    min-width: 700px;
+  }
+  
+  .product-showcase-left {
+    margin-right: var(--showcase-margin-overlap);
+    margin-bottom: 24px;
+  }
+  
+  .product-showcase-center {
+    top: 36px;
+    left: -45px;
+  }
+  
+  .product-showcase-right {
+    margin-left: 80px;
+    text-align: left;
+    align-items: flex-start;
+  }
+  
+  .product-showcase-title {
+    max-width: 480px;
+  }
+  
+  .product-showcase-preorder {
+    min-width: 150px;
+    min-height: 46px;
+  }
+}
+
+/* Tablet Landscape: 900px-1199px - Планшет горизонтальный */
+@media (min-width: 900px) and (max-width: 1199px) {
+  :root {
+    --showcase-model-width: 400px;
+    --showcase-model-height: 300px;
+    --showcase-product-width: 280px;
+    --showcase-product-height: 360px;
+    --showcase-margin-overlap: -40px;
+    --showcase-gap: 24px;
+    --showcase-right-width: 450px;
+    --showcase-title-size: 38px;
+    --showcase-price-size: 28px;
+    --showcase-button-size: 17px;
+    --showcase-title-margin: 24px;
+    --showcase-price-margin: 36px;
+  }
+  
+  .product-showcase-root {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: var(--showcase-gap);
+    padding: var(--showcase-padding) 60px calc(var(--showcase-padding) * 1.5) 60px;
+  }
+  
+  .product-showcase-images {
+    flex-direction: row;
+    align-items: flex-end;
+    min-width: auto;
+  }
+  
+  .product-showcase-left {
+    margin-right: var(--showcase-margin-overlap);
+    margin-bottom: 16px;
+  }
+  
+  .product-showcase-center {
+    top: 24px;
+    left: -30px;
+  }
+  
+  .product-showcase-right {
+    margin-left: 60px;
+    text-align: left;
+    align-items: flex-start;
+  }
+  
+  .product-showcase-title {
+    max-width: 420px;
+  }
+  
+  .product-showcase-preorder {
+    min-width: 140px;
+    min-height: 44px;
+  }
+}
+
+/* Tablet Portrait: 600px-899px - Планшет вертикальный */
+@media (min-width: 600px) and (max-width: 899px) {
+  :root {
+    --showcase-model-width: 380px;
+    --showcase-model-height: 280px;
+    --showcase-product-width: 250px;
+    --showcase-product-height: 320px;
+    --showcase-margin-overlap: 0px;
+    --showcase-gap: 24px;
+    --showcase-right-width: 400px;
+    --showcase-title-size: 32px;
+    --showcase-price-size: 24px;
+    --showcase-button-size: 18px;
+    --showcase-title-margin: 20px;
+    --showcase-price-margin: 28px;
+    --showcase-button-padding-v: 14px;
+    --showcase-button-padding-h: 32px;
+  }
+  
+  .product-showcase-root {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--showcase-gap);
+    padding: var(--showcase-padding) 40px calc(var(--showcase-padding) * 1.5) 40px;
+  }
+  
+  .product-showcase-images {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: auto;
+    width: 100%;
+    margin: 0 auto var(--showcase-gap) auto;
+    gap: 0;
+    /* Принудительное центрирование */
+    display: flex;
+    align-self: center;
+  }
+  
+  .product-showcase-left {
+    margin-right: 0;
+    margin-bottom: 0;
+    align-self: center;
+  }
+  
+  /* Скрываем второе изображение на планшетах в портретном режиме */
+  .product-showcase-center {
+    display: none;
+  }
+  
+  .product-showcase-right {
+    margin-left: 0;
+    text-align: center;
+    align-items: center;
+    min-width: auto;
+    max-width: 90%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  .product-showcase-title {
+    max-width: 100%;
+    text-align: center;
+    width: 100%;
+  }
+  
+  .product-showcase-price {
+    text-align: center;
+    width: 100%;
+  }
+  
+  .product-showcase-preorder {
+    min-width: 160px;
+    min-height: 48px;
+    align-self: center;
+  }
+}
+
+/* Mobile Large: 480px-599px - Мобильный большой */
+@media (min-width: 480px) and (max-width: 599px) {
+  :root {
+    --showcase-model-width: 340px;
+    --showcase-model-height: 240px;
+    --showcase-product-width: 220px;
+    --showcase-product-height: 280px;
+    --showcase-margin-overlap: 0px;
+    --showcase-gap: 32px;
+    --showcase-right-width: 320px;
+    --showcase-title-size: 28px;
+    --showcase-price-size: 22px;
+    --showcase-button-size: 17px;
+    --showcase-padding: 16px;
+    --showcase-arrow-margin: 16px;
+    --showcase-title-margin: 32px;
+    --showcase-price-margin: 24px;
+    --showcase-button-padding-v: 14px;
+    --showcase-button-padding-h: 28px;
+  }
+  
+  .product-showcase-root {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--showcase-gap);
+    padding: var(--showcase-padding) 20px calc(var(--showcase-padding) * 1.5) 20px;
+  }
+  
+  .product-showcase-images {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: auto;
+    width: 100%;
+    margin-bottom: var(--showcase-gap);
+    margin-left: 0;
+    gap: 0;
+  }
+  
+  .product-showcase-left {
+    margin-right: 0;
+    margin-bottom: 0;
+    align-self: center;
+  }
+  
+  /* Скрываем второе изображение на мобильных */
+  .product-showcase-center {
+    display: none;
+  }
+  
+  .product-showcase-right {
+    margin-left: 0;
+    text-align: center;
+    align-items: center;
+    min-width: auto;
+    max-width: 95%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  .product-showcase-title {
+    max-width: 100%;
+    text-align: center;
+    word-break: break-word;
+    hyphens: auto;
+    width: 100%;
+  }
+  
+  .product-showcase-price {
+    text-align: center;
+    width: 100%;
+  }
+  
+  .product-showcase-preorder {
+    min-width: 150px;
+    min-height: 50px;
+    align-self: center;
+  }
+}
+
+/* Mobile Medium: 400px-479px - Мобильный средний */
+@media (min-width: 400px) and (max-width: 479px) {
+  :root {
+    --showcase-model-width: 320px;
+    --showcase-model-height: 220px;
+    --showcase-product-width: 200px;
+    --showcase-product-height: 250px;
+    --showcase-margin-overlap: 0px;
+    --showcase-gap: 28px;
+    --showcase-right-width: 300px;
+    --showcase-title-size: 26px;
+    --showcase-price-size: 20px;
+    --showcase-button-size: 16px;
+    --showcase-padding: 12px;
+    --showcase-arrow-margin: 12px;
+    --showcase-title-margin: 28px;
+    --showcase-price-margin: 22px;
+    --showcase-button-padding-v: 13px;
+    --showcase-button-padding-h: 26px;
+  }
+  
+  .product-showcase-root {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--showcase-gap);
+    padding: var(--showcase-padding) 16px calc(var(--showcase-padding) * 1.5) 16px;
+  }
+  
+  .product-showcase-images {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: auto;
+    width: 100%;
+    margin-bottom: var(--showcase-gap);
+    margin-left: 0;
+    gap: 0;
+  }
+  
+  .product-showcase-left {
+    margin-right: 0;
+    margin-bottom: 0;
+    align-self: center;
+  }
+  
+  /* Скрываем второе изображение на мобильных */
+  .product-showcase-center {
+    display: none;
+  }
+  
+  .product-showcase-right {
+    margin-left: 0;
+    text-align: center;
+    align-items: center;
+    min-width: auto;
+    max-width: 95%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  .product-showcase-title {
+    max-width: 100%;
+    text-align: center;
+    word-break: break-word;
+    hyphens: auto;
+    width: 100%;
+  }
+  
+  .product-showcase-price {
+    text-align: center;
+    width: 100%;
+  }
+  
+  .product-showcase-preorder {
+    min-width: 140px;
+    min-height: 48px;
+    align-self: center;
+  }
+}
+
+/* Mobile Small: <400px - Мобильный малый */
+@media (max-width: 399px) {
+  :root {
+    --showcase-model-width: 300px;
+    --showcase-model-height: 200px;
+    --showcase-product-width: 180px;
+    --showcase-product-height: 220px;
+    --showcase-margin-overlap: 0px;
+    --showcase-gap: 24px;
+    --showcase-right-width: 280px;
+    --showcase-title-size: 24px;
+    --showcase-price-size: 18px;
+    --showcase-button-size: 15px;
+    --showcase-padding: 10px;
+    --showcase-arrow-margin: 10px;
+    --showcase-title-margin: 24px;
+    --showcase-price-margin: 20px;
+    --showcase-button-padding-v: 12px;
+    --showcase-button-padding-h: 24px;
+    --showcase-border-radius: 6px;
+    --showcase-button-radius: 4px;
+  }
+  
+  .product-showcase-root {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--showcase-gap);
+    padding: var(--showcase-padding) 12px calc(var(--showcase-padding) * 1.5) 12px;
+  }
+  
+  .product-showcase-images {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: auto;
+    width: 100%;
+    margin-bottom: var(--showcase-gap);
+    margin-left: 0;
+    gap: 0;
+  }
+  
+  .product-showcase-left {
+    margin-right: 0;
+    margin-bottom: 0;
+    align-self: center;
+  }
+  
+  /* Скрываем второе изображение на мобильных */
+  .product-showcase-center {
+    display: none;
+  }
+  
+  .product-showcase-right {
+    margin-left: 0;
+    text-align: center;
+    align-items: center;
+    min-width: auto;
+    max-width: 95%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  .product-showcase-title {
+    max-width: 100%;
+    text-align: center;
+    word-break: break-word;
+    hyphens: auto;
+    line-height: 1.2;
+    width: 100%;
+  }
+  
+  .product-showcase-price {
+    text-align: center;
+    white-space: nowrap;
+    width: 100%;
+  }
+  
+  .product-showcase-preorder {
+    min-width: 130px;
+    min-height: 46px;
+    align-self: center;
+  }
+}
+
 .product-showcase-images {
   display: flex;
   flex-direction: row;
   align-items: flex-end;
+  justify-content: flex-start;
   position: relative;
-  min-width: 800px;
+  min-width: clamp(400px, 60vw, 800px);
+  gap: var(--showcase-gap);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  /* Flexbox адаптивность */
+  flex-wrap: nowrap;
+  /* Отступ от левого края */
+  margin-left: clamp(20px, 5vw, 80px);
 }
 
 .product-showcase-left {
   background: transparent !important;
-  width: 640px;
-  height: 600px;
+  width: var(--showcase-model-width);
+  height: var(--showcase-model-height);
   position: relative;
   overflow: hidden;
-  border-radius: 0;
+  border-radius: var(--showcase-border-radius);
   box-shadow: 0 8px 32px rgba(0,0,0,0.10);
   z-index: 1;
-  margin-right: -120px;
-  margin-bottom: 32px;
+  margin-right: var(--showcase-margin-overlap);
+  margin-bottom: var(--showcase-gap);
   transition: all 0.35s cubic-bezier(.77,0,.18,1);
+  /* Обеспечиваем адаптивность */
+  flex-shrink: 0;
+  flex-grow: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  /* Grid поддержка */
+  grid-column: 1;
+  justify-self: end;
 }
 .product-showcase-left > img {
   position: absolute;
@@ -68,18 +625,26 @@ body {
 
 .product-showcase-center {
   background: transparent !important;
-  width: 360px;
-  height: 480px;
+  width: var(--showcase-product-width);
+  height: var(--showcase-product-height);
   position: relative;
   overflow: hidden;
-  border-radius: 0;
+  border-radius: var(--showcase-border-radius);
   box-shadow: 0 12px 32px rgba(0,0,0,0.18);
   z-index: 2;
   margin-left: 0;
   margin-bottom: 0;
-  top: 48px;
-  left: -60px;
+  top: clamp(24px, 3vw, 48px);
+  left: clamp(-30px, -4vw, -60px);
   transition: all 0.35s cubic-bezier(.77,0,.18,1);
+  /* Обеспечиваем адаптивность */
+  flex-shrink: 0;
+  flex-grow: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  /* Grid поддержка */
+  grid-column: 2;
+  justify-self: start;
 }
 .product-showcase-center > img {
   position: absolute;
@@ -113,22 +678,75 @@ body {
   min-height: unset;
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin: 0 64px;
-  align-self: center;
+  justify-content: flex-start;
+  margin: var(--showcase-button-margin) 0 0 0;
+  align-self: flex-start;
   box-shadow: none;
-  transition: background 0.2s, transform 0.2s;
+  transition: transform 0.15s ease, opacity 0.2s ease;
   flex-shrink: 0;
   cursor: pointer;
-  padding: 0;
+  padding: 8px 0;
+  /* Обычный элемент в потоке */
+  position: static;
+  z-index: 3;
+  /* Оптимизация производительности */
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  /* Оптимизация для touch-устройств */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  /* Минимальный размер для touch */
+  min-width: 44px;
+  min-height: 44px;
+  /* Видимая стрелка */
+  opacity: 0.8;
 }
+
+/* Адаптивное выравнивание стрелки */
+/* На desktop - слева */
+@media (min-width: 900px) {
+  .product-showcase-arrow {
+    align-self: flex-start;
+    justify-content: flex-start;
+  }
+}
+
+/* На мобильных - по центру */
+@media (max-width: 899px) {
+  .product-showcase-arrow {
+    align-self: center;
+    justify-content: center;
+  }
+  
+  /* Принудительное центрирование контейнера изображений на мобильных */
+  .product-showcase-images {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    justify-content: center !important;
+    align-items: center !important;
+    display: flex !important;
+    width: 100% !important;
+  }
+  
+  /* Центрирование самого изображения */
+  .product-showcase-left {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    align-self: center !important;
+  }
+}
+.product-showcase-arrow:hover {
+  opacity: 1;
+  transform: translateX(4px);
+}
+
 .product-showcase-arrow:active {
-  transform: scale(0.95);
-  background: none;
+  transform: scale(0.95) translateX(4px);
 }
 .product-showcase-arrow-icon {
-  width: 50px;
-  height: 80px;
+  width: clamp(24px, 3vw, 36px);
+  height: clamp(24px, 3vw, 36px);
   display: block;
 }
 
@@ -137,91 +755,207 @@ body {
   flex-direction: column;
   justify-content: flex-start;
   align-items: flex-start;
-  margin-left: auto;
-  width: 600px;
-  min-width: 600px;
-  max-width: 600px;
+  margin-left: clamp(40px, 8vw, 120px);
+  width: var(--showcase-right-width);
+  min-width: var(--showcase-right-width);
+  max-width: var(--showcase-right-width);
   position: relative;
-  height: 340px;
+  height: clamp(280px, 35vh, 340px);
   text-align: left;
   background: transparent !important;
 }
 .product-showcase-title {
   font-family: 'Arial Narrow', Arial, sans-serif;
-  font-size: 48px;
+  font-size: var(--showcase-title-size);
   font-weight: 700;
   text-transform: uppercase;
   color: #000;
-  margin-bottom: 24px;
-  letter-spacing: 2px;
-  line-height: 1.1;
+  margin-bottom: var(--showcase-title-margin);
+  letter-spacing: var(--showcase-title-letter-spacing);
+  line-height: var(--showcase-title-line-height);
+  /* Улучшенный перенос текста */
   word-break: break-word;
   overflow-wrap: break-word;
+  hyphens: auto;
+  /* Предотвращение переполнения */
+  max-width: 100%;
+  /* Плавные переходы */
   transition: opacity 0.35s cubic-bezier(.77,0,.18,1), transform 0.35s cubic-bezier(.77,0,.18,1);
+  /* Оптимизация для мобильных устройств */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 .product-showcase-price {
   font-family: 'Arial Narrow', Arial, sans-serif;
-  font-size: 32px;
+  font-size: var(--showcase-price-size);
+  font-weight: 300;
   color: #000;
-  margin-bottom: 40px;
-  letter-spacing: 2px;
+  margin-bottom: var(--showcase-price-margin);
+  letter-spacing: clamp(0.8px, 0.25vw, 2.2px);
+  line-height: var(--showcase-price-line-height);
+  /* Улучшенный перенос текста */
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  white-space: nowrap;
+  /* Предотвращение переполнения */
+  max-width: 100%;
+  /* Плавные переходы */
   transition: opacity 0.35s cubic-bezier(.77,0,.18,1), transform 0.35s cubic-bezier(.77,0,.18,1);
+  /* Оптимизация для мобильных устройств */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 .product-showcase-preorder {
   background: #fff;
   color: #000;
   font-family: 'Arial Narrow', Arial, sans-serif;
-  font-size: 32px;
+  font-size: var(--showcase-button-size);
+  font-weight: 600;
   text-transform: uppercase;
   border: 2px solid #000;
-  border-radius: 0;
-  padding: 16px 48px;
-  margin-bottom: 32px;
+  border-radius: var(--showcase-button-radius);
+  padding: var(--showcase-button-padding-v) var(--showcase-button-padding-h);
+  margin-bottom: var(--showcase-button-margin);
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  /* Улучшенная типографика кнопки */
+  line-height: var(--showcase-button-line-height);
+  letter-spacing: clamp(0.5px, 0.1vw, 1.5px);
+  text-align: center;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Оптимизация для touch-устройств */
+  min-height: 44px;
+  min-width: 120px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  /* Предотвращение переполнения */
+  max-width: 100%;
+  box-sizing: border-box;
+  /* Плавные переходы */
+  transition: background 0.2s ease, color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+  /* Оптимизация для мобильных устройств */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 .product-showcase-preorder:hover {
   background: #000000;
   color: #fff;
   border-color: #000000;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
+.product-showcase-preorder:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.product-showcase-preorder:focus {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+}
+
+/* Оптимизированный анимационный оверлей */
 .product-showcase-anim-overlay {
   position: absolute;
   left: 0; top: 0; right: 0; bottom: 0;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.35s;
+  transition: opacity var(--anim-duration) var(--anim-easing);
   background: rgba(255,255,255,0.10);
   z-index: 0;
-  border-radius: 32px;
+  border-radius: clamp(16px, 2vw, 32px);
+  /* Оптимизация производительности */
+  will-change: opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
+
 .product-showcase-anim-overlay.anim {
   opacity: 1;
 }
 
-/* Анимация смены товара */
+/* Адаптивные стили для анимационного оверлея */
+@media (max-width: 899px) {
+  .product-showcase-anim-overlay {
+    border-radius: clamp(8px, 1.5vw, 16px);
+    background: rgba(255,255,255,0.05);
+  }
+}
+
+@media (max-width: 599px) {
+  .product-showcase-anim-overlay {
+    /* Упрощенный оверлей для мобильных устройств */
+    transition: opacity calc(var(--anim-duration) * 0.8) ease;
+    border-radius: var(--showcase-border-radius);
+  }
+}
+
+/* Отключение оверлея для слабых устройств */
+@media (max-width: 399px) {
+  .product-showcase-anim-overlay {
+    display: none;
+  }
+}
+
+/* Анимация смены товара - адаптивная для всех размеров экрана */
+
+/* CSS переменные для адаптивных анимаций */
+:root {
+  /* Адаптивные значения для анимаций */
+  --anim-translate-distance: clamp(60px, 8vw, 120px);
+  --anim-scale-out: clamp(0.9, 0.95, 0.85);
+  --anim-scale-in-start: clamp(1.05, 1.1, 1.15);
+  --anim-duration: 0.35s;
+  --anim-easing: cubic-bezier(.77,0,.18,1);
+  
+  /* Оптимизация для мобильных устройств */
+  --anim-mobile-translate: clamp(30px, 6vw, 80px);
+  --anim-mobile-scale-out: 0.95;
+  --anim-mobile-scale-in: 1.05;
+}
+
+/* Базовые анимационные классы */
 .product-anim-out {
   opacity: 0;
-  transform: translateX(-120px) scale(0.85);
+  transform: translateX(calc(-1 * var(--anim-translate-distance))) scale(var(--anim-scale-out));
   pointer-events: none;
-  transition: transform 0.35s cubic-bezier(.77,0,.18,1), opacity 0.35s cubic-bezier(.77,0,.18,1);
+  transition: transform var(--anim-duration) var(--anim-easing), 
+              opacity var(--anim-duration) var(--anim-easing);
+  /* Оптимизация производительности */
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
+
 .product-anim-in {
   opacity: 1;
   transform: translateX(0) scale(1);
   pointer-events: auto;
-  transition: transform 0.35s cubic-bezier(.77,0,.18,1), opacity 0.35s cubic-bezier(.77,0,.18,1);
+  transition: transform var(--anim-duration) var(--anim-easing), 
+              opacity var(--anim-duration) var(--anim-easing);
+  /* Оптимизация производительности */
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
+
 .product-anim-in.product-anim-new {
   opacity: 1;
-  transform: translateX(120px) scale(1.15);
-  animation: animInShowcase 0.35s cubic-bezier(.77,0,.18,1) forwards;
+  transform: translateX(var(--anim-translate-distance)) scale(var(--anim-scale-in-start));
+  animation: animInShowcase var(--anim-duration) var(--anim-easing) forwards;
 }
+
+/* Основная анимация входа */
 @keyframes animInShowcase {
   from {
     opacity: 0;
-    transform: translateX(120px) scale(1.15);
+    transform: translateX(var(--anim-translate-distance)) scale(var(--anim-scale-in-start));
   }
   to {
     opacity: 1;
@@ -229,70 +963,367 @@ body {
   }
 }
 
-@media (max-width: 400px) {
-  .product-showcase-root {
-    padding: 8px 2% 16px 2%;
-    border-radius: 6px;
-    min-height: 380px;
-    width: 100%;
+/* Адаптивные анимации для планшетов */
+@media (min-width: 600px) and (max-width: 1199px) {
+  :root {
+    --anim-translate-distance: clamp(40px, 6vw, 80px);
+    --anim-scale-out: 0.92;
+    --anim-scale-in-start: 1.08;
+    --anim-duration: 0.3s;
   }
-  .product-showcase-images {
-    gap: 6px;
+  
+  /* Оптимизированные анимации для планшетов */
+  .product-anim-out {
+    transform: translateX(calc(-1 * var(--anim-translate-distance))) scale(var(--anim-scale-out));
   }
-  .product-showcase-left {
-    width: 94%;
-    max-width: 340px;
-    height: 120px;
-    border-radius: 6px;
-  }
-  .product-showcase-model {
-    width: 94%;
-    max-width: 340px;
-    height: 120px;
-    border-radius: 6px;
-  }
-  .product-showcase-center {
-    width: 88%;
-    max-width: 280px;
-    height: 100px;
-    border-radius: 4px;
-  }
-  .product-showcase-product {
-    width: 88%;
-    max-width: 280px;
-    height: 100px;
-    border-radius: 4px;
-  }
-  .product-showcase-arrow {
-    margin: 8px 0;
-  }
-  .product-showcase-arrow-icon {
-    width: 30px;
-    height: 40px;
-  }
-  .product-showcase-title {
-    font-size: 16px;
-    min-height: 35px;
-    max-height: 45px;
-    margin-bottom: 8px;
-    line-height: 1.1;
-  }
-  .product-showcase-price {
-    font-size: 14px;
-    margin-bottom: 12px;
-  }
-  .product-showcase-preorder {
-    font-size: 12px;
-    padding: 8px 16px;
-    border-radius: 4px;
-    margin-bottom: 6px;
-  }
-  .product-showcase-right {
-    padding: 0 8px;
-    width: 92%;
-    max-width: 92%;
+  
+  .product-anim-in.product-anim-new {
+    transform: translateX(var(--anim-translate-distance)) scale(var(--anim-scale-in-start));
   }
 }
+
+/* Адаптивные анимации для мобильных устройств */
+@media (max-width: 599px) {
+  :root {
+    --anim-translate-distance: var(--anim-mobile-translate);
+    --anim-scale-out: var(--anim-mobile-scale-out);
+    --anim-scale-in-start: var(--anim-mobile-scale-in);
+    --anim-duration: 0.25s;
+  }
+  
+  /* Простая анимация fade для мобильных устройств */
+  .product-anim-out {
+    transform: scale(var(--anim-mobile-scale-out));
+    opacity: 0;
+  }
+  
+  .product-anim-in {
+    transform: scale(1);
+    opacity: 1;
+  }
+  
+  .product-anim-in.product-anim-new {
+    transform: scale(var(--anim-mobile-scale-in));
+    animation: animInShowcaseMobile var(--anim-duration) var(--anim-easing) forwards;
+  }
+  
+  /* Специальная анимация для мобильных устройств */
+  @keyframes animInShowcaseMobile {
+    from {
+      opacity: 0;
+      transform: scale(var(--anim-mobile-scale-in));
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  /* Скрываем второе изображение в анимациях */
+  .product-showcase-center.product-anim-out,
+  .product-showcase-center.product-anim-in,
+  .product-showcase-center.product-anim-new {
+    display: none !important;
+  }
+}
+
+/* Дополнительная оптимизация для очень маленьких экранов */
+@media (max-width: 399px) {
+  :root {
+    --anim-mobile-translate: 20px;
+    --anim-mobile-scale-out: 0.98;
+    --anim-mobile-scale-in: 1.02;
+    --anim-duration: 0.2s;
+  }
+}
+
+/* Оптимизация анимаций для слабых устройств */
+@media (max-width: 599px) and (prefers-reduced-motion: no-preference) {
+  .product-anim-out,
+  .product-anim-in {
+    /* Используем только GPU-ускоренные свойства */
+    transition: transform var(--anim-duration) var(--anim-easing), 
+                opacity var(--anim-duration) var(--anim-easing);
+    /* Принудительное использование GPU */
+    transform: translateZ(0);
+    will-change: transform, opacity;
+  }
+}
+
+/* Поддержка prefers-reduced-motion для accessibility */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --anim-duration: 0.01s;
+  }
+  
+  .product-anim-out,
+  .product-anim-in,
+  .product-anim-in.product-anim-new {
+    transition: opacity 0.01s ease;
+    animation: none;
+    transform: none;
+    will-change: auto;
+  }
+  
+  .product-anim-out {
+    opacity: 0;
+  }
+  
+  .product-anim-in {
+    opacity: 1;
+  }
+  
+  @keyframes animInShowcase,
+  @keyframes animInShowcaseMobile {
+    from, to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/* Дополнительные стили для плавного масштабирования и оптимизации производительности */
+.product-showcase-left,
+.product-showcase-center {
+  /* Обеспечиваем плавное изменение размеров */
+  transition: width 0.3s ease, height 0.3s ease, all 0.35s cubic-bezier(.77,0,.18,1);
+  /* Обеспечиваем корректное отображение на всех устройствах */
+  min-width: 0;
+  min-height: 0;
+  /* Оптимизация производительности анимаций */
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  /* Принудительное использование GPU для композитинга */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  /* Оптимизация рендеринга */
+  contain: layout style paint;
+}
+
+/* Дополнительная оптимизация для изображений в анимациях */
+.product-showcase-left > img,
+.product-showcase-center > img {
+  /* Оптимизация производительности */
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  /* Принудительное использование GPU */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* Оптимизация для слабых устройств */
+@media (max-width: 599px) {
+  .product-showcase-left,
+  .product-showcase-center {
+    /* Упрощенные переходы для мобильных устройств */
+    transition: transform var(--anim-duration) var(--anim-easing), 
+                opacity var(--anim-duration) var(--anim-easing);
+    /* Отключаем изменение размеров во время анимации на мобильных */
+    width: var(--showcase-model-width);
+    height: var(--showcase-model-height);
+  }
+  
+  .product-showcase-center {
+    width: var(--showcase-product-width);
+    height: var(--showcase-product-height);
+  }
+}
+
+/* Дополнительная оптимизация для очень слабых устройств */
+@media (max-width: 399px) and (prefers-reduced-motion: no-preference) {
+  .product-showcase-left,
+  .product-showcase-center {
+    /* Минимальные анимации для очень маленьких экранов */
+    transition: opacity var(--anim-duration) ease;
+  }
+  
+  .product-anim-out {
+    /* Только изменение прозрачности на очень маленьких экранах */
+    transform: none;
+    opacity: 0;
+  }
+  
+  .product-anim-in {
+    transform: none;
+    opacity: 1;
+  }
+  
+  .product-anim-in.product-anim-new {
+    animation: animInShowcaseMinimal var(--anim-duration) ease forwards;
+  }
+  
+  @keyframes animInShowcaseMinimal {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+.product-showcase-left > img,
+.product-showcase-center > img {
+  /* Обеспечиваем адаптивность изображений */
+  max-width: 100%;
+  max-height: 100%;
+  width: 100%;
+  height: 100%;
+  /* Улучшенная адаптивность изображений */
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Дополнительные адаптивные стили для контейнера */
+.product-showcase-root {
+  /* Обеспечиваем корректное поведение на всех устройствах */
+  overflow: hidden;
+  contain: layout style;
+}
+
+/* Улучшенная адаптивность для текстового блока */
+.product-showcase-right {
+  /* Обеспечиваем корректное поведение текста */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  /* Дополнительные стили для максимальной адаптивности */
+  width: 100%;
+  max-width: var(--showcase-right-width);
+  box-sizing: border-box;
+}
+
+/* Дополнительные адаптивные стили для заголовка */
+@media (max-width: 1199px) {
+  .product-showcase-title {
+    /* Улучшенный перенос для планшетов и мобильных */
+    word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    text-align: center;
+  }
+}
+
+@media (min-width: 1200px) {
+  .product-showcase-title {
+    /* Сохраняем левое выравнивание на desktop */
+    text-align: left;
+  }
+  
+  .product-showcase-price {
+    text-align: left;
+  }
+}
+
+/* Адаптивные стили для цены */
+@media (max-width: 1199px) {
+  .product-showcase-price {
+    text-align: center;
+    /* Предотвращаем перенос цены на новую строку */
+    white-space: nowrap;
+  }
+}
+
+/* Дополнительная оптимизация для очень длинных названий товаров */
+@media (max-width: 479px) {
+  .product-showcase-title {
+    /* Более агрессивный перенос для маленьких экранов */
+    word-break: break-all;
+    line-height: 1.15;
+  }
+}
+
+/* Дополнительные адаптивные стили для кнопки предзаказа */
+@media (max-width: 899px) {
+  .product-showcase-preorder {
+    /* Увеличиваем размер кнопки для планшетов и мобильных устройств */
+    min-height: 48px;
+    min-width: 140px;
+    /* Улучшенная доступность для touch */
+    padding: var(--showcase-button-padding-v) var(--showcase-button-padding-h);
+  }
+}
+
+@media (max-width: 599px) {
+  .product-showcase-preorder {
+    /* Оптимальный размер для мобильных устройств */
+    min-height: 50px;
+    min-width: 150px;
+    /* Дополнительные отступы для удобства нажатия */
+    margin: var(--showcase-button-margin) auto;
+  }
+}
+
+@media (max-width: 399px) {
+  .product-showcase-preorder {
+    /* Компактный размер для очень маленьких экранов */
+    min-height: 46px;
+    min-width: 130px;
+    font-size: 15px;
+  }
+}
+
+/* Расширенная поддержка prefers-reduced-motion для accessibility */
+@media (prefers-reduced-motion: reduce) {
+  /* Отключаем все анимации и переходы для пользователей с ограниченными возможностями */
+  .product-showcase-left,
+  .product-showcase-center,
+  .product-showcase-title,
+  .product-showcase-price,
+  .product-showcase-preorder,
+  .product-showcase-arrow,
+  .product-showcase-anim-overlay {
+    transition: none !important;
+    animation: none !important;
+    will-change: auto !important;
+  }
+  
+  /* Мгновенные переходы для анимационных классов */
+  .product-anim-out,
+  .product-anim-in,
+  .product-anim-in.product-anim-new {
+    transition: opacity 0.01s ease !important;
+    animation: none !important;
+    transform: none !important;
+    will-change: auto !important;
+  }
+  
+  /* Обеспечиваем корректную видимость элементов */
+  .product-anim-out {
+    opacity: 0 !important;
+  }
+  
+  .product-anim-in {
+    opacity: 1 !important;
+  }
+  
+  /* Отключаем все keyframe анимации */
+  @keyframes animInShowcase,
+  @keyframes animInShowcaseMobile {
+    from, to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  
+  /* Отключаем hover эффекты для кнопок */
+  .product-showcase-preorder:hover {
+    transform: none !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1) !important;
+  }
+  
+  .product-showcase-preorder:active {
+    transform: none !important;
+  }
+  
+  .product-showcase-arrow:active {
+    transform: none !important;
+  }
+}
+
+
 
 .product-showcase-link {
   text-decoration: none;
@@ -325,221 +1356,115 @@ body {
   border-radius: 0;
 }
 
-@media (max-width: 1400px) {
+
+/* Дополнительные оптимизации производительности анимаций */
+
+/* Оптимизация для устройств с низкой производительностью */
+@media (max-device-width: 768px) and (orientation: portrait) {
   .product-showcase-root {
-    max-width: 100%;
-    padding: 32px 4% 64px 4%;
+    /* Оптимизация композитинга для мобильных устройств */
+    contain: layout style paint;
+    isolation: isolate;
+  }
+  
+  .product-showcase-left,
+  .product-showcase-center {
+    /* Принудительное создание композитного слоя */
+    will-change: transform, opacity;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
   }
 }
 
-@media (max-width: 1200px) {
-  .product-showcase-root {
-    flex-direction: column;
-    align-items: center;
-    min-height: 800px;
-    padding: 24px 2% 48px 2%;
-    border-radius: 20px;
-    width: 100%;
-    margin: 0 auto;
-  }
-  .product-showcase-images {
-    min-width: unset;
-    width: 100%;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-  }
-  .product-showcase-left {
-    width: 85%;
-    max-width: 500px;
-    height: 300px;
-    border-radius: 16px;
-    margin: 0;
-  }
-  .product-showcase-model {
-    width: 85%;
-    max-width: 500px;
-    height: 300px;
-    border-radius: 16px;
-    margin: 0;
-  }
-  .product-showcase-center {
-    width: 75%;
-    max-width: 400px;
-    height: 250px;
-    border-radius: 14px;
-    margin: 0;
-    left: 0;
-    top: 0;
-    position: relative;
-  }
-  .product-showcase-product {
-    width: 75%;
-    max-width: 400px;
-    height: 250px;
-    border-radius: 14px;
-    margin: 0;
-    left: 0;
-    top: 0;
-    position: relative;
-  }
-  .product-showcase-arrow {
-    margin: 20px 0;
-    order: 1;
-  }
-  .product-showcase-right {
-    margin-left: 0;
-    align-items: center;
-    text-align: center;
-    min-width: unset;
-    max-width: 90%;
-    width: 90%;
-    order: 2;
-  }
-  .product-showcase-title {
-    font-size: 28px;
-    text-align: center;
-  }
-  .product-showcase-price {
-    font-size: 22px;
-    text-align: center;
-  }
-  .product-showcase-preorder {
-    font-size: 20px;
-    padding: 14px 40px;
+/* Оптимизация для устройств с высоким DPI */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .product-showcase-left > img,
+  .product-showcase-center > img {
+    /* Оптимизация рендеринга изображений на Retina дисплеях */
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
   }
 }
 
-@media (max-width: 900px) {
-  .product-showcase-root {
-    padding: 16px 2% 24px 2%;
-    border-radius: 12px;
-    min-height: 600px;
-    width: 100% !important;
-  }
-  .product-showcase-images {
-    gap: 12px;
-  }
-  .product-showcase-left {
-    width: 90%;
-    max-width: none;
-    height: 200px;
-    border-radius: 12px;
-  }
-  .product-showcase-model {
-    width: 90%;
-    max-width: none;
-    height: 200px;
-    border-radius: 12px;
-  }
-  .product-showcase-center {
-    width: 80%;
-    max-width: none;
-    height: 180px;
-    border-radius: 10px;
-  }
-  .product-showcase-product {
-    width: 80%;
-    max-width: none;
-    height: 180px;
-    border-radius: 10px;
-  }
-  .product-showcase-arrow {
-    margin: 16px 0;
-  }
-  .product-showcase-arrow-icon {
-    width: 40px;
-    height: 60px;
-  }
-  .product-showcase-title {
-    font-size: 22px;
-    min-height: 50px;
-    max-height: 60px;
-    margin-bottom: 16px;
-  }
-  .product-showcase-price {
-    font-size: 18px;
-    margin-bottom: 20px;
-  }
-  .product-showcase-preorder {
-    font-size: 16px;
-    padding: 12px 24px;
-    border-radius: 8px;
-    margin-bottom: 12px;
-  }
-  .product-showcase-right {
-    width: 95%;
-    min-width: unset;
-    max-width: 95%;
-    height: auto;
-    padding: 0 16px;
-    align-items: center;
+/* Оптимизация для старых браузеров */
+@supports not (will-change: transform) {
+  .product-anim-out,
+  .product-anim-in {
+    /* Fallback для старых браузеров без поддержки will-change */
+    -webkit-transform: translateZ(0);
+    -moz-transform: translateZ(0);
+    -ms-transform: translateZ(0);
+    transform: translateZ(0);
   }
 }
 
-@media (max-width: 600px) {
-  .product-showcase-root {
-    flex-direction: column;
-    align-items: center;
-    padding: 12px 2% 20px 2%;
-    border-radius: 8px;
-    min-height: 450px;
-    width: 100% !important;
+/* Оптимизация для браузеров без поддержки CSS custom properties */
+@supports not (--css: variables) {
+  .product-anim-out {
+    transform: translateX(-80px) scale(0.9);
+    transition: transform 0.3s cubic-bezier(.77,0,.18,1), opacity 0.3s cubic-bezier(.77,0,.18,1);
   }
-  .product-showcase-images {
-    gap: 8px;
+  
+  .product-anim-in {
+    transform: translateX(0) scale(1);
+    transition: transform 0.3s cubic-bezier(.77,0,.18,1), opacity 0.3s cubic-bezier(.77,0,.18,1);
   }
-  .product-showcase-left {
-    width: 92%;
-    max-width: none;
-    height: 150px;
-    border-radius: 8px;
+  
+  .product-anim-in.product-anim-new {
+    transform: translateX(80px) scale(1.1);
+    animation: animInShowcaseFallback 0.3s cubic-bezier(.77,0,.18,1) forwards;
   }
-  .product-showcase-model {
-    width: 92%;
-    max-width: none;
-    height: 150px;
-    border-radius: 8px;
+  
+  @keyframes animInShowcaseFallback {
+    from {
+      opacity: 0;
+      transform: translateX(80px) scale(1.1);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
   }
+}
+
+/* Дополнительная оптимизация для медленных соединений */
+@media (prefers-reduced-data: reduce) {
+  .product-showcase-anim-overlay {
+    display: none;
+  }
+  
+  .product-anim-out,
+  .product-anim-in {
+    transition-duration: 0.1s;
+  }
+}
+
+/* Оптимизация для устройств с низким энергопотреблением */
+@media (prefers-reduced-motion: no-preference) and (max-width: 599px) {
+  .product-showcase-left,
   .product-showcase-center {
-    width: 85%;
-    max-width: none;
-    height: 130px;
-    border-radius: 6px;
+    /* Используем только самые эффективные CSS свойства для анимации */
+    transition-property: transform, opacity;
+    transition-timing-function: ease-out;
   }
-  .product-showcase-product {
-    width: 85%;
-    max-width: none;
-    height: 130px;
-    border-radius: 6px;
+}
+
+/* Финальная оптимизация для критически слабых устройств */
+@media (max-width: 320px) {
+  .product-anim-out,
+  .product-anim-in,
+  .product-anim-in.product-anim-new {
+    /* Минимальные анимации для очень старых устройств */
+    transition: opacity 0.15s ease;
+    transform: none;
+    animation: none;
   }
-  .product-showcase-arrow {
-    margin: 12px 0;
+  
+  .product-anim-out {
+    opacity: 0;
   }
-  .product-showcase-arrow-icon {
-    width: 35px;
-    height: 50px;
-  }
-  .product-showcase-title {
-    font-size: 18px;
-    min-height: 40px;
-    max-height: 50px;
-    margin-bottom: 12px;
-    line-height: 1.2;
-  }
-  .product-showcase-price {
-    font-size: 16px;
-    margin-bottom: 16px;
-  }
-  .product-showcase-preorder {
-    font-size: 14px;
-    padding: 10px 20px;
-    border-radius: 6px;
-    margin-bottom: 8px;
-  }
-  .product-showcase-right {
-    padding: 0 12px;
-    width: 90%;
-    max-width: 90%;
+  
+  .product-anim-in {
+    opacity: 1;
   }
 }

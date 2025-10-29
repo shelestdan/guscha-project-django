@@ -1,6 +1,23 @@
 :root {
   --pdp-left-panel-width: 420px;
   --pdp-top-offset: 80px; /* Adjust based on main header height */
+  
+  /* Адаптивные размеры для разных устройств */
+  --pdp-mobile-padding: 15px;
+  --pdp-tablet-padding: 20px;
+  --pdp-desktop-padding: 30px;
+  
+  --pdp-mobile-gap: 15px;
+  --pdp-tablet-gap: 20px;
+  --pdp-desktop-gap: 30px;
+  
+  --pdp-button-mobile-padding: 12px 20px;
+  --pdp-button-tablet-padding: 14px 28px;
+  --pdp-button-desktop-padding: 16px 32px;
+  
+  --pdp-control-mobile-gap: 10px;
+  --pdp-control-tablet-gap: 15px;
+  --pdp-control-desktop-gap: 30px;
 }
 
 .pdp-root {
@@ -85,9 +102,12 @@
 }
 
 .pdp-controls-grid {
-  display: flex;
-  align-items: center;
-  gap: 30px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--pdp-control-desktop-gap, 30px);
+  margin-bottom: 30px;
+  align-items: start;
+  justify-content: space-between;
 }
 
 .pdp-control-group {
@@ -170,6 +190,9 @@
 /* Image Gallery */
 .pdp-image-gallery {
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
 .pdp-image {
@@ -177,6 +200,15 @@
   height: auto;
   margin-bottom: 20px;
   background-color: #f9f9f9;
+}
+
+.pdp-image-gallery img {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  transition: transform 0.3s ease;
 }
 
 /* Responsive (Mobile) */
@@ -696,6 +728,292 @@
   }
   .a24-recommendation-card {
     min-width: 100%;
+  }
+}
+
+/* Responsive adjustments */
+/* Мобильные устройства (до 480px) */
+@media (max-width: 480px) {
+  .pdp-container {
+    flex-direction: column;
+    gap: var(--pdp-mobile-gap);
+    padding: var(--pdp-mobile-padding);
+  }
+
+  .pdp-left-panel {
+    width: 100%;
+    position: relative;
+    top: 0;
+    padding: var(--pdp-mobile-padding);
+  }
+
+  .pdp-right-panel {
+    width: 100%;
+    padding: var(--pdp-mobile-padding);
+  }
+
+  .pdp-controls-grid {
+    grid-template-columns: 1fr;
+    gap: var(--pdp-control-mobile-gap);
+  }
+
+  .pdp-add-to-cart-btn {
+    width: 100%;
+    margin-left: 0;
+    padding: var(--pdp-button-mobile-padding);
+    font-size: 14px;
+    min-height: 44px; /* Минимальная высота для touch интерфейса */
+  }
+
+  .pdp-image-gallery img {
+    max-width: 100%;
+    height: auto;
+    min-height: 200px;
+    object-fit: cover;
+  }
+
+  .pdp-title {
+    font-size: 18px;
+    line-height: 1.3;
+  }
+
+  .pdp-price {
+    font-size: 16px;
+  }
+
+  .pdp-description {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+}
+
+/* Планшеты портрет (481px - 768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+  .pdp-container {
+    flex-direction: column;
+    gap: var(--pdp-tablet-gap);
+    padding: var(--pdp-tablet-padding);
+  }
+
+  .pdp-left-panel {
+    width: 100%;
+    position: relative;
+    top: 0;
+    padding: var(--pdp-tablet-padding);
+  }
+
+  .pdp-right-panel {
+    width: 100%;
+    padding: var(--pdp-tablet-padding);
+  }
+
+  .pdp-controls-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--pdp-control-tablet-gap);
+  }
+
+  .pdp-add-to-cart-btn {
+    width: 100%;
+    margin-left: 0;
+    padding: var(--pdp-button-tablet-padding);
+    font-size: 15px;
+    min-height: 48px;
+  }
+
+  .pdp-image-gallery img {
+    max-width: 100%;
+    height: auto;
+    min-height: 250px;
+    object-fit: cover;
+  }
+}
+
+/* Планшеты ландшафт (769px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .pdp-container {
+    gap: var(--pdp-tablet-gap);
+    padding: var(--pdp-tablet-padding);
+  }
+
+  .pdp-left-panel {
+    width: 45%;
+    padding: var(--pdp-tablet-padding);
+  }
+
+  .pdp-right-panel {
+    width: 55%;
+    padding: var(--pdp-tablet-padding);
+  }
+
+  .pdp-controls-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--pdp-control-tablet-gap);
+  }
+
+  .pdp-add-to-cart-btn {
+    padding: var(--pdp-button-tablet-padding);
+    font-size: 15px;
+    min-height: 48px;
+  }
+
+  .pdp-image-gallery img {
+    max-width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+}
+
+/* Очень маленькие экраны (321px - 400px) */
+@media (max-width: 400px) {
+  .pdp-container {
+    flex-direction: column;
+    gap: var(--pdp-mobile-gap);
+    padding: 10px;
+  }
+
+  .pdp-left-panel {
+    width: 100%;
+    position: relative;
+    top: 0;
+    padding: 10px;
+  }
+
+  .pdp-right-panel {
+    width: 100%;
+    padding: 10px;
+  }
+
+  .pdp-controls-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .pdp-add-to-cart-btn {
+    width: 100%;
+    margin-left: 0;
+    padding: 10px 16px;
+    font-size: 13px;
+    min-height: 42px;
+  }
+
+  .pdp-image-gallery {
+    padding: 10px;
+  }
+
+  .pdp-image-gallery img {
+    max-width: 100%;
+    height: auto;
+    min-height: 150px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+
+  .pdp-title {
+    font-size: 16px;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+
+  .pdp-price {
+    font-size: 15px;
+    margin-bottom: 15px;
+  }
+
+  .pdp-description {
+    font-size: 13px;
+    line-height: 1.3;
+  }
+}
+
+/* Экстремально маленькие экраны (до 320px) */
+@media (max-width: 320px) {
+  .pdp-root {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .pdp-container {
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .pdp-left-panel {
+    width: 100%;
+    position: relative;
+    top: 0;
+    padding: 8px;
+    border-right: none;
+    border-bottom: 1px solid #e5e5e5;
+  }
+
+  .pdp-right-panel {
+    width: 100%;
+    padding: 8px;
+    height: auto;
+    overflow-y: visible;
+  }
+
+  .pdp-sticky-controls {
+    position: relative;
+    padding: 15px 8px;
+  }
+
+  .pdp-controls-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    margin-bottom: 15px;
+  }
+
+  .pdp-add-to-cart-btn {
+    width: 100%;
+    margin-left: 0;
+    padding: 8px 12px;
+    font-size: 12px;
+    min-height: 40px;
+  }
+
+  .pdp-image-gallery {
+    padding: 8px;
+  }
+
+  .pdp-image-gallery img {
+    max-width: 100%;
+    width: 100%;
+    height: auto;
+    min-height: 120px;
+    object-fit: cover;
+    border-radius: 3px;
+  }
+
+  .pdp-title {
+    font-size: 14px;
+    line-height: 1.2;
+    margin-bottom: 6px;
+  }
+
+  .pdp-price {
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+
+  .pdp-description {
+    font-size: 12px;
+    line-height: 1.3;
+  }
+
+  .pdp-control-label {
+    font-size: 0.7rem;
+  }
+
+  .pdp-picker-btn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+
+  .pdp-picker-btn.quantity {
+    width: 35px;
+    padding: 6px;
   }
 }
 
