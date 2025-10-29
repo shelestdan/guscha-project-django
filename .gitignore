@@ -24,14 +24,34 @@ debug_toolbar/
 instance/
 .webassets-cache
 
-# Environments
+# Environments - КРИТИЧЕСКИ ВАЖНО!
 .env
+.env.*
+!.env.example
+!.env.production
 .venv
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
+
+# Docker volumes and data
+guscha_django/data/postgres/
+guscha_django/data/redis/
+postgres_data/
+redis_data/
+
+# SSL certificates
+ssl/
+*.pem
+*.crt
+*.key
+
+# Backups
+backups/
+*.sql
+*.tar.gz
 
 # React / Node.js
 node_modules/

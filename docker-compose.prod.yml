@@ -1,0 +1,190 @@
+# Production Docker Compose Configuration
+version: '3.8'
+
+networks:
+  guscha-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  static_files:
+    driver: local
+  media_files:
+    driver: local
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15.4-alpine
+    container_name: guscha-db-prod
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - guscha-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+
+  # Redis Cache
+  redis:
+    image: redis:7.2-alpine
+    container_name: guscha-redis-prod
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - guscha-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  # Django Backend
+  django:
+    build:
+      context: ./guscha_django
+      dockerfile: Dockerfile
+      target: production
+    container_name: guscha-django-prod
+    env_file:
+      - ./guscha_django/.env
+    volumes:
+      - static_files:/app/static_root
+      - media_files:/app/media
+      - ./guscha_django/logs:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - guscha-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health/', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # Telegram Bot
+  telegram-bot:
+    build:
+      context: ./guscha_django
+      dockerfile: Dockerfile.telegram
+      target: production
+    container_name: guscha-telegram-bot-prod
+    env_file:
+      - ./guscha_django/.env
+    volumes:
+      - ./guscha_django/logs:/app/logs
+      - ./guscha_django/telegram_bot/logs:/app/telegram_bot/logs
+    depends_on:
+      django:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - guscha-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.path.append('/app'); from telegram_bot.utils.health import check_bot_health; check_bot_health()"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  # Frontend Build
+  frontend:
+    build:
+      context: ./guscha_django_frontend
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: ${FRONTEND_URL}/api
+    container_name: guscha-frontend-build
+    volumes:
+      - static_files:/app/build
+    networks:
+      - guscha-network
+
+  # Nginx Web Server
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: guscha-nginx-prod
+    ports:
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
+    volumes:
+      - ./guscha_django/config/nginx.conf:/etc/nginx/nginx.conf:ro
+      - static_files:/var/www/react:ro
+      - static_files:/var/www/static:ro
+      - media_files:/var/www/media:ro
+      - ./ssl:/etc/nginx/ssl:ro  # SSL certificates
+    depends_on:
+      django:
+        condition: service_healthy
+      frontend:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    networks:
+      - guscha-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/nginx-health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
