@@ -110,30 +110,23 @@ install_docker() {
     fi
 }
 
-# Клонирование репозитория
-clone_repository() {
-    print_step "Клонирование репозитория..."
+# Проверка что мы в правильной директории
+check_project_directory() {
+    print_step "Проверка структуры проекта..."
     
-    if [ -d "guscha-project-django" ]; then
-        print_warning "Директория guscha-project-django уже существует"
-        read -p "Удалить и клонировать заново? (y/N): " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            rm -rf guscha-project-django
-        else
-            print_step "Использование существующей директории..."
-            cd guscha-project-django
-            git pull origin macOS
-            cd ..
-        fi
+    if [ ! -f "guscha_django/docker-compose.dev.yml" ]; then
+        print_error "Ошибка: docker-compose.dev.yml не найден"
+        print_error "Убедитесь что вы запускаете скрипт из корневой директории проекта"
+        exit 1
     fi
     
-    if [ ! -d "guscha-project-django" ]; then
-        git clone -b macOS git@github.com:shelestdan/guscha-project-django.git
+    if [ ! -f "guscha_django/.env.example" ]; then
+        print_error "Ошибка: .env.example не найден"
+        print_error "Убедитесь что вы скачали полный проект"
+        exit 1
     fi
     
-    cd guscha-project-django
-    print_success "Репозиторий склонирован"
+    print_success "Структура проекта корректна"
 }
 
 # Настройка переменных окружения
@@ -288,7 +281,8 @@ main() {
     print_header
     
     echo -e "${YELLOW}Этот скрипт выполнит полную установку проекта Guscha${NC}"
-    echo -e "${YELLOW}Включая: Docker, Git клонирование, настройку и запуск${NC}"
+    echo -e "${YELLOW}Включая: Docker, настройку и запуск всех сервисов${NC}"
+    echo -e "${YELLOW}Убедитесь что вы запускаете скрипт из корневой директории проекта${NC}"
     echo
     read -p "Продолжить? (y/N): " -n 1 -r
     echo
@@ -299,7 +293,7 @@ main() {
     
     check_requirements
     install_docker
-    clone_repository
+    check_project_directory
     setup_environment
     build_and_start
     check_services

@@ -2,23 +2,20 @@
 
 ## ⚡ Супер быстрый старт
 
-### На новом macOS/Linux сервере выполните ОДНУ команду:
-
+### 1. Скачайте проект (приватный репозиторий)
 ```bash
-curl -fsSL https://raw.githubusercontent.com/shelestdan/guscha-project-django/macOS/FULL_SETUP.sh -o setup.sh && chmod +x setup.sh && ./setup.sh
+# Скачайте проект любым удобным способом и распакуйте
+# Перейдите в директорию проекта
+cd guscha-project-django
 ```
 
-## 📋 Или по шагам:
-
-### 1. Скачайте и запустите:
+### 2. Запустите установку:
 ```bash
-git clone -b macOS git@github.com:shelestdan/guscha-project-django.git
-cd guscha-project-django
 chmod +x FULL_SETUP.sh
 ./FULL_SETUP.sh
 ```
 
-### 2. Готово! 🎉
+### 3. Готово! 🎉
 
 После установки будете иметь:
 - 🌐 **Сайт:** http://localhost
@@ -30,7 +27,7 @@ chmod +x FULL_SETUP.sh
 
 1. **🔍 Проверяет систему** (macOS/Linux)
 2. **📦 Устанавливает Docker** (если нужен)
-3. **📥 Клонирует репозиторий** с GitHub
+3. **📁 Проверяет структуру проекта**
 4. **⚙️ Настраивает .env** файл
 5. **🐳 Собирает Docker образы**
 6. **🚀 Запускает все контейнеры**
@@ -65,5 +62,11 @@ docker-compose -f docker-compose.dev.yml restart
 # Остановить
 docker-compose -f docker-compose.dev.yml down
 ```
+
+## 📋 Важно:
+
+- Скрипт нужно запускать **из корневой директории проекта**
+- Убедитесь что файлы `guscha_django/docker-compose.dev.yml` и `guscha_django/.env.example` существуют
+- Для macOS нужна установка Docker Desktop вручную
 
 **Больше НИЧЕГО настраивать не нужно!** 🚀
