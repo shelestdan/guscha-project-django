@@ -123,8 +123,9 @@ guscha_django/static_root/
 guscha_django/staticfiles/
 
 # Django media files (user uploads)
-media/
-guscha_django/media/
+# TEMPORARILY DISABLED FOR TESTING - media files included for development
+# media/
+# guscha_django/media/
 
 # Django data directory (PostgreSQL data, etc.)
 data/
