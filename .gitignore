@@ -1,71 +1,14 @@
-# Django
-*.log
-*.pot
-*.pyc
+# ============================================================================
+# PYTHON
+# ============================================================================
+
+# Byte-compiled / optimized / DLL files
 __pycache__/
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-media
-
-# Django static files and data
-guscha_django/static/
-guscha_django/static_root/
-guscha_django/data/
-
-# Django profiling files
-profiles/
-*.prof
-
-# Django debug toolbar
-debug_toolbar/
-
-# Flask
-instance/
-.webassets-cache
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# React / Node.js
-node_modules/
-/build/
-/.pnp
-.pnp.js
-
-# testing
-/coverage
-
-# production
-/build
-
-# misc
-.DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# IDE specific files
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# Python
 *.py[cod]
 *$py.class
 *.so
+
+# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -79,40 +22,408 @@ parts/
 sdist/
 var/
 wheels/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-PIPFILE_LOCK
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
 
-# Backup files
-*.bak
+# PyInstaller
+*.manifest
+*.spec
 
-# Trae AI specific
-.trae/
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
 
-# Frontend build artifacts
-guscha_django_frontend/
+# Translations
+*.mo
+*.pot
+
+# Scrapy stuff
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# ============================================================================
+# DJANGO
+# ============================================================================
+
+# Django stuff
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Django static files
+static_root/
+staticfiles/
+guscha_django/static_root/
+guscha_django/staticfiles/
+
+# Django media files (user uploads)
+media/
+guscha_django/media/
+
+# Django data directory (PostgreSQL data, etc.)
+data/
+guscha_django/data/
+
+# Django profiling files (Django Silk)
+profiles/
+guscha_django/profiles/
+*.prof
+
+# Django logs
+logs/
+guscha_django/logs/
+*.log
+
+# Django debug toolbar
+debug_toolbar/
+
+# Django migrations (опционально, раскомментируйте если не хотите коммитить)
+# */migrations/*.py
+# !*/migrations/__init__.py
+
+# ============================================================================
+# ENVIRONMENTS
+# ============================================================================
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+ENV/
+env.bak/
+venv.bak/
+guscha_django/venv/
+guscha_django/.venv/
+
+# Environment variables (КРИТИЧНО!)
+.env
+.env.*
+!.env.example
+!.env.production
+guscha_django/.env
+guscha_django/.env.*
+!guscha_django/.env.example
+
+# ============================================================================
+# NODE.JS / REACT
+# ============================================================================
+
+# Dependencies
+node_modules/
+guscha_django_frontend/node_modules/
+jspm_packages/
+
+# Production build
 build/
+guscha_django_frontend/build/
 dist/
-*.map
+guscha_django_frontend/dist/
 
-# Embedded git repositories
-guscha_project/
+# Testing
+coverage/
+guscha_django_frontend/coverage/
+.nyc_output
+
+# Misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Yarn
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# parcel-bundler cache
+.cache
+.parcel-cache
+
+# Next.js
+.next
+out
+
+# Nuxt.js
+.nuxt
+dist
+
+# Gatsby files
+.cache/
+public
+
+# vuepress
+.vuepress/dist
+
+# Serverless directories
+.serverless/
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# ============================================================================
+# DOCKER
+# ============================================================================
+
+# Docker volumes data
+postgres_data/
+redis_data/
+guscha_django/data/postgres/
+guscha_django/data/redis/
+
+# Docker build cache
+# .dockerignore should be committed
+
+# ============================================================================
+# SSL / CERTIFICATES
+# ============================================================================
+
+# SSL certificates
+ssl/
+*.crt
+*.p12
+*.pfx
+# Note: *.pem and *.key already defined in Security section
+
+# ============================================================================
+# BACKUPS
+# ============================================================================
+
+# Database backups
+backups/
+guscha_django/backups/
+*.sql
+*.dump
+*.tar.gz
+*.zip
+
+# ============================================================================
+# IDE / EDITORS
+# ============================================================================
+
+# VSCode
+.vscode/
+.history/
+.ionide/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+.vim/
+
+# Emacs
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Eclipse
+.project
+.pydevproject
+.settings/
+
+# ============================================================================
+# OS SPECIFIC
+# ============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
 
 # Windows
 Thumbs.db
+Thumbs.db:encryptable
 ehthumbs.db
-Desktop.ini
-
-# Recycle Bin used on file shares
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
 $RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
 
-# VS Code directories that might contain sensitive data
-.history/
-.ionide/
+# Linux
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
 
-# Strix AI Security Scanner files
+# ============================================================================
+# SECURITY / SENSITIVE DATA
+# ============================================================================
+
+# Security scanner files
 agent_runs/
 .strix.env
 run_security_scan.ps1
 STRIX_SETUP_GUIDE.md
+
+# AI tools
+.trae/
+
+# Credentials
+credentials.json
+secrets.json
+*.key
+*.pem
+
+# ============================================================================
+# PROJECT SPECIFIC
+# ============================================================================
+
+# Embedded git repositories (если есть submodules, раскомментируйте)
+# guscha_project/
+
+# Requirements full (для справки, не нужен в git)
+requirements-full.txt
+requirements-clean.txt
+requirements-dev.txt
+
+# Temporary analysis files
+*.tmp
+*.temp
+
+# Performance reports
+performance_reports/
+bundle_reports/
+
+# ============================================================================
+# TESTING
+# ============================================================================
+
+# Test databases
+test_*.db
+test_*.sqlite3
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# ============================================================================
+# DOCUMENTATION (опционально)
+# ============================================================================
+
+# Если не хотите коммитить документацию, раскомментируйте:
+# *.md
+# !README.md
+# !CONTRIBUTING.md
+# !LICENSE.md

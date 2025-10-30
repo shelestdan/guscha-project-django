@@ -1,7 +1,9 @@
-# Оптимизированный Dockerfile для Django приложения
-# Многоступенчатая сборка для уменьшения размера образа
+# ============================================================================
+# OPTIMIZED DOCKERFILE FOR DJANGO APPLICATION
+# Multi-stage build for minimal image size
+# ============================================================================
 
-# Стадия сборки
+# Build stage
 FROM python:3.11.6-slim as builder
 
 # Метаданные образа
@@ -35,10 +37,10 @@ ENV PATH="/opt/venv/bin:$PATH"
 COPY requirements.txt /tmp/
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
-# Продакшн стадия
+# Production stage
 FROM python:3.11.6-slim as production
 
-# Метаданные для продакшн образа
+# Production metadata
 LABEL stage="production"
 
 # Переменные окружения
@@ -47,46 +49,47 @@ ENV PYTHONUNBUFFERED=1 \
     PATH="/opt/venv/bin:$PATH" \
     APP_HOME=/app
 
-# Установка только runtime зависимостей
+# Install only runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     default-libmysqlclient-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-# Копирование виртуального окружения из стадии сборки
+# Copy virtual environment from builder stage
 COPY --from=builder /opt/venv /opt/venv
 
-# Создание пользователя app
+# Create non-privileged user
 RUN addgroup --system app && adduser --system --group app
 
-# Установка рабочей директории
+# Set working directory
 WORKDIR $APP_HOME
 
-# Создание необходимых директорий
+# Create necessary directories
 RUN mkdir -p $APP_HOME/static_root $APP_HOME/logs $APP_HOME/telegram_bot/logs $APP_HOME/media $APP_HOME/backups
 
-# Копирование файлов приложения (порядок оптимизирован для кэширования)
-COPY manage.py $APP_HOME/
-COPY start_django_server.py $APP_HOME/
-COPY guscha_project/ $APP_HOME/guscha_project/
-COPY apps/ $APP_HOME/apps/
-COPY telegram_bot/ $APP_HOME/telegram_bot/
-COPY templates/ $APP_HOME/templates/
-COPY static/ $APP_HOME/static/
+# Copy application files (order optimized for caching)
+COPY --chown=app:app manage.py $APP_HOME/
+COPY --chown=app:app start_django_server.py $APP_HOME/
+COPY --chown=app:app guscha_project/ $APP_HOME/guscha_project/
+COPY --chown=app:app apps/ $APP_HOME/apps/
+COPY --chown=app:app telegram_bot/ $APP_HOME/telegram_bot/
+COPY --chown=app:app templates/ $APP_HOME/templates/
+COPY --chown=app:app static/ $APP_HOME/static/
 
-# Копирование и настройка скрипта запуска
-COPY scripts/start.sh $APP_HOME/start.sh
+# Copy and setup startup script
+COPY --chown=app:app scripts/start.sh $APP_HOME/start.sh
 RUN chmod +x $APP_HOME/start.sh
 
-# Устанавливаем права доступа для пользователя app
-RUN chown -R app:app $APP_HOME
+# Switch to non-privileged user
+USER app
 
-# Открытие порта
+# Expose port
 EXPOSE 8000
 
-# Healthcheck для мониторинга состояния
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8000/health/', timeout=5)" || exit 1
+# Health check for monitoring
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8000/health/ || exit 1
 
-# Запуск приложения
+# Start application
 CMD ["./start.sh"]

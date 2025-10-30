@@ -1,7 +1,9 @@
-# Оптимизированный Docker Compose для разработки
+# ============================================================================
+# OPTIMIZED DOCKER COMPOSE FOR DEVELOPMENT ENVIRONMENT
+# ============================================================================
 version: '3.8'
 
-# Определение сетей для изоляции сервисов
+# Network definition for service isolation
 networks:
   guscha-network:
     driver: bridge
@@ -27,7 +29,7 @@ services:
     restart: unless-stopped
     networks:
       - guscha-network
-    # Ограничения ресурсов
+    # Resource limits
     deploy:
       resources:
         limits:
@@ -36,14 +38,14 @@ services:
         reservations:
           cpus: '0.1'
           memory: 64M
-    # Healthcheck
+    # Health check
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/health/"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
-    # Настройки логирования
+    # Logging configuration
     logging:
       driver: "json-file"
       options:
@@ -73,7 +75,7 @@ services:
       - POSTGRES_PASSWORD=guscha123
       - POSTGRES_HOST=db
       - POSTGRES_PORT=5432
-      # Security settings - переменные безопасности
+      # Security settings
       - ADMIN_URL=${ADMIN_URL}
       - ADMIN_IP_WHITELIST=${ADMIN_IP_WHITELIST:-}
       - EMAIL_HOST=${EMAIL_HOST:-smtp.gmail.com}
@@ -91,7 +93,7 @@ services:
     restart: unless-stopped
     networks:
       - guscha-network
-    # Ограничения ресурсов
+    # Resource limits
     deploy:
       resources:
         limits:
@@ -100,14 +102,14 @@ services:
         reservations:
           cpus: '0.2'
           memory: 256M
-    # Healthcheck
+    # Health check
     healthcheck:
       test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health/', timeout=5)"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 30s
-    # Настройки логирования
+    # Logging configuration
     logging:
       driver: "json-file"
       options:
@@ -122,7 +124,7 @@ services:
       POSTGRES_DB: guscha_dev
       POSTGRES_USER: guscha
       POSTGRES_PASSWORD: guscha123
-      # Добавляем оптимизации:
+      # Performance optimizations:
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
     volumes:
       - postgres_data_dev:/var/lib/postgresql/data
@@ -132,7 +134,7 @@ services:
     restart: unless-stopped
     networks:
       - guscha-network
-    # Ограничения ресурсов
+    # Resource limits
     deploy:
       resources:
         limits:
@@ -141,14 +143,14 @@ services:
         reservations:
           cpus: '0.2'
           memory: 256M
-    # Healthcheck
+    # Health check
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U guscha -d guscha_dev"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
-    # Настройки логирования
+    # Logging configuration
     logging:
       driver: "json-file"
       options:
@@ -169,7 +171,7 @@ services:
     restart: unless-stopped
     networks:
       - guscha-network
-    # Ограничения ресурсов
+    # Resource limits
     deploy:
       resources:
         limits:
@@ -178,14 +180,14 @@ services:
         reservations:
           cpus: '0.05'
           memory: 32M
-    # Healthcheck
+    # Health check
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9187/metrics"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
-    # Настройки логирования
+    # Logging configuration
     logging:
       driver: "json-file"
       options:
@@ -202,7 +204,7 @@ services:
     restart: unless-stopped
     networks:
       - guscha-network
-    # Ограничения ресурсов
+    # Resource limits
     deploy:
       resources:
         limits:
@@ -211,14 +213,14 @@ services:
         reservations:
           cpus: '0.1'
           memory: 64M
-    # Healthcheck
+    # Health check
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 3s
       retries: 3
       start_period: 10s
-    # Настройки логирования
+    # Logging configuration
     logging:
       driver: "json-file"
       options:
@@ -256,7 +258,7 @@ services:
     restart: unless-stopped
     networks:
       - guscha-network
-    # Ограничения ресурсов
+    # Resource limits
     deploy:
       resources:
         limits:
@@ -265,21 +267,21 @@ services:
         reservations:
           cpus: '0.1'
           memory: 128M
-    # Healthcheck
+    # Health check
     healthcheck:
       test: ["CMD", "python", "-c", "import sys; sys.path.append('/app'); from telegram_bot.utils.health import check_bot_health; check_bot_health()"]
       interval: 60s
       timeout: 10s
       retries: 3
       start_period: 30s
-    # Настройки логирования
+    # Logging configuration
     logging:
       driver: "json-file"
       options:
         max-size: "50m"
         max-file: "3"
 
-# Именованные volumes с оптимизированными настройками
+# Named volumes with optimized settings
 volumes:
   redis_data_dev:
     driver: local

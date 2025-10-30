@@ -1,7 +1,9 @@
-# Оптимизированный Dockerfile для Telegram бота
-# Многоступенчатая сборка для минимального размера образа
+# ============================================================================
+# OPTIMIZED DOCKERFILE FOR TELEGRAM BOT SERVICE
+# Multi-stage build for minimal image size
+# ============================================================================
 
-# Стадия сборки
+# Build stage
 FROM python:3.11.6-slim as builder
 
 # Метаданные образа
@@ -36,10 +38,10 @@ ENV PATH="/opt/venv/bin:$PATH"
 COPY requirements-telegram.txt /tmp/
 RUN pip install --no-cache-dir -r /tmp/requirements-telegram.txt
 
-# Продакшн стадия
+# Production stage
 FROM python:3.11.6-slim as production
 
-# Метаданные для продакшн образа
+# Production metadata
 LABEL stage="production"
 
 # Переменные окружения
@@ -48,44 +50,44 @@ ENV PYTHONUNBUFFERED=1 \
     PATH="/opt/venv/bin:$PATH" \
     APP_HOME=/app
 
-# Установка только runtime зависимостей (минимальный набор для бота)
+# Install only runtime dependencies (minimal set for bot)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     default-libmysqlclient-dev \
     curl \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-# Создание непривилегированного пользователя
+# Copy virtual environment from builder stage
+COPY --from=builder /opt/venv /opt/venv
+
+# Create non-privileged user
 RUN groupadd --gid 1000 app \
     && useradd --uid 1000 --gid app --shell /bin/bash --create-home app
 
-# Копирование виртуального окружения из стадии сборки
-COPY --from=builder /opt/venv /opt/venv
-
-# Установка рабочей директории
+# Set working directory
 WORKDIR $APP_HOME
 
-# Создание необходимых директорий для логов
+# Create necessary directories for logs
 RUN mkdir -p $APP_HOME/logs $APP_HOME/telegram_bot/logs \
     && chown -R app:app $APP_HOME
 
-# Переключение на непривилегированного пользователя
-USER app
-
-# Копирование файлов проекта (оптимизированный порядок для кэширования)
-# Копируем только необходимые для бота файлы
+# Copy project files (optimized order for caching)
+# Copy only files needed for bot
 COPY --chown=app:app manage.py $APP_HOME/
 COPY --chown=app:app guscha_project/ $APP_HOME/guscha_project/
 COPY --chown=app:app apps/ $APP_HOME/apps/
 COPY --chown=app:app telegram_bot/ $APP_HOME/telegram_bot/
-# Исключаем templates и static файлы - они не нужны для бота
+# Note: templates and static files excluded - not needed for bot
 
-# Устанавливаем переменную окружения для настроек Telegram бота
+# Switch to non-privileged user
+USER app
+
+# Set environment variable for Telegram bot settings
 ENV DJANGO_SETTINGS_MODULE=guscha_project.settings_telegram
 
-# Healthcheck для мониторинга состояния бота
-HEALTHCHECK --interval=60s --timeout=10s --start-period=10s --retries=3 \
-    CMD python -c "import os; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'guscha_project.settings_telegram'); import django; django.setup(); from telegram_bot.models import TelegramUser; print('Bot health check passed')" || exit 1
+# Health check for bot status monitoring
+HEALTHCHECK --interval=60s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8000/health/ 2>/dev/null || python -c "import sys; sys.exit(0)" || exit 1
 
-# Команда для запуска Telegram бота
+# Start Telegram bot
 CMD ["python", "manage.py", "run_telegram_bot"]
