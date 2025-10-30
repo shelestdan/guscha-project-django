@@ -66,7 +66,7 @@ RUN addgroup --system app && adduser --system --group app
 WORKDIR $APP_HOME
 
 # Create necessary directories
-RUN mkdir -p $APP_HOME/static_root $APP_HOME/logs $APP_HOME/telegram_bot/logs $APP_HOME/media $APP_HOME/backups
+RUN mkdir -p $APP_HOME/static_root $APP_HOME/logs $APP_HOME/telegram_bot/logs $APP_HOME/media $APP_HOME/backups $APP_HOME/profiles
 
 # Copy application files (order optimized for caching)
 COPY --chown=app:app manage.py $APP_HOME/
