@@ -11,6 +11,7 @@
 #   ./build_frontend.sh --skip-build    # Skip npm build
 #   ./build_frontend.sh --dev-mode      # Development mode (no Docker)
 #   ./build_frontend.sh --force-refresh # Full Docker restart
+#   ./build_frontend.sh --auto-setup    # Complete automatic setup with migrations
 
 set -e  # Exit on error
 
@@ -29,6 +30,7 @@ DEV_MODE=false
 FORCE_REFRESH=false
 RESTART_CONTAINERS=false
 VERBOSE=false
+AUTO_SETUP=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -54,6 +56,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --verbose)
             VERBOSE=true
+            shift
+            ;;
+        --auto-setup)
+            AUTO_SETUP=true
             shift
             ;;
         *)
@@ -399,3 +405,18 @@ fi
 
 echo
 echo -e "${MAGENTA}✨ Frontend build completed!${NC}"
+
+# Auto-setup mode
+if [ "$AUTO_SETUP" = true ]; then
+    echo
+    echo -e "${CYAN}🚀 Starting automatic setup...${NC}"
+    
+    # Run the setup script
+    if [ -f "$SCRIPT_DIR/setup_macos.sh" ]; then
+        echo "Running complete setup script..."
+        bash "$SCRIPT_DIR/setup_macos.sh"
+    else
+        log_error "setup_macos.sh not found. Auto-setup requires the setup script."
+        exit 1
+    fi
+fi
