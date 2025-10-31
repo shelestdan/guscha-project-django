@@ -69,7 +69,7 @@ INSTALLED_APPS = [
     'djmoney',  # Django Money для работы с валютами
     'defender',  # Защита от brute force атак
     'django_ratelimit',  # Ограничение частоты запросов
-    'honeypot',  # Защита от ботов
+    # 'honeypot',  # Защита от ботов - временно отключен из-за конфликтов зависимостей
     
     # Google OAuth
     'allauth',
@@ -109,7 +109,7 @@ INSTALLED_APPS = [
 # Добавляем новые приложения для безопасности
 INSTALLED_APPS += [
     'guardian',
-    'django_recaptcha',
+    # 'django_recaptcha',  # Удален из-за конфликтов зависимостей
     'simple_history',  # История изменений моделей
     'axes',  # django-axes для защиты от brute-force атак
     # 'admin_honeypot',  # django-admin-honeypot убран из-за несовместимости с Django 5.2

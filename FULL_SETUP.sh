@@ -131,25 +131,14 @@ check_project_directory() {
 
 # Настройка переменных окружения
 setup_environment() {
-    print_step "Настройка переменных окружения..."
+    print_step "Проверка переменных окружения..."
     
     if [ ! -f "guscha_django/.env" ]; then
-        print_step "Создание файла .env из шаблона..."
-        cp guscha_django/.env.example guscha_django/.env
-        
-        # Генерация секретного ключа Django
-        SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(50))" 2>/dev/null || openssl rand -hex 32)
-        
-        # Обновление .env файла
-        sed -i.bak "s/SECRET_KEY=.*/SECRET_KEY=$SECRET_KEY/" guscha_django/.env
-        sed -i.bak "s/DEBUG=True/DEBUG=True/" guscha_django/.env
-        sed -i.bak "s/ALLOWED_HOSTS=.*/ALLOWED_HOSTS=localhost,127.0.0.1/" guscha_django/.env
-        
-        rm guscha_django/.env.bak
-        
-        print_success "Файл .env создан"
+        print_error "Ошибка: файл .env не найден"
+        print_error "Создайте файл .env из шаблона .env.example"
+        exit 1
     else
-        print_success "Файл .env уже существует"
+        print_success "Файл .env существует"
     fi
 }
 
@@ -162,8 +151,8 @@ build_and_start() {
     # Остановка старых контейнеров если есть
     docker-compose -f docker-compose.dev.yml down 2>/dev/null || true
     
-    # Сборка образов
-    print_step "Сборка Docker образов..."
+    # Сборка образов с исправленным Dockerfile
+    print_step "Сборка Docker образов с полными зависимостями..."
     docker-compose -f docker-compose.dev.yml build
     
     # Запуск контейнеров
