@@ -1,69 +1,49 @@
 # ============================================================================
-# MINIMAL REQUIREMENTS FOR TELEGRAM BOT SERVICE
+# SIMPLIFIED REQUIREMENTS FOR TELEGRAM BOT SERVICE
 # ============================================================================
-# This file contains only the essential dependencies needed to run
-# the Telegram bot without the full Django web application stack.
 
-# ============================================================================
-# CORE DJANGO (minimal setup for models and ORM)
-# ============================================================================
+# Core Django
 Django>=5.2,<5.3
 djangorestframework>=3.14.0
 django-filter>=23.0
 
-# ============================================================================
-# DATABASE
-# ============================================================================
+# Database
 psycopg2-binary>=2.9.9
 
-# ============================================================================
-# AUTHENTICATION & SECURITY (minimal)
-# ============================================================================
-# Basic security
+# Authentication
+django-allauth[socialaccount]>=0.65.0
+dj-rest-auth>=5.0.0,<6.0.0
+djangorestframework-simplejwt>=5.3.0
+
+# Security
 django-guardian>=2.4.0
-django-redis>=5.4.0
+django-ratelimit>=4.1.0
 cryptography>=41.0.0
 bcrypt>=4.1.0
 pyjwt>=2.8.0
 
-# Rate limiting for bot
-django-ratelimit>=4.1.0
+# Redis
+django-redis>=5.4.0
 
-# Two-factor authentication
-django-otp>=1.5.0
+# Admin
+django-simple-history>=3.4.0
+django-unfold>=0.30.0
 
-# ============================================================================
-# TELEGRAM BOT
-# ============================================================================
-python-telegram-bot>=20.0
+# Image processing
+Pillow>=10.2.0
 
-# ============================================================================
-# UTILITIES
-# ============================================================================
-# Configuration
+# Money
+django-money>=3.4.0
+
+# Utilities
 python-dotenv>=1.0.0
-str2bool>=1.1
-
-# Logging
+requests>=2.31.0
+python-telegram-bot>=20.0
 structlog>=23.0.0
-
-# Phone number validation
 phonenumbers>=8.13.0
 pytz>=2024.1
-
-# HTTP requests (for webhook and API calls)
-requests>=2.31.0
-urllib3>=2.0.0
-
-# Text processing
+str2bool>=1.1
 python-slugify>=8.0.0
-
-# General utilities
 markupsafe>=2.1.0
 itsdangerous>=2.1.0
 blinker>=1.7.0
-
-# ============================================================================
-# SECURITY
-# ============================================================================
-setuptools>=78.1.1

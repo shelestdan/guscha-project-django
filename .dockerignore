@@ -1,0 +1,51 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+docs/
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# CI/CD
+.github/
+
+# Build artifacts
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Node
+node_modules/
+npm-debug.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+performance_reports/
+bundle_reports/
+cleanup-project.ps1
+analyze-unused-packages.py
+PROJECT_AUDIT_REPORT.md
+
+# Frontend build (will be copied separately)
+guscha_django_frontend/node_modules/
+guscha_django_frontend/build/
+guscha_django_frontend/coverage/
+
+# Vercel
+.vercel/

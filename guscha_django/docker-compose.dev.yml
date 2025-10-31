@@ -285,13 +285,5 @@ services:
 volumes:
   redis_data_dev:
     driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./data/redis
   postgres_data_dev:
     driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./data/postgres
