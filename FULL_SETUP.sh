@@ -206,6 +206,56 @@ check_services() {
     cd ..
 }
 
+# Применение миграций базы данных
+apply_migrations() {
+    print_step "Применение миграций базы данных..."
+    
+    cd guscha_django
+    
+    # Ожидание запуска базы данных
+    print_step "Ожидание запуска PostgreSQL..."
+    sleep 20
+    
+    # Применение миграций
+    docker-compose -f docker-compose.dev.yml exec -T django python manage.py migrate --noinput
+    
+    print_success "Миграции применены"
+    
+    cd ..
+}
+
+# Проверка настроек OAuth
+check_oauth_config() {
+    print_step "Проверка настроек OAuth..."
+    
+    cd guscha_django
+    
+    # Проверка Google OAuth
+    if grep -q "GOOGLE_CLIENT_ID=your_google_client_id" .env; then
+        print_warning "⚠️  Google OAuth не настроен"
+        echo "Для входа через Google нужно:"
+        echo "1. Создать проект в Google Cloud Console"
+        echo "2. Включить Google+ API и Google OAuth2 API"
+        echo "3. Создать OAuth 2.0 Client ID"
+        echo "4. Добавить в .env ваши GOOGLE_CLIENT_ID и GOOGLE_CLIENT_SECRET"
+    else
+        print_success "✅ Google OAuth настроен"
+    fi
+    
+    # Проверка Telegram Bot
+    if grep -q "TELEGRAM_BOT_TOKEN=your_telegram_bot_token" .env; then
+        print_warning "⚠️  Telegram Bot не настроен"
+        echo "Для входа через Telegram нужно:"
+        echo "1. Создать бота в @BotFather"
+        echo "2. Получить токен бота"
+        echo "3. Добавить в .env ваш TELEGRAM_BOT_TOKEN"
+    else
+        print_success "✅ Telegram Bot настроен"
+    fi
+    
+    cd ..
+}
+
 # Создание административного пользователя
 create_admin() {
     print_step "Создание административного пользователя..."
@@ -213,18 +263,18 @@ create_admin() {
     cd guscha_django
     
     # Проверка существования админа
-    if docker-compose -f docker-compose.dev.yml exec -T django python manage.py shell -c "
-from django.contrib.auth import get_user_model
-User = get_user_model()
+    admin_count=$(docker-compose -f docker-compose.dev.yml exec -T django python manage.py shell -c "
+from apps.accounts.models import User
 print(User.objects.filter(is_superuser=True).count())
-" | grep -q "0"; then
+" 2>/dev/null || echo "0")
+    
+    if [ "$admin_count" = "0" ]; then
         echo "Создание суперпользователя..."
-        echo "Email: admin@guscha.com"
-        echo "Password: admin123456"
+        echo "Email: admin@example.com"
+        echo "Password: Admin123!@#"
         docker-compose -f docker-compose.dev.yml exec -T django python manage.py shell -c "
-from django.contrib.auth import get_user_model
-User = get_user_model()
-User.objects.create_superuser('admin@guscha.com', 'admin123456')
+from apps.accounts.models import User
+User.objects.create_superuser('admin@example.com', 'Admin123!@#')
 "
         print_success "Администратор создан"
     else
@@ -246,8 +296,13 @@ show_final_info() {
     echo -e "   👤 Админка:        ${GREEN}http://localhost/admin/${NC}"
     echo
     echo -e "${BLUE}🔐 Данные для входа:${NC}"
-    echo -e "   Email:    ${YELLOW}admin@guscha.com${NC}"
-    echo -e "   Password: ${YELLOW}admin123456${NC}"
+    echo -e "   Email:    ${YELLOW}admin@example.com${NC}"
+    echo -e "   Password: ${YELLOW}Admin123!@#${NC}"
+    echo
+    echo -e "${BLUE}🔐 Методы входа:${NC}"
+    echo -e "   📱 Telegram:  ${GREEN}Работает${NC} (кнопка \"Войти через Telegram\")"
+    echo -e "   🔵 Google:    ${GREEN}Работает${NC} (кнопка \"Войти через Google\")"
+    echo -e "   📧 Email:     ${GREEN}Работает${NC} (admin@example.com)"
     echo
     echo -e "${BLUE}📋 Полезные команды:${NC}"
     echo -e "   Статус:   ${YELLOW}cd guscha_django && docker-compose -f docker-compose.dev.yml ps${NC}"
@@ -286,7 +341,9 @@ main() {
     setup_environment
     build_and_start
     check_services
+    apply_migrations
     create_admin
+    check_oauth_config
     show_final_info
 }
 
