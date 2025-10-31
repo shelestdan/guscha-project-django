@@ -262,23 +262,118 @@ create_admin() {
     
     cd guscha_django
     
-    # Проверка существования админа
-    admin_count=$(docker-compose -f docker-compose.dev.yml exec -T django python manage.py shell -c "
-from apps.accounts.models import User
-print(User.objects.filter(is_superuser=True).count())
-" 2>/dev/null || echo "0")
+    # Ждем запуска Django
+    print_step "Ожидание запуска Django..."
+    sleep 10
     
-    if [ "$admin_count" = "0" ]; then
-        echo "Создание суперпользователя..."
-        echo "Email: admin@example.com"
-        echo "Password: Admin123!@#"
-        docker-compose -f docker-compose.dev.yml exec -T django python manage.py shell -c "
+    # Проверка и создание суперпользователя с гарантированным результатом
+    admin_created=false
+    max_attempts=3
+    attempt=1
+    
+    while [ $attempt -le $max_attempts ] && [ "$admin_created" = false ]; do
+        print_step "Попытка создания администратора ($attempt/$max_attempts)..."
+        
+        # Проверяем существование админа
+        admin_count=$(docker-compose -f docker-compose.dev.yml exec -T django python manage.py shell -c "
 from apps.accounts.models import User
-User.objects.create_superuser('admin@example.com', 'Admin123!@#')
-"
-        print_success "Администратор создан"
+import sys
+import os
+os.environ['DJANGO_SETTINGS_MODULE'] = 'guscha_project.settings'
+import django
+django.setup()
+try:
+    count = User.objects.filter(is_superuser=True).count()
+    print(count)
+    sys.stdout.flush()
+except Exception as e:
+    print('0')
+    sys.stdout.flush()
+" 2>/dev/null | tail -1 | tr -d '\r\n' || echo "0")
+        
+        if [ "$admin_count" = "0" ]; then
+            echo "Создание суперпользователя..."
+            echo "Email: admin@example.com"
+            echo "Password: Admin123!@#"
+            
+            # Создаем суперпользователя
+            create_result=$(docker-compose -f docker-compose.dev.yml exec -T django python manage.py shell -c "
+from apps.accounts.models import User
+import sys
+import os
+os.environ['DJANGO_SETTINGS_MODULE'] = 'guscha_project.settings'
+import django
+django.setup()
+try:
+    admin = User.objects.create_superuser('admin@example.com', 'Admin123!@#')
+    print('SUCCESS')
+    sys.stdout.flush()
+except Exception as e:
+    print(f'ERROR: {e}')
+    sys.stdout.flush()
+" 2>/dev/null | tail -1 | tr -d '\r\n' || echo "ERROR: Command failed")
+            
+            if [[ "$create_result" == "SUCCESS" ]]; then
+                admin_created=true
+                print_success "Администратор успешно создан"
+            else
+                print_error "Ошибка создания администратора: $create_result"
+                if [ $attempt -lt $max_attempts ]; then
+                    print_step "Повторная попытка через 10 секунд..."
+                    sleep 10
+                fi
+            fi
+        else
+            admin_created=true
+            print_success "Администратор уже существует ($admin_count шт.)"
+        fi
+        
+        attempt=$((attempt + 1))
+    done
+    
+    # Финальная проверка и вывод информации
+    if [ "$admin_created" = true ]; then
+        print_step "Финальная проверка администратора..."
+        
+        # Получаем информацию о администраторе
+        admin_info=$(docker-compose -f docker-compose.dev.yml exec -T django python manage.py shell -c "
+from apps.accounts.models import User
+import sys
+import os
+os.environ['DJANGO_SETTINGS_MODULE'] = 'guscha_project.settings'
+import django
+django.setup()
+try:
+    admin = User.objects.filter(is_superuser=True).first()
+    if admin:
+        print(f'ID:{admin.id}|Email:{admin.email}|Superuser:{admin.is_superuser}|Staff:{admin.is_staff}')
+        sys.stdout.flush()
+    else:
+        print('ERROR: Admin not found')
+        sys.stdout.flush()
+except Exception as e:
+    print(f'ERROR: {e}')
+    sys.stdout.flush()
+" 2>/dev/null | tail -1 | tr -d '\r\n' || echo "ERROR: Command failed")
+        
+        if [[ "$admin_info" == "ID:"* ]]; then
+            print_success "✅ Администратор проверен и готов к использованию:"
+            echo -e "${GREEN}   👤 ID:        $(echo $admin_info | cut -d'|' -f1)${NC}"
+            echo -e "${GREEN}   📧 Email:     $(echo $admin_info | cut -d'|' -f2)${NC}"
+            echo -e "${GREEN}   🔑 Superuser: $(echo $admin_info | cut -d'|' -f3)${NC}"
+            echo -e "${GREEN}   🛠️  Staff:     $(echo $admin_info | cut -d'|' -f4)${NC}"
+            echo
+            echo -e "${BLUE}🔐 Данные для входа в админку:${NC}"
+            echo -e "   🌐 URL:      ${YELLOW}http://localhost/admin/${NC}"
+            echo -e "   📧 Email:    ${YELLOW}admin@example.com${NC}"
+            echo -e "   🔒 Password: ${YELLOW}Admin123!@#${NC}"
+        else
+            print_error "❌ Финальная проверка не пройдена: $admin_info"
+            exit 1
+        fi
     else
-        print_success "Администратор уже существует"
+        print_error "❌ Не удалось создать администратора после $max_attempts попыток"
+        exit 1
     fi
     
     cd ..
@@ -295,14 +390,10 @@ show_final_info() {
     echo -e "   🔧 API:            ${GREEN}http://localhost/api/${NC}"
     echo -e "   👤 Админка:        ${GREEN}http://localhost/admin/${NC}"
     echo
-    echo -e "${BLUE}🔐 Данные для входа:${NC}"
-    echo -e "   Email:    ${YELLOW}admin@example.com${NC}"
-    echo -e "   Password: ${YELLOW}Admin123!@#${NC}"
-    echo
     echo -e "${BLUE}🔐 Методы входа:${NC}"
     echo -e "   📱 Telegram:  ${GREEN}Работает${NC} (кнопка \"Войти через Telegram\")"
     echo -e "   🔵 Google:    ${GREEN}Работает${NC} (кнопка \"Войти через Google\")"
-    echo -e "   📧 Email:     ${GREEN}Работает${NC} (admin@example.com)"
+    echo -e "   📧 Email:     ${GREEN}Работает${NC} (данные выше)${NC}"
     echo
     echo -e "${BLUE}📋 Полезные команды:${NC}"
     echo -e "   Статус:   ${YELLOW}cd guscha_django && docker-compose -f docker-compose.dev.yml ps${NC}"
