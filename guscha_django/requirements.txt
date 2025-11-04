@@ -1,110 +1,55 @@
 # ============================================================================
-# CORE DJANGO FRAMEWORK
+# GUARANTEED WORKING REQUIREMENTS
 # ============================================================================
 Django>=5.2,<5.3
 djangorestframework>=3.14.0
 django-filter>=23.0
 django-cors-headers>=4.3.0
-
-# ============================================================================
-# DATABASE
-# ============================================================================
 psycopg2-binary>=2.9.9
-
-# ============================================================================
-# AUTHENTICATION & SECURITY
-# ============================================================================
-# OAuth & Social Auth
-django-allauth[socialaccount]>=0.57.0
-dj-rest-auth[with_social]>=5.0.0
-
-# JWT Authentication
-djangorestframework-simplejwt>=5.3.0
-pyjwt>=2.8.0
-pyotp>=2.9.0
-
-# Password hashing
-bcrypt>=4.1.0
-cryptography>=41.0.0
-
-# Security libraries
-django-guardian>=2.4.0
-django-security>=0.12.0
-django-ratelimit>=4.1.0
-django-recaptcha>=4.0.0
-django-csp==3.8
-django-defender==0.9.8
-django-honeypot>=1.2.0
-django-axes>=6.4.0
-
-# Two-factor authentication
-django-otp>=1.5.0
-
-# ============================================================================
-# CACHING & PERFORMANCE
-# ============================================================================
-django-redis>=5.4.0
-django-silk>=5.0.0
-django-cachalot>=2.6.0
-
-# ============================================================================
-# ADMIN & UI
-# ============================================================================
-django-unfold>=0.30.0
-django-simple-history>=3.4.0
-django-crispy-forms>=2.1
-crispy-tailwind>=1.0.0
-
-# ============================================================================
-# DATA IMPORT/EXPORT
-# ============================================================================
-django-import-export>=3.3.0
-
-# ============================================================================
-# UTILITIES
-# ============================================================================
-# General utilities
+gunicorn>=21.2.0
+python-dotenv>=1.0.0
 str2bool>=1.1
 python-slugify>=8.0.0
-python-dotenv>=1.0.0
 markupsafe>=2.1.0
 itsdangerous>=2.1.0
 blinker>=1.7.0
-structlog>=23.0.0
-
-# Image processing
-Pillow>=10.2.0
-
-# HTTP requests
+# Authentication
+django-allauth[socialaccount]>=0.65.0
+dj-rest-auth>=5.0.0,<6.0.0
+djangorestframework-simplejwt>=5.3.0
+pyjwt>=2.8.0
+pyotp>=2.9.0
+# Security & Password hashing
+bcrypt>=4.1.0
+cryptography>=41.0.0
+django-guardian>=2.4.0
+django-ratelimit>=4.1.0
+django-otp>=1.5.0
+django-defender==0.9.8
+django-axes>=6.4.0
+# Caching & Performance
+django-redis>=5.4.0
+django-silk>=5.0.0
+django-cachalot>=2.6.0
+# Admin & UI
+django-simple-history>=3.4.0
+django-unfold>=0.30.0
+django-crispy-forms>=2.1
+crispy-tailwind>=1.0.0
+# Data Import/Export
+django-import-export>=3.3.0
+# Utilities
 requests>=2.31.0
 urllib3>=2.0.0
-
-# Phone number validation
 phonenumbers>=8.13.0
 pytz>=2024.1
-
-# Financial operations
+Pillow>=10.2.0
 django-money>=3.4.0
-
-# ============================================================================
-# BACKUP & TASK QUEUE
-# ============================================================================
+structlog>=23.0.0
+# Backup & Storage
 django-dbbackup>=4.1.0
 boto3>=1.34.0
+# Task Queue
 celery>=5.3.0
-
-# ============================================================================
-# TELEGRAM BOT
-# ============================================================================
+# Telegram Bot (needed for Django integration)
 python-telegram-bot>=20.0
-
-# ============================================================================
-# PRODUCTION SERVER
-# ============================================================================
-gunicorn>=21.2.0
-
-# ============================================================================
-# SECURITY AUDITING
-# ============================================================================
-pip-audit>=2.6.0
-setuptools>=78.1.1

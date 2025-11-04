@@ -122,6 +122,13 @@ staticfiles/
 guscha_django/static_root/
 guscha_django/staticfiles/
 
+# Exception for media files (logos, icons, etc)
+!static_root/media/
+!guscha_django/static_root/media/
+!static_root/media/*.svg
+!static_root/media/*.png
+!static_root/media/*.ico
+
 # Django media files (user uploads)
 # TEMPORARILY DISABLED FOR TESTING - media files included for development
 # media/

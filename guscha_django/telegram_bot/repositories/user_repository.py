@@ -60,7 +60,6 @@ class UserRepository:
             raise DatabaseError(f"Ошибка получения пользователя по email: {e}")
     
     @staticmethod
-    @async_db_transaction()
     async def create_telegram_user(
         phone: str,
         chat_id: str,
@@ -108,18 +107,25 @@ class UserRepository:
                 for _ in range(12)
             )
             
-            # Создаем пользователя
-            user = await sync_to_async(User.objects.create_user)(
-                email=temp_email,
-                password=temp_password,
-                phone=normalized_phone,
-                telegram_chat_id=chat_id,
-                telegram_username=telegram_username or '',
-                is_telegram_verified=True,
-                is_active=True,
-                first_name=first_name or '',
-                last_name=last_name or ''
-            )
+            # Создаем пользователя в транзакции
+            from django.db import transaction
+            
+            @sync_to_async
+            def create_user_transaction():
+                with transaction.atomic():
+                    return User.objects.create_user(
+                        email=temp_email,
+                        password=temp_password,
+                        phone=normalized_phone,
+                        telegram_chat_id=chat_id,
+                        telegram_username=telegram_username or '',
+                        is_telegram_verified=True,
+                        is_active=True,
+                        first_name=first_name or '',
+                        last_name=last_name or ''
+                    )
+            
+            user = await create_user_transaction()
             
             return user
             
