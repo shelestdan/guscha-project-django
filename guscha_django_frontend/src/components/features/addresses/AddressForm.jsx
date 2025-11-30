@@ -20,21 +20,20 @@ const AddressForm = ({ address, addressType, onSuccess, onCancel }) => {
     const fetchUserData = async () => {
       try {
         console.log('🏠 AddressForm: загружаем данные пользователя');
-        const token = localStorage.getItem("token");
-        if (token) {
-          const response = await fetch(
-            "http://localhost/api/accounts/users/me/",
-            {
-              headers: {
-                Authorization: `Token ${token}`
-              }
-            }
-          );
-          if (response.ok) {
-            const user = await response.json();
-            console.log('🏠 AddressForm: данные пользователя загружены:', user);
-            setUserData(user);
+        // Токен теперь в httpOnly cookie
+        const response = await fetch(
+          "/api/accounts/users/me/",
+          {
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            credentials: 'include'
           }
+        );
+        if (response.ok) {
+          const user = await response.json();
+          console.log('🏠 AddressForm: данные пользователя загружены:', user);
+          setUserData(user);
         }
       } catch (error) {
         console.error("Ошибка загрузки данных пользователя:", error);
@@ -49,7 +48,7 @@ const AddressForm = ({ address, addressType, onSuccess, onCancel }) => {
     if (address) {
       // Проверяем, есть ли все необходимые поля в объекте address
       const hasCompleteData = address.address_line1 && address.city && address.postal_code;
-      
+
       if (hasCompleteData) {
         console.log('🏠 AddressForm: заполняем форму полными данными:', address);
         setFormData({
@@ -76,7 +75,7 @@ const AddressForm = ({ address, addressType, onSuccess, onCancel }) => {
       console.log('🏠 AddressForm: загружаем адрес по ID:', addressId);
       const response = await addressesApi.getAddress(addressId);
       const addressData = response.data;
-      
+
       console.log('🏠 AddressForm: получены полные данные адреса:', addressData);
       setFormData({
         address_type: addressData.address_type || addressType || "shipping",

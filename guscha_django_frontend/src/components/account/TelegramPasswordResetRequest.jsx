@@ -20,23 +20,14 @@ const TelegramPasswordResetRequest = () => {
     }
 
     setIsLoading(true);
-    
+
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        showError('Токен аутентификации не найден. Пожалуйста, войдите в систему заново.');
-        return;
-      }
-      
-      // Определяем тип токена и соответствующий заголовок
-      const authHeader = token.includes('.') ? `Bearer ${token}` : `Token ${token}`;
-      
       const response = await fetch('/api/accounts/telegram/authenticated-password-reset/', {
         method: 'POST',
         headers: {
-          'Authorization': authHeader,
           'Content-Type': 'application/json'
-        }
+        },
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -72,8 +63,8 @@ const TelegramPasswordResetRequest = () => {
           <p className="check-spam">
             Если сообщение не пришло, убедитесь, что ваш Telegram аккаунт правильно привязан к профилю.
           </p>
-          <button 
-            type="button" 
+          <button
+            type="button"
             className="reset-form-btn"
             onClick={handleReset}
           >
@@ -96,19 +87,19 @@ const TelegramPasswordResetRequest = () => {
             </span>
           )}
         </p>
-        
-        <button 
-          type="button" 
+
+        <button
+          type="button"
           className="reset-submit-btn"
           onClick={handleTelegramPasswordReset}
           disabled={isLoading || !user?.is_telegram_verified}
         >
           {isLoading ? 'Отправка...' : 'Отправить ссылку в Telegram'}
         </button>
-        
+
         <div className="reset-info">
           <p>
-            <strong>Безопасность:</strong> Ссылка для сброса пароля будет действительна 
+            <strong>Безопасность:</strong> Ссылка для сброса пароля будет действительна
             в течение 24 часов и может быть использована только один раз.
           </p>
           {user?.is_telegram_verified && (

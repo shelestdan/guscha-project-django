@@ -24,205 +24,196 @@ from django.core.exceptions import ImproperlyConfigured
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Загружаем переменные окружения из .env файла
-load_dotenv(BASE_DIR / '.env')  # Явно указываем путь к .env файлу
+load_dotenv(BASE_DIR / ".env")  # Явно указываем путь к .env файлу
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = os.environ.get("SECRET_KEY")
 if not SECRET_KEY:
     raise ValueError("SECRET_KEY environment variable is required")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = str2bool(os.environ.get('DEBUG', 'False'))
+DEBUG = str2bool(os.environ.get("DEBUG", "False"))
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'unfold',  # Django Unfold для красивой админки
-    'unfold.contrib.filters',  # Опциональные фильтры
-    'unfold.contrib.forms',  # Опциональные формы
-    'unfold.contrib.import_export',  # Импорт/экспорт для Unfold
-    'unfold.contrib.simple_history',  # История для Unfold
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django.contrib.sites',  # Required for allauth
-    
+    "unfold",  # Django Unfold для красивой админки
+    "unfold.contrib.filters",  # Опциональные фильтры
+    "unfold.contrib.forms",  # Опциональные формы
+    "unfold.contrib.import_export",  # Импорт/экспорт для Unfold
+    "unfold.contrib.simple_history",  # История для Unfold
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django.contrib.sites",  # Required for allauth
     # Сторонние приложения
-    'rest_framework',
-    'rest_framework.authtoken',
-    'rest_framework_simplejwt',
-    'django_filters',
-    'corsheaders',
-    'crispy_forms',
-    'crispy_tailwind',
-    'import_export',
-    'djmoney',  # Django Money для работы с валютами
-    'defender',  # Защита от brute force атак
-    'django_ratelimit',  # Ограничение частоты запросов
+    "rest_framework",
+    "rest_framework.authtoken",
+    "rest_framework_simplejwt",
+    "django_filters",
+    "corsheaders",
+    "crispy_forms",
+    "crispy_tailwind",
+    "import_export",
+    "djmoney",  # Django Money для работы с валютами
+    "defender",  # Защита от brute force атак
+    "django_ratelimit",  # Ограничение частоты запросов
     # 'honeypot',  # Защита от ботов - временно отключен из-за конфликтов зависимостей
-    
     # Google OAuth
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'allauth.socialaccount.providers.google',
-    
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
     # dj-rest-auth для API аутентификации
-    'dj_rest_auth',
-    'dj_rest_auth.registration',
-
-    
+    "dj_rest_auth",
+    "dj_rest_auth.registration",
     # Система резервного копирования
-    'dbbackup',  # Django Database Backup
-    'django_otp',  # Двухфакторная аутентификация
-    'django_otp.plugins.otp_totp',  # TOTP плагин для OTP
-    'django_otp.plugins.otp_static',  # Статические токены для OTP
-    'apps.backup_system',
-    
+    "dbbackup",  # Django Database Backup
+    "django_otp",  # Двухфакторная аутентификация
+    "django_otp.plugins.otp_totp",  # TOTP плагин для OTP
+    "django_otp.plugins.otp_static",  # Статические токены для OTP
+    "apps.backup_system",
     # Оптимизация производительности
-    'silk',  # Профилирование и мониторинг SQL запросов
-    'cachalot',  # Автоматическое кэширование ORM запросов
-    
+    "silk",  # Профилирование и мониторинг SQL запросов
+    "cachalot",  # Автоматическое кэширование ORM запросов
     # Приложения проекта
-    'apps.products.apps.ProductsConfig',
-    'apps.accounts.apps.AccountsConfig',
-    'apps.orders.apps.OrdersConfig',
-    'apps.cart.apps.CartConfig',
-    'apps.core.apps.CoreConfig',
-    'apps.addresses.apps.AddressesConfig',
-    'apps.collections.apps.CollectionsConfig',
-    'apps.background_content.apps.BackgroundContentConfig',
-    'telegram_bot',
-
+    "apps.products.apps.ProductsConfig",
+    "apps.accounts.apps.AccountsConfig",
+    "apps.orders.apps.OrdersConfig",
+    "apps.cart.apps.CartConfig",
+    "apps.core.apps.CoreConfig",
+    "apps.addresses.apps.AddressesConfig",
+    "apps.collections.apps.CollectionsConfig",
+    "apps.background_content.apps.BackgroundContentConfig",
+    "telegram_bot",
 ]
 
 # Добавляем новые приложения для безопасности
 INSTALLED_APPS += [
-    'guardian',
+    "guardian",
     # 'django_recaptcha',  # Удален из-за конфликтов зависимостей
-    'simple_history',  # История изменений моделей
-    'axes',  # django-axes для защиты от brute-force атак
+    "simple_history",  # История изменений моделей
     # 'admin_honeypot',  # django-admin-honeypot убран из-за несовместимости с Django 5.2
 ]
 
 # Минимальный набор middleware для тестов
-if 'test' in sys.argv:
+if "test" in sys.argv:
     MIDDLEWARE = [
-        'django.middleware.security.SecurityMiddleware',
-        'django.contrib.sessions.middleware.SessionMiddleware',
-        'django.middleware.common.CommonMiddleware',
-        'django.middleware.csrf.CsrfViewMiddleware',
-        'django.contrib.auth.middleware.AuthenticationMiddleware',
-        'django.contrib.messages.middleware.MessageMiddleware',
-        'django.middleware.clickjacking.XFrameOptionsMiddleware',
-        'allauth.account.middleware.AccountMiddleware',
+        "django.middleware.security.SecurityMiddleware",
+        "django.contrib.sessions.middleware.SessionMiddleware",
+        "django.middleware.common.CommonMiddleware",
+        "django.middleware.csrf.CsrfViewMiddleware",
+        "django.contrib.auth.middleware.AuthenticationMiddleware",
+        "django.contrib.messages.middleware.MessageMiddleware",
+        "django.middleware.clickjacking.XFrameOptionsMiddleware",
+        "allauth.account.middleware.AccountMiddleware",
     ]
 elif DEBUG:
     # Middleware для разработки
     MIDDLEWARE = [
-        'silk.middleware.SilkyMiddleware',  # Django Silk профилирование (должен быть первым)
-        'django.middleware.security.SecurityMiddleware',
-        'django.contrib.sessions.middleware.SessionMiddleware',
-        'corsheaders.middleware.CorsMiddleware',  # CORS middleware для frontend-backend взаимодействия
-        'django.middleware.common.CommonMiddleware',
-        'apps.core.middleware.csrf_exempt.TelegramCSRFExemptMiddleware',  # CSRF exempt for Telegram
-        'apps.core.middleware.csrf_debug.CSRFDebugMiddleware',  # CSRF debug logging
-        'django.middleware.csrf.CsrfViewMiddleware',
-        'django.contrib.auth.middleware.AuthenticationMiddleware',
-        'axes.middleware.AxesMiddleware',  # Axes middleware для защиты от брутфорса
-        'simple_history.middleware.HistoryRequestMiddleware',  # Middleware для simple_history
-        'django.contrib.messages.middleware.MessageMiddleware',
-        'django.middleware.clickjacking.XFrameOptionsMiddleware',
-        'allauth.account.middleware.AccountMiddleware',
+        # 'silk.middleware.SilkyMiddleware',  # Django Silk профилирование (должен быть первым) - временно отключен
+        "django.middleware.security.SecurityMiddleware",
+        "django.contrib.sessions.middleware.SessionMiddleware",
+        "corsheaders.middleware.CorsMiddleware",  # CORS middleware для frontend-backend взаимодействия
+        "django.middleware.common.CommonMiddleware",
+        "apps.core.middleware.csrf_exempt.TelegramCSRFExemptMiddleware",  # CSRF exempt for Telegram
+        "apps.core.middleware.csrf_debug.CSRFDebugMiddleware",  # CSRF debug logging
+        "django.middleware.csrf.CsrfViewMiddleware",
+        "django.contrib.auth.middleware.AuthenticationMiddleware",
+        "simple_history.middleware.HistoryRequestMiddleware",  # Middleware для simple_history
+        "django.contrib.messages.middleware.MessageMiddleware",
+        "django.middleware.clickjacking.XFrameOptionsMiddleware",
+        "allauth.account.middleware.AccountMiddleware",
     ]
 else:
     # Полная middleware цепочка для продакшена
     MIDDLEWARE = [
-        'django.middleware.security.SecurityMiddleware',
-        'csp.middleware.CSPMiddleware',
-        'django.contrib.sessions.middleware.SessionMiddleware',
-        'corsheaders.middleware.CorsMiddleware',  # CORS middleware для frontend-backend взаимодействия
-        'apps.core.middleware.SecurityMonitoringMiddleware',  # Security monitoring
-        'apps.core.middleware.SecurityMetricsMiddleware',  # Security metrics
-        'apps.core.middleware.RateLimitBypassMiddleware',  # Before rate limiting
-        'apps.core.middleware.RateLimitMiddleware',  # Rate limiting
-        'django.middleware.common.CommonMiddleware',
-        'apps.core.middleware.csrf_exempt.TelegramCSRFExemptMiddleware',  # CSRF exempt for Telegram
-        'django.middleware.csrf.CsrfViewMiddleware',
-        'django.contrib.auth.middleware.AuthenticationMiddleware',
-        'defender.middleware.FailedLoginMiddleware',
-        'simple_history.middleware.HistoryRequestMiddleware',  # Middleware для simple_history
-        'django.contrib.messages.middleware.MessageMiddleware',
-        'django.middleware.clickjacking.XFrameOptionsMiddleware',
-        'apps.core.middleware.SecurityHeadersMiddleware',
-        'apps.core.middleware.SecurityAuditMiddleware',  # Security audit
-        'allauth.account.middleware.AccountMiddleware',
+        "django.middleware.security.SecurityMiddleware",
+        "csp.middleware.CSPMiddleware",
+        "django.contrib.sessions.middleware.SessionMiddleware",
+        "corsheaders.middleware.CorsMiddleware",  # CORS middleware для frontend-backend взаимодействия
+        "apps.core.middleware.SecurityMonitoringMiddleware",  # Security monitoring
+        "apps.core.middleware.SecurityMetricsMiddleware",  # Security metrics
+        # "apps.core.middleware.RateLimitBypassMiddleware",  # Before rate limiting - временно отключен
+        # "apps.core.middleware.RateLimitMiddleware",  # Rate limiting - временно отключен
+        "django.middleware.common.CommonMiddleware",
+        "apps.core.middleware.csrf_exempt.TelegramCSRFExemptMiddleware",  # CSRF exempt for Telegram
+        "django.middleware.csrf.CsrfViewMiddleware",
+        "django.contrib.auth.middleware.AuthenticationMiddleware",
+        # "defender.middleware.FailedLoginMiddleware",  # Временно отключен для тестирования
+        "simple_history.middleware.HistoryRequestMiddleware",  # Middleware для simple_history
+        "django.contrib.messages.middleware.MessageMiddleware",
+        "django.middleware.clickjacking.XFrameOptionsMiddleware",
+        "apps.core.middleware.SecurityHeadersMiddleware",
+        "apps.core.middleware.SecurityAuditMiddleware",  # Security audit
+        "allauth.account.middleware.AccountMiddleware",
     ]
 
-ROOT_URLCONF = 'guscha_project.urls'
+ROOT_URLCONF = "guscha_project.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            BASE_DIR / 'templates',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [
+            BASE_DIR / "templates",
         ],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'guscha_project.wsgi.application'
+WSGI_APPLICATION = "guscha_project.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 # Используем PostgreSQL в Docker окружении, SQLite локально
-if os.getenv('DATABASE_URL') or os.getenv('POSTGRES_DB'):
+if os.getenv("DATABASE_URL") or os.getenv("POSTGRES_DB"):
     import psycopg2.extensions
+
     # PostgreSQL конфигурация для Docker
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('POSTGRES_DB', 'guscha_dev'),
-            'USER': os.getenv('POSTGRES_USER', 'guscha'),
-            'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'guscha123'),
-            'HOST': os.getenv('POSTGRES_HOST', 'db'),
-            'PORT': os.getenv('POSTGRES_PORT', '5432'),
-            'OPTIONS': {
-                'isolation_level': psycopg2.extensions.ISOLATION_LEVEL_READ_COMMITTED,
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("POSTGRES_DB", "guscha_dev"),
+            "USER": os.getenv("POSTGRES_USER", "guscha"),
+            "PASSWORD": os.getenv("POSTGRES_PASSWORD", "guscha123"),
+            "HOST": os.getenv("POSTGRES_HOST", "db"),
+            "PORT": os.getenv("POSTGRES_PORT", "5432"),
+            "OPTIONS": {
+                "isolation_level": psycopg2.extensions.ISOLATION_LEVEL_READ_COMMITTED,
             },
-            'CONN_MAX_AGE': 600,  # Connection pooling
+            "CONN_MAX_AGE": 600,  # Connection pooling
         }
     }
 else:
     # Fallback к PostgreSQL с локальными настройками
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'guscha_dev',
-            'USER': 'guscha',
-            'PASSWORD': 'guscha123',
-            'HOST': 'localhost',
-            'PORT': '5432',
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": "guscha_dev",
+            "USER": "guscha",
+            "PASSWORD": "guscha123",
+            "HOST": "localhost",
+            "PORT": "5432",
         }
     }
 
@@ -232,16 +223,16 @@ else:
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -249,9 +240,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'ru-ru'
+LANGUAGE_CODE = "ru-ru"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -261,18 +252,18 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'static_root'
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "static_root"
 STATICFILES_DIRS = [
-    BASE_DIR / 'static',
+    BASE_DIR / "static",
 ]
 
 # Добавляем версионирование статических файлов для принудительного обновления кеша
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
 
 # Media files
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 # File upload settings
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
@@ -283,167 +274,171 @@ FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o755
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Django Sites Framework
 SITE_ID = 1
 
 # Cache configuration
 CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': os.getenv('REDIS_URL', 'redis://redis:6379/1'),
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        }
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": os.getenv("REDIS_URL", "redis://redis:6379/1"),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
     }
 }
 
 # Telegram Bot Settings
-TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '')
-TELEGRAM_BOT_USERNAME = os.getenv('TELEGRAM_BOT_USERNAME', 'GuschaBot')
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_BOT_USERNAME = os.getenv("TELEGRAM_BOT_USERNAME", "GuschaBot")
 
 # Allauth settings
-ACCOUNT_EMAIL_VERIFICATION = 'none'
+ACCOUNT_EMAIL_VERIFICATION = "none"
 # Новый API для методов входа (заменяет ACCOUNT_AUTHENTICATION_METHOD)
-ACCOUNT_LOGIN_METHODS = {'email'}
+ACCOUNT_LOGIN_METHODS = {"email"}
 # Заменяет ACCOUNT_EMAIL_REQUIRED и ACCOUNT_USERNAME_REQUIRED
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 
 # Google OAuth settings
-GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
-GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
+GOOGLE_OAUTH_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
+GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
 
 SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'APP': {
-            'client_id': os.environ.get('GOOGLE_CLIENT_ID'),
-            'secret': os.environ.get('GOOGLE_CLIENT_SECRET'),
-            'key': ''
+    "google": {
+        "APP": {
+            "client_id": os.environ.get("GOOGLE_CLIENT_ID"),
+            "secret": os.environ.get("GOOGLE_CLIENT_SECRET"),
+            "key": "",
         },
-        'SCOPE': [
-            'profile',
-            'email',
+        "SCOPE": [
+            "profile",
+            "email",
         ],
-        'AUTH_PARAMS': {
-            'access_type': 'online',
+        "AUTH_PARAMS": {
+            "access_type": "online",
         },
-        'VERIFIED_EMAIL': True,
+        "VERIFIED_EMAIL": True,
     }
 }
 
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
-ACCOUNT_USER_MODEL_EMAIL_FIELD = 'email'
+ACCOUNT_USER_MODEL_EMAIL_FIELD = "email"
 
 # Пользовательская модель аутентификации
-AUTH_USER_MODEL = 'accounts.User'
+AUTH_USER_MODEL = "accounts.User"
 
 # Настройки dj-rest-auth
 REST_USE_JWT = True
-JWT_AUTH_COOKIE = 'jwt-auth'
-JWT_AUTH_REFRESH_COOKIE = 'jwt-refresh'
+JWT_AUTH_COOKIE = "access_token"
+JWT_AUTH_REFRESH_COOKIE = "refresh_token"
+JWT_AUTH_HTTPONLY = True
+JWT_AUTH_SAMESITE = "Lax"
 REST_AUTH_SERIALIZERS = {
-    'USER_DETAILS_SERIALIZER': 'apps.accounts.serializers.UserSerializer',
+    "USER_DETAILS_SERIALIZER": "apps.accounts.serializers.UserSerializer",
 }
 REST_AUTH_REGISTER_SERIALIZERS = {
-    'REGISTER_SERIALIZER': 'apps.accounts.serializers.CustomRegisterSerializer',
+    "REGISTER_SERIALIZER": "apps.accounts.serializers.CustomRegisterSerializer",
 }
 
 # Настройки Django REST Framework
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
     ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
     ],
-    'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
     ],
-    'DEFAULT_PARSER_CLASSES': [
-        'rest_framework.parsers.JSONParser',
-        'rest_framework.parsers.FormParser',
-        'rest_framework.parsers.MultiPartParser',
+    "DEFAULT_PARSER_CLASSES": [
+        "rest_framework.parsers.JSONParser",
+        "rest_framework.parsers.FormParser",
+        "rest_framework.parsers.MultiPartParser",
     ],
-    'DEFAULT_FILTER_BACKENDS': [
-        'django_filters.rest_framework.DjangoFilterBackend',
-        'rest_framework.filters.SearchFilter',
-        'rest_framework.filters.OrderingFilter',
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter",
     ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20,
-    'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle'
-    ],
-    'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/hour',
-        'user': '1000/hour'
-    }
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 20,
+    "DEFAULT_THROTTLE_CLASSES": [],  # Отключаем throttling
+    "DEFAULT_THROTTLE_RATES": {},  # Отключаем throttle rates
 }
 
 # JWT Settings
 from datetime import timedelta
 
 # JWT Secret Key (отдельный от основного SECRET_KEY для безопасности)
-JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', SECRET_KEY)
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", SECRET_KEY)
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),  # Сокращено для безопасности
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'UPDATE_LAST_LOGIN': True,  # Включено для аудита
-
-    'ALGORITHM': 'HS256',
-    'SIGNING_KEY': JWT_SECRET_KEY,
-    'VERIFYING_KEY': None,
-    'AUDIENCE': None,
-    'ISSUER': None,
-    'JWK_URL': None,
-    'LEEWAY': 0,
-
-    'AUTH_HEADER_TYPES': ('Bearer',),
-    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
-    'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'user_id',
-    'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
-
-    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
-    'TOKEN_TYPE_CLAIM': 'token_type',
-    'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
-
-    'JTI_CLAIM': 'jti',
-
-    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
-    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
-    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),  # Сокращено для безопасности
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": True,  # Включено для аудита
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": JWT_SECRET_KEY,
+    "VERIFYING_KEY": None,
+    "AUDIENCE": None,
+    "ISSUER": None,
+    "JWK_URL": None,
+    "LEEWAY": 0,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+    "USER_AUTHENTICATION_RULE": "rest_framework_simplejwt.authentication.default_user_authentication_rule",
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+    "TOKEN_TYPE_CLAIM": "token_type",
+    "TOKEN_USER_CLASS": "rest_framework_simplejwt.models.TokenUser",
+    "JTI_CLAIM": "jti",
+    "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
+    "SLIDING_TOKEN_LIFETIME": timedelta(minutes=5),
+    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
 }
 
 # Настройки CORS
 CORS_ALLOW_ALL_ORIGINS = DEBUG  # Только для разработки
 
-# Получаем разрешенные origins из переменных окружения
-CORS_ALLOWED_ORIGINS_ENV = os.environ.get('CORS_ALLOWED_ORIGINS', '')
+# Базовые настройки CORS
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost",
+    "http://127.0.0.1",
+    "https://yourdomain.com",
+    "https://www.yourdomain.com",
+]
+
+# Дополнительные origins из переменных окружения
+CORS_ALLOWED_ORIGINS_ENV = os.environ.get("CORS_ALLOWED_ORIGINS", "")
 if CORS_ALLOWED_ORIGINS_ENV:
-    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in CORS_ALLOWED_ORIGINS_ENV.split(',')]
-else:
-    # Fallback для продакшена
-    CORS_ALLOWED_ORIGINS = [
-        "https://yourdomain.com",
-        "https://www.yourdomain.com",
-    ]
+    CORS_ALLOWED_ORIGINS.extend([
+        origin.strip() for origin in CORS_ALLOWED_ORIGINS_ENV.split(",") 
+        if origin.strip() not in CORS_ALLOWED_ORIGINS
+    ])
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
-CORS_ALLOW_HEADERS = ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-CSRFToken', 'X-Session-ID']
+CORS_ALLOW_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+CORS_ALLOW_HEADERS = [
+    "Content-Type",
+    "Authorization",
+    "X-CSRF-Token",
+    "X-CSRFToken",
+    "X-Session-ID",
+]
 
 # Настройки CSRF - используем те же origins что и для CORS
-CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS if not DEBUG else [
+# Объединяем CORS_ALLOWED_ORIGINS с дополнительными доменами
+CSRF_TRUSTED_ORIGINS = list(set(CORS_ALLOWED_ORIGINS + [
+    # Локальные адреса
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:8000",
@@ -452,55 +447,38 @@ CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS if not DEBUG else [
     "http://localhost",
     "http://127.0.0.1:80",
     "http://127.0.0.1",
+    
     # Контейнерные адреса
     "http://nginx:80",
     "http://nginx",
+    "http://django:8000",
+    "http://django",
     "http://frontend:3000",
     "http://frontend",
     "http://backend:8000",
     "http://backend",
+    
+    # HTTPS варианты для локальной разработки с самоподписанными сертификатами
+    "https://localhost",
+    "https://127.0.0.1",
+    
     # Docker внутренние сети
     "http://172.17.0.1",
     "http://172.18.0.1",
     "http://172.19.0.1",
     "http://172.20.0.1",
-]
-CSRF_COOKIE_NAME = 'csrftoken'
-CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
+]))
 
-# CORS настройки для разработки (только в DEBUG режиме)
-if DEBUG:
-    # В режиме разработки добавляем localhost адреса к существующим CORS_ALLOWED_ORIGINS
-    CORS_ALLOWED_ORIGINS.extend([
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://localhost:8000",
-        "http://127.0.0.1:8000",
-        "http://localhost:80",
-        "http://localhost",
-        "http://127.0.0.1:80",
-        "http://127.0.0.1",
-        # Контейнерные адреса
-        "http://nginx:80",
-        "http://nginx",
-        "http://frontend:3000",
-        "http://frontend",
-        "http://backend:8000",
-        "http://backend",
-        # Docker внутренние сети
-        "http://172.17.0.1",
-        "http://172.18.0.1",
-        "http://172.19.0.1",
-        "http://172.20.0.1",
-    ])
+CSRF_COOKIE_NAME = "csrftoken"
+CSRF_HEADER_NAME = "HTTP_X_CSRFTOKEN"
 
 # Настройки безопасности
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
-SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
-X_FRAME_OPTIONS = 'SAMEORIGIN'
+X_FRAME_OPTIONS = "SAMEORIGIN"
 
 # Отключаем HSTS и SSL redirect для локальной разработки
 SECURE_HSTS_SECONDS = 0
@@ -519,267 +497,262 @@ if not DEBUG:
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 7200  # 2 часа для улучшения пользовательского опыта
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Lax'  # Защита от CSRF
-CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SAMESITE = "Lax"  # Защита от CSRF
+CSRF_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_HTTPONLY = False  # Разрешаем JavaScript доступ к CSRF токену для фронтенда
 
 # Создаем директорию для логов если она не существует
 import os
-LOGS_DIR = BASE_DIR / 'logs'
+
+LOGS_DIR = BASE_DIR / "logs"
 if not os.path.exists(LOGS_DIR):
     os.makedirs(LOGS_DIR, exist_ok=True)
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+            "style": "{",
         },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
+        "simple": {
+            "format": "{levelname} {message}",
+            "style": "{",
         },
-        'security': {
-            'format': '[SECURITY] {asctime} {levelname} {name} - {message}',
-            'style': '{',
+        "security": {
+            "format": "[SECURITY] {asctime} {levelname} {name} - {message}",
+            "style": "{",
         },
-        'audit': {
-            'format': '[AUDIT] {asctime} {levelname} - {message}',
-            'style': '{',
-        },
-    },
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse',
-        },
-        'require_debug_true': {
-            '()': 'django.utils.log.RequireDebugTrue',
+        "audit": {
+            "format": "[AUDIT] {asctime} {levelname} - {message}",
+            "style": "{",
         },
     },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
+    "filters": {
+        "require_debug_false": {
+            "()": "django.utils.log.RequireDebugFalse",
         },
-        'file': {
-            'class': 'logging.FileHandler',
-            'filename': str(LOGS_DIR / 'django.log'),
-            'formatter': 'verbose',
-        },
-        'security_file': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': str(LOGS_DIR / 'security.log'),
-            'maxBytes': 10 * 1024 * 1024,  # 10MB
-            'backupCount': 10,
-            'formatter': 'security',
-        },
-        'audit_file': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': str(LOGS_DIR / 'audit.log'),
-            'maxBytes': 10 * 1024 * 1024,  # 10MB
-            'backupCount': 10,
-            'formatter': 'audit',
-        },
-        'csrf_debug_file': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': str(LOGS_DIR / 'csrf_debug.log'),
-            'maxBytes': 5 * 1024 * 1024,  # 5MB
-            'backupCount': 5,
-            'formatter': 'verbose',
-            'filters': ['require_debug_true'],
-        },
-        'threat_file': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': str(LOGS_DIR / 'threats.log'),
-            'maxBytes': 10 * 1024 * 1024,  # 10MB
-            'backupCount': 10,
-            'formatter': 'security',
-        },
-        'telegram_security_file': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': str(LOGS_DIR / 'telegram_security.log'),
-            'maxBytes': 10 * 1024 * 1024,  # 10MB
-            'backupCount': 10,
-            'formatter': 'security',
-        },
-        'error_file': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': str(LOGS_DIR / 'errors.log'),
-            'maxBytes': 10 * 1024 * 1024,  # 10MB
-            'backupCount': 5,
-            'formatter': 'verbose',
-        },
-        'mail_admins': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler',
-            'include_html': True,
+        "require_debug_true": {
+            "()": "django.utils.log.RequireDebugTrue",
         },
     },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+        "file": {
+            "class": "logging.FileHandler",
+            "filename": str(LOGS_DIR / "django.log"),
+            "formatter": "verbose",
+        },
+        "security_file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": str(LOGS_DIR / "security.log"),
+            "maxBytes": 10 * 1024 * 1024,  # 10MB
+            "backupCount": 10,
+            "formatter": "security",
+        },
+        "audit_file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": str(LOGS_DIR / "audit.log"),
+            "maxBytes": 10 * 1024 * 1024,  # 10MB
+            "backupCount": 10,
+            "formatter": "audit",
+        },
+        "csrf_debug_file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": str(LOGS_DIR / "csrf_debug.log"),
+            "maxBytes": 5 * 1024 * 1024,  # 5MB
+            "backupCount": 5,
+            "formatter": "verbose",
+            "filters": ["require_debug_true"],
+        },
+        "threat_file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": str(LOGS_DIR / "threats.log"),
+            "maxBytes": 10 * 1024 * 1024,  # 10MB
+            "backupCount": 10,
+            "formatter": "security",
+        },
+        "telegram_security_file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": str(LOGS_DIR / "telegram_security.log"),
+            "maxBytes": 10 * 1024 * 1024,  # 10MB
+            "backupCount": 10,
+            "formatter": "security",
+        },
+        "error_file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": str(LOGS_DIR / "errors.log"),
+            "maxBytes": 10 * 1024 * 1024,  # 10MB
+            "backupCount": 5,
+            "formatter": "verbose",
+        },
+        "mail_admins": {
+            "level": "ERROR",
+            "filters": ["require_debug_false"],
+            "class": "django.utils.log.AdminEmailHandler",
+            "include_html": True,
+        },
     },
-    'loggers': {
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+    "loggers": {
         # Security monitoring loggers
-        'security': {
-            'handlers': ['security_file', 'console'],
-            'level': 'INFO',
-            'propagate': False,
+        "security": {
+            "handlers": ["security_file", "console"],
+            "level": "INFO",
+            "propagate": False,
         },
-        'security.monitoring': {
-            'handlers': ['security_file', 'threat_file'],
-            'level': 'WARNING',
-            'propagate': False,
+        "security.monitoring": {
+            "handlers": ["security_file", "threat_file"],
+            "level": "WARNING",
+            "propagate": False,
         },
-        'security.audit': {
-            'handlers': ['audit_file', 'console'],
-            'level': 'INFO',
-            'propagate': False,
+        "security.audit": {
+            "handlers": ["audit_file", "console"],
+            "level": "INFO",
+            "propagate": False,
         },
-        'security.threats': {
-            'handlers': ['threat_file', 'mail_admins'],
-            'level': 'WARNING',
-            'propagate': False,
+        "security.threats": {
+            "handlers": ["threat_file", "mail_admins"],
+            "level": "WARNING",
+            "propagate": False,
         },
-        'security.authentication': {
-            'handlers': ['security_file', 'audit_file'],
-            'level': 'INFO',
-            'propagate': False,
+        "security.authentication": {
+            "handlers": ["security_file", "audit_file"],
+            "level": "INFO",
+            "propagate": False,
         },
-        'security.authorization': {
-            'handlers': ['security_file', 'audit_file'],
-            'level': 'INFO',
-            'propagate': False,
+        "security.authorization": {
+            "handlers": ["security_file", "audit_file"],
+            "level": "INFO",
+            "propagate": False,
         },
         # CSRF debug logger (only in DEBUG mode)
-        'csrf_debug': {
-            'handlers': ['csrf_debug_file'],
-            'level': 'DEBUG',
-            'propagate': False,
+        "csrf_debug": {
+            "handlers": ["csrf_debug_file"],
+            "level": "DEBUG",
+            "propagate": False,
         },
-        'security.ratelimit': {
-            'handlers': ['security_file', 'threat_file'],
-            'level': 'WARNING',
-            'propagate': False,
+        "security.ratelimit": {
+            "handlers": ["security_file", "threat_file"],
+            "level": "WARNING",
+            "propagate": False,
         },
-        'security.telegram': {
-            'handlers': ['telegram_security_file', 'security_file', 'console'],
-            'level': 'INFO',
-            'propagate': False,
+        "security.telegram": {
+            "handlers": ["telegram_security_file", "security_file", "console"],
+            "level": "INFO",
+            "propagate": False,
         },
-        'security.telegram.suspicious': {
-            'handlers': ['telegram_security_file', 'threat_file', 'mail_admins'],
-            'level': 'WARNING',
-            'propagate': False,
+        "security.telegram.suspicious": {
+            "handlers": ["telegram_security_file", "threat_file", "mail_admins"],
+            "level": "WARNING",
+            "propagate": False,
         },
         # Django security loggers
-        'django.security': {
-            'handlers': ['security_file', 'mail_admins'],
-            'level': 'INFO',
-            'propagate': False,
+        "django.security": {
+            "handlers": ["security_file", "mail_admins"],
+            "level": "INFO",
+            "propagate": False,
         },
-        'django.security.csrf': {
-            'handlers': ['security_file', 'threat_file'],
-            'level': 'WARNING',
-            'propagate': False,
+        "django.security.csrf": {
+            "handlers": ["security_file", "threat_file"],
+            "level": "WARNING",
+            "propagate": False,
         },
         # Django Axes logger
-        'axes': {
-            'handlers': ['security_file', 'console'],
-            'level': 'WARNING',
-            'propagate': False,
-        },
-        'django.request': {
-            'handlers': ['console', 'file', 'error_file'],
-            'level': 'DEBUG',
-            'propagate': False,
+
+        "django.request": {
+            "handlers": ["console", "file", "error_file"],
+            "level": "DEBUG",
+            "propagate": False,
         },
         # Application loggers
-        'apps.products': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-            'propagate': False,
+        "apps.products": {
+            "handlers": ["console", "file"],
+            "level": "DEBUG",
+            "propagate": False,
         },
-        'apps.products.admin': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-            'propagate': False,
+        "apps.products.admin": {
+            "handlers": ["console", "file"],
+            "level": "DEBUG",
+            "propagate": False,
         },
-        'apps.products.models': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-            'propagate': False,
+        "apps.products.models": {
+            "handlers": ["console", "file"],
+            "level": "DEBUG",
+            "propagate": False,
         },
-        'apps.products.forms': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-            'propagate': False,
+        "apps.products.forms": {
+            "handlers": ["console", "file"],
+            "level": "DEBUG",
+            "propagate": False,
         },
-        'apps.accounts': {
-            'handlers': ['console', 'file', 'audit_file'],
-            'level': 'DEBUG',
-            'propagate': False,
+        "apps.accounts": {
+            "handlers": ["console", "file", "audit_file"],
+            "level": "DEBUG",
+            "propagate": False,
         },
-        'apps.accounts.views': {
-            'handlers': ['console', 'file', 'audit_file'],
-            'level': 'DEBUG',
-            'propagate': False,
+        "apps.accounts.views": {
+            "handlers": ["console", "file", "audit_file"],
+            "level": "DEBUG",
+            "propagate": False,
         },
-        'unfold': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-            'propagate': False,
+        "unfold": {
+            "handlers": ["console", "file"],
+            "level": "DEBUG",
+            "propagate": False,
         },
     },
 }
 
 
-
-
 # Настройки для reCAPTCHA
-RECAPTCHA_PUBLIC_KEY = os.environ.get('RECAPTCHA_PUBLIC_KEY', 'your-public-key-here')
-RECAPTCHA_PRIVATE_KEY = os.environ.get('RECAPTCHA_PRIVATE_KEY', 'your-private-key-here')
+RECAPTCHA_PUBLIC_KEY = os.environ.get("RECAPTCHA_PUBLIC_KEY", "your-public-key-here")
+RECAPTCHA_PRIVATE_KEY = os.environ.get("RECAPTCHA_PRIVATE_KEY", "your-private-key-here")
 
 # Настройки для ratelimit
-RATELIMIT_ENABLE = True
+RATELIMIT_ENABLE = False  # Временно отключаем для тестирования
 
 # Rate Limiting Configuration
-RATE_LIMITING_ENABLED = True
-RATE_LIMIT_IN_DEBUG = True  # Enable rate limiting in DEBUG mode for testing
+RATE_LIMITING_ENABLED = False  # Временно отключаем для тестирования
+RATE_LIMIT_IN_DEBUG = False  # Отключаем в DEBUG режиме для тестирования
 RATE_LIMIT_SKIP_SUPERUSER = True  # Skip rate limiting for superusers
 
 # Paths excluded from rate limiting
 RATE_LIMIT_EXCLUDED_PATHS = [
-    '/admin/jsi18n/',
-    '/static/',
-    '/media/',
-    '/favicon.ico',
-    '/health/',
-    '/ping/',
-    '/admin/login/',  # Allow admin login without rate limiting
+    "/admin/jsi18n/",
+    "/static/",
+    "/media/",
+    "/favicon.ico",
+    "/health/",
+    "/ping/",
+    "/admin/login/",  # Allow admin login without rate limiting
 ]
 
 # User agents excluded from rate limiting (bots, monitoring)
 RATE_LIMIT_EXCLUDED_USER_AGENTS = [
-    'GoogleBot',
-    'BingBot',
-    'YandexBot',
-    'facebookexternalhit',
-    'Twitterbot',
-    'LinkedInBot',
-    'WhatsApp',
-    'Telegram',
-    'UptimeRobot',
-    'Pingdom',
+    "GoogleBot",
+    "BingBot",
+    "YandexBot",
+    "facebookexternalhit",
+    "Twitterbot",
+    "LinkedInBot",
+    "WhatsApp",
+    "Telegram",
+    "UptimeRobot",
+    "Pingdom",
 ]
 
 # Trusted IPs that bypass rate limiting (monitoring, load balancers)
 RATE_LIMIT_TRUSTED_IPS = [
-    '127.0.0.1',
-    '::1',
+    "127.0.0.1",
+    "::1",
     # Add your monitoring server IPs here
     # '10.0.0.1',
     # '192.168.1.100',
@@ -800,10 +773,10 @@ SECURE_HSTS_PRELOAD = True
 
 # Authentication backends
 AUTHENTICATION_BACKENDS = (
-    'axes.backends.AxesStandaloneBackend',  # Axes backend для защиты от брутфорса
-    'django.contrib.auth.backends.ModelBackend',  # Default backend
-    'guardian.backends.ObjectPermissionBackend',  # Guardian backend для объектных разрешений
-    'allauth.account.auth_backends.AuthenticationBackend',  # Allauth backend
+    # "axes.backends.AxesStandaloneBackend",  # Axes backend удален в пользу defender
+    "django.contrib.auth.backends.ModelBackend",  # Default backend
+    "guardian.backends.ObjectPermissionBackend",  # Guardian backend для объектных разрешений
+    "allauth.account.auth_backends.AuthenticationBackend",  # Allauth backend
 )
 
 # Настройки для crispy forms
@@ -811,15 +784,15 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
 CRISPY_TEMPLATE_PACK = "tailwind"
 
 # Валидация критически важных переменных окружения
-if not os.environ.get('ADMIN_URL'):
+if not os.environ.get("ADMIN_URL"):
     raise ImproperlyConfigured(
         "ADMIN_URL environment variable is required for security. "
         "Set it to a random, hard-to-guess path (e.g., 'my-secret-admin-path-123/')"
     )
 
 # Проверяем, что ADMIN_URL не содержит очевидных значений
-ADMIN_URL = os.environ['ADMIN_URL']
-if ADMIN_URL.lower() in ['admin/', 'admin', 'administrator/', 'panel/', 'control/']:
+ADMIN_URL = os.environ["ADMIN_URL"]
+if ADMIN_URL.lower() in ["admin/", "admin", "administrator/", "panel/", "control/"]:
     raise ImproperlyConfigured(
         "ADMIN_URL should not use obvious values like 'admin'. "
         "Use a random, hard-to-guess path for security."
@@ -848,10 +821,8 @@ UNFOLD = {
         "image": lambda request: static("images/login-bg.jpg"),
         "redirect_after": lambda request: reverse_lazy("admin:index"),
     },
-    "STYLES": [
-    ],
-    "SCRIPTS": [
-    ],
+    "STYLES": [],
+    "SCRIPTS": [],
     "COLORS": {
         "primary": {
             "50": "250 245 255",
@@ -915,10 +886,10 @@ UNFOLD = {
                         "link": "/admin/cart/reservation/",
                     },
                     {
-                         "title": _("Фоновый контент"),
-                         "icon": "image",
-                         "link": "http://localhost/admin/background_content/",
-                     },
+                        "title": _("Фоновый контент"),
+                        "icon": "image",
+                        "link": "http://localhost/admin/background_content/",
+                    },
                     {
                         "title": _("Коллекции"),
                         "icon": "collections",
@@ -947,10 +918,12 @@ UNFOLD = {
     # ],
 }
 
+
 # Функции обратного вызова для Unfold
 def environment_callback(request):
     """Определяет окружение для отображения в админке"""
     return "Разработка" if DEBUG else "Продакшн"
+
 
 def dashboard_callback(request, context):
     """Добавляет данные для дашборда"""
@@ -961,138 +934,155 @@ def dashboard_callback(request, context):
     from datetime import timedelta
     from django.db.models import Sum, Count
     from decimal import Decimal
-    
+
     User = get_user_model()
-    
+
     # Базовая статистика
     total_users = User.objects.count()
     total_products = Product.objects.count()
     total_orders = Order.objects.count()
     orders_today = Order.objects.filter(created_at__date=timezone.now().date()).count()
-    
+
     # Общая выручка
-    total_revenue = Order.objects.filter(status='completed').aggregate(
-        total=Sum('total')
-    )['total'] or Decimal('0')
-    
+    total_revenue = Order.objects.filter(status="completed").aggregate(
+        total=Sum("total")
+    )["total"] or Decimal("0")
+
     # Данные для графика выручки за последние 30 дней
     end_date = timezone.now().date()
     start_date = end_date - timedelta(days=29)
-    
+
     revenue_data = []
     labels = []
-    
+
     for i in range(30):
         date = start_date + timedelta(days=i)
         daily_revenue = Order.objects.filter(
-            created_at__date=date,
-            status='completed'
-        ).aggregate(total=Sum('total'))['total'] or Decimal('0')
-        
+            created_at__date=date, status="completed"
+        ).aggregate(total=Sum("total"))["total"] or Decimal("0")
+
         revenue_data.append(float(daily_revenue))
-        labels.append(date.strftime('%d.%m'))
-    
+        labels.append(date.strftime("%d.%m"))
+
     # Данные для графика регистраций пользователей за последние 30 дней
     users_data = []
-    
+
     for i in range(30):
         date = start_date + timedelta(days=i)
         daily_users = User.objects.filter(date_joined__date=date).count()
         users_data.append(daily_users)
-    
+
     # Данные для графика заказов по категориям
     categories_data = []
     categories_labels = []
-    
-    categories_stats = Category.objects.annotate(
-        order_count=Count('products__orderitem', distinct=True)
-    ).filter(order_count__gt=0).order_by('-order_count')[:10]
-    
+
+    categories_stats = (
+        Category.objects.annotate(
+            order_count=Count("products__orderitem", distinct=True)
+        )
+        .filter(order_count__gt=0)
+        .order_by("-order_count")[:10]
+    )
+
     for category in categories_stats:
         categories_data.append(category.order_count)
         categories_labels.append(category.name)
-    
+
     # Последние заказы для таблицы
-    recent_orders = Order.objects.select_related('user').order_by('-created_at')[:10]
-    
+    recent_orders = Order.objects.select_related("user").order_by("-created_at")[:10]
+
     # Формирование данных для графиков в формате Chart.js
     revenue_chart_data = {
-        'labels': labels,
-        'datasets': [{
-            'label': 'Выручка (₽)',
-            'data': revenue_data,
-            'borderColor': 'rgb(168, 85, 247)',
-            'backgroundColor': 'rgba(168, 85, 247, 0.1)',
-            'tension': 0.4,
-            'fill': True
-        }]
+        "labels": labels,
+        "datasets": [
+            {
+                "label": "Выручка (₽)",
+                "data": revenue_data,
+                "borderColor": "rgb(168, 85, 247)",
+                "backgroundColor": "rgba(168, 85, 247, 0.1)",
+                "tension": 0.4,
+                "fill": True,
+            }
+        ],
     }
-    
+
     users_chart_data = {
-        'labels': labels,
-        'datasets': [{
-            'label': 'Регистрации',
-            'data': users_data,
-            'backgroundColor': 'rgba(59, 130, 246, 0.8)',
-            'borderColor': 'rgb(59, 130, 246)',
-            'borderWidth': 1
-        }]
+        "labels": labels,
+        "datasets": [
+            {
+                "label": "Регистрации",
+                "data": users_data,
+                "backgroundColor": "rgba(59, 130, 246, 0.8)",
+                "borderColor": "rgb(59, 130, 246)",
+                "borderWidth": 1,
+            }
+        ],
     }
-    
+
     orders_by_category_data = {
-        'labels': categories_labels,
-        'datasets': [{
-            'label': 'Количество заказов',
-            'data': categories_data,
-            'backgroundColor': [
-                'rgba(168, 85, 247, 0.8)',
-                'rgba(59, 130, 246, 0.8)',
-                'rgba(16, 185, 129, 0.8)',
-                'rgba(245, 158, 11, 0.8)',
-                'rgba(239, 68, 68, 0.8)',
-                'rgba(139, 92, 246, 0.8)',
-                'rgba(236, 72, 153, 0.8)',
-                'rgba(34, 197, 94, 0.8)',
-                'rgba(251, 146, 60, 0.8)',
-                'rgba(14, 165, 233, 0.8)'
-            ],
-            'borderWidth': 1
-        }]
+        "labels": categories_labels,
+        "datasets": [
+            {
+                "label": "Количество заказов",
+                "data": categories_data,
+                "backgroundColor": [
+                    "rgba(168, 85, 247, 0.8)",
+                    "rgba(59, 130, 246, 0.8)",
+                    "rgba(16, 185, 129, 0.8)",
+                    "rgba(245, 158, 11, 0.8)",
+                    "rgba(239, 68, 68, 0.8)",
+                    "rgba(139, 92, 246, 0.8)",
+                    "rgba(236, 72, 153, 0.8)",
+                    "rgba(34, 197, 94, 0.8)",
+                    "rgba(251, 146, 60, 0.8)",
+                    "rgba(14, 165, 233, 0.8)",
+                ],
+                "borderWidth": 1,
+            }
+        ],
     }
-    
+
     # Данные для таблицы последних заказов
     recent_orders_table = {
-        'headers': ['№ заказа', 'Пользователь', 'Сумма', 'Статус', 'Дата'],
-        'rows': []
+        "headers": ["№ заказа", "Пользователь", "Сумма", "Статус", "Дата"],
+        "rows": [],
     }
-    
+
     for order in recent_orders:
-        recent_orders_table['rows'].append([
-            f'#{order.id}',
-            (order.user.get_full_name() or order.user.email) if order.user else 'Гость',
-            f'{order.total} ₽',
-            order.get_status_display(),
-            order.created_at.strftime('%d.%m.%Y %H:%M')
-        ])
-    
-    context.update({
-        'total_users': total_users,
-        'total_revenue': f'{total_revenue:,.0f} ₽',
-        'orders_today': orders_today,
-        'products_count': total_products,
-        'revenue_chart_data': json.dumps(revenue_chart_data, ensure_ascii=False),
-        'users_chart_data': json.dumps(users_chart_data, ensure_ascii=False),
-        'orders_by_category_data': json.dumps(orders_by_category_data, ensure_ascii=False),
-        'recent_orders': recent_orders,
-        'recent_orders_table': recent_orders_table,
-    })
+        recent_orders_table["rows"].append(
+            [
+                f"#{order.id}",
+                (order.user.get_full_name() or order.user.email)
+                if order.user
+                else "Гость",
+                f"{order.total} ₽",
+                order.get_status_display(),
+                order.created_at.strftime("%d.%m.%Y %H:%M"),
+            ]
+        )
+
+    context.update(
+        {
+            "total_users": total_users,
+            "total_revenue": f"{total_revenue:,.0f} ₽",
+            "orders_today": orders_today,
+            "products_count": total_products,
+            "revenue_chart_data": json.dumps(revenue_chart_data, ensure_ascii=False),
+            "users_chart_data": json.dumps(users_chart_data, ensure_ascii=False),
+            "orders_by_category_data": json.dumps(
+                orders_by_category_data, ensure_ascii=False
+            ),
+            "recent_orders": recent_orders,
+            "recent_orders_table": recent_orders_table,
+        }
+    )
     return context
 
 
 # Настройки django-money
-CURRENCIES = ('RUB',)  # Ограничиваем только рублем
-DEFAULT_CURRENCY = 'RUB'
-CURRENCY_CHOICES = [('RUB', 'Рубль')]
+CURRENCIES = ("RUB",)  # Ограничиваем только рублем
+DEFAULT_CURRENCY = "RUB"
+CURRENCY_CHOICES = [("RUB", "Рубль")]
 
 # Дополнительные настройки для django-money
 USE_MONEY_LOCALIZATION = True
@@ -1102,30 +1092,30 @@ MONEY_MAX_DIGITS = 10
 # Настройки Email для сброса пароля
 # Для локальной разработки используем консольный бэкенд
 if DEBUG:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 else:
     # Для продакшена настройки SMTP (Beget)
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.beget.com')
-    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
-    EMAIL_USE_TLS = str2bool(os.environ.get('EMAIL_USE_TLS', 'True'))
-    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.beget.com")
+    EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
+    EMAIL_USE_TLS = str2bool(os.environ.get("EMAIL_USE_TLS", "True"))
+    EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+    EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 
 # Общие настройки email
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@guscha.ru')
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@guscha.ru")
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
-EMAIL_SUBJECT_PREFIX = '[Guscha] '
+EMAIL_SUBJECT_PREFIX = "[Guscha] "
 
 # Настройки для сброса пароля
 PASSWORD_RESET_TIMEOUT = 3600  # 1 час в секундах
 
 # Настройки Telegram бота
-TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 
 # URL фронтенда для генерации ссылок (для статических файлов)
 # Поскольку фронтенд собирается в статические файлы и обслуживается Django
-FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:8000')
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:8000")
 
 # Content Security Policy настройки
 # Разные политики для разработки и продакшена
@@ -1142,22 +1132,30 @@ if DEBUG:
 else:
     # Строгая политика для продакшена БЕЗ unsafe-inline и unsafe-eval
     CSP_DEFAULT_SRC = ("'self'",)
-    CSP_SCRIPT_SRC = ("'self'", "https://accounts.google.com", "https://apis.google.com")
+    CSP_SCRIPT_SRC = (
+        "'self'",
+        "https://accounts.google.com",
+        "https://apis.google.com",
+    )
     CSP_STYLE_SRC = ("'self'", "https://fonts.googleapis.com")
     CSP_IMG_SRC = ("'self'", "data:", "https:")
     CSP_FONT_SRC = ("'self'", "https://fonts.gstatic.com")
-    CSP_CONNECT_SRC = ("'self'", "https://accounts.google.com", "https://apis.google.com")
+    CSP_CONNECT_SRC = (
+        "'self'",
+        "https://accounts.google.com",
+        "https://apis.google.com",
+    )
     CSP_FRAME_SRC = ("'self'", "https://accounts.google.com")
 
 # Настройки Django Defender
-DEFENDER_REDIS_URL = os.getenv('REDIS_URL', 'redis://redis:6379/1')
+DEFENDER_REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/1")
 DEFENDER_LOGIN_FAILURE_LIMIT = 5
 DEFENDER_COOLOFF_TIME = 300  # 5 минут
-DEFENDER_LOCKOUT_TEMPLATE = 'defender/lockout.html'
+DEFENDER_LOCKOUT_TEMPLATE = "defender/lockout.html"
 DEFENDER_STORE_ACCESS_ATTEMPTS = True
 DEFENDER_USE_CELERY = False  # Отключаем Celery, так как он не установлен
-DEFENDER_LOCKOUT_URL = '/api/auth/lockout/'
-DEFENDER_REVERSE_PROXY_HEADER = 'HTTP_X_FORWARDED_FOR'
+DEFENDER_LOCKOUT_URL = "/api/auth/lockout/"
+DEFENDER_REVERSE_PROXY_HEADER = "HTTP_X_FORWARDED_FOR"
 
 # Дополнительные CSP настройки
 CSP_MEDIA_SRC = ("'self'",)
@@ -1165,35 +1163,35 @@ CSP_OBJECT_SRC = ("'none'",)
 CSP_BASE_URI = ("'self'",)
 CSP_FORM_ACTION = ("'self'",)
 
-# Настройки Django Axes (защита от brute force) - УСТАРЕЛО, используем defender
+# Настройки Django Axes (защита от brute force) - УДАЛЕНО, используем defender
 # AXES_FAILURE_LIMIT = 5
 # AXES_COOLOFF_TIME = 1  # час
 # AXES_RESET_ON_SUCCESS = True
 
 # Настройки Django Ratelimit
-RATELIMIT_ENABLE = True
-RATELIMIT_USE_CACHE = 'default'
-RATELIMIT_VIEW = 'django_ratelimit.views.ratelimited'
+RATELIMIT_ENABLE = False  # Временно отключаем для тестирования
+RATELIMIT_USE_CACHE = "default"
+RATELIMIT_VIEW = "django_ratelimit.views.ratelimited"
 
 # Кастомные настройки для разных типов запросов
-API_RATELIMIT_RATE = '100/h'  # 100 запросов в час для API
-AUTH_RATELIMIT_RATE = '10/m'  # 10 попыток входа в минуту
-REGISTRATION_RATELIMIT_RATE = '5/h'  # 5 регистраций в час с одного IP
+API_RATELIMIT_RATE = "100/h"  # 100 запросов в час для API
+AUTH_RATELIMIT_RATE = "10/m"  # 10 попыток входа в минуту
+REGISTRATION_RATELIMIT_RATE = "5/h"  # 5 регистраций в час с одного IP
 
 # Настройки Django Honeypot
-HONEYPOT_FIELD_NAME = 'email_confirm'  # Имя поля-ловушки
-HONEYPOT_VALUE = ''  # Значение поля-ловушки (должно быть пустым)
-HONEYPOT_VERIFIER = 'honeypot.decorators.verify_honeypot_value'
-AXES_ENABLE_ADMIN = True
+HONEYPOT_FIELD_NAME = "email_confirm"  # Имя поля-ловушки
+HONEYPOT_VALUE = ""  # Значение поля-ловушки (должно быть пустым)
+HONEYPOT_VERIFIER = "honeypot.decorators.verify_honeypot_value"
+
 
 # ============================================================================
 # DJANGO-DBBACKUP SETTINGS
 # ============================================================================
 
 # Основные настройки резервного копирования
-DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
+DBBACKUP_STORAGE = "django.core.files.storage.FileSystemStorage"
 DBBACKUP_STORAGE_OPTIONS = {
-    'location': BASE_DIR / 'backups',
+    "location": BASE_DIR / "backups",
 }
 
 # Настройки для медиа-файлов
@@ -1201,7 +1199,7 @@ DBBACKUP_MEDIA_STORAGE = DBBACKUP_STORAGE
 DBBACKUP_MEDIA_STORAGE_OPTIONS = DBBACKUP_STORAGE_OPTIONS
 
 # Шифрование резервных копий
-DBBACKUP_GPG_RECIPIENT = os.environ.get('BACKUP_GPG_RECIPIENT', '')
+DBBACKUP_GPG_RECIPIENT = os.environ.get("BACKUP_GPG_RECIPIENT", "")
 DBBACKUP_GPG_ALWAYS_TRUST = True
 
 # Очистка старых резервных копий
@@ -1213,23 +1211,23 @@ DBBACKUP_COMPRESS = True
 DBBACKUP_COMPRESS_MEDIA = True
 
 # Настройки для облачного хранения (AWS S3)
-if os.environ.get('AWS_ACCESS_KEY_ID'):
-    DBBACKUP_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+if os.environ.get("AWS_ACCESS_KEY_ID"):
+    DBBACKUP_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
     DBBACKUP_STORAGE_OPTIONS = {
-        'access_key': os.environ.get('AWS_ACCESS_KEY_ID'),
-        'secret_key': os.environ.get('AWS_SECRET_ACCESS_KEY'),
-        'bucket_name': os.environ.get('AWS_BACKUP_BUCKET_NAME', 'guscha-backups'),
-        'default_acl': 'private',
-        'location': 'database/',
+        "access_key": os.environ.get("AWS_ACCESS_KEY_ID"),
+        "secret_key": os.environ.get("AWS_SECRET_ACCESS_KEY"),
+        "bucket_name": os.environ.get("AWS_BACKUP_BUCKET_NAME", "guscha-backups"),
+        "default_acl": "private",
+        "location": "database/",
     }
-    
+
     DBBACKUP_MEDIA_STORAGE = DBBACKUP_STORAGE
     DBBACKUP_MEDIA_STORAGE_OPTIONS = {
-        'access_key': os.environ.get('AWS_ACCESS_KEY_ID'),
-        'secret_key': os.environ.get('AWS_SECRET_ACCESS_KEY'),
-        'bucket_name': os.environ.get('AWS_BACKUP_BUCKET_NAME', 'guscha-backups'),
-        'default_acl': 'private',
-        'location': 'media/',
+        "access_key": os.environ.get("AWS_ACCESS_KEY_ID"),
+        "secret_key": os.environ.get("AWS_SECRET_ACCESS_KEY"),
+        "bucket_name": os.environ.get("AWS_BACKUP_BUCKET_NAME", "guscha-backups"),
+        "default_acl": "private",
+        "location": "media/",
     }
 
 # ============================================================================
@@ -1237,38 +1235,41 @@ if os.environ.get('AWS_ACCESS_KEY_ID'):
 # ============================================================================
 
 # Настройки OTP
-OTP_TOTP_ISSUER = 'Guscha Backup System'
-OTP_LOGIN_URL = '/admin/login/'
+OTP_TOTP_ISSUER = "Guscha Backup System"
+OTP_LOGIN_URL = "/admin/login/"
 
 # Добавляем OTP middleware для админки
-if not any('django_otp.middleware.OTPMiddleware' in str(middleware) for middleware in MIDDLEWARE):
-    MIDDLEWARE.append('django_otp.middleware.OTPMiddleware')
+if not any(
+    "django_otp.middleware.OTPMiddleware" in str(middleware)
+    for middleware in MIDDLEWARE
+):
+    MIDDLEWARE.append("django_otp.middleware.OTPMiddleware")
 
 # ============================================================================
 # CELERY SETTINGS (для планирования резервного копирования)
 # ============================================================================
 
 # Настройки Celery
-CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://redis:6379/0')
-CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://redis:6379/0')
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://redis:6379/0")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://redis:6379/0")
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
 
 # Настройки планировщика задач
 CELERY_BEAT_SCHEDULE = {
-    'daily-database-backup': {
-        'task': 'backup_system.tasks.create_database_backup',
-        'schedule': 86400.0,  # Каждые 24 часа
+    "daily-database-backup": {
+        "task": "backup_system.tasks.create_database_backup",
+        "schedule": 86400.0,  # Каждые 24 часа
     },
-    'weekly-media-backup': {
-        'task': 'backup_system.tasks.create_media_backup',
-        'schedule': 604800.0,  # Каждые 7 дней
+    "weekly-media-backup": {
+        "task": "backup_system.tasks.create_media_backup",
+        "schedule": 604800.0,  # Каждые 7 дней
     },
-    'monthly-cleanup': {
-        'task': 'backup_system.tasks.cleanup_old_backups',
-        'schedule': 2592000.0,  # Каждые 30 дней
+    "monthly-cleanup": {
+        "task": "backup_system.tasks.cleanup_old_backups",
+        "schedule": 2592000.0,  # Каждые 30 дней
     },
 }
 
@@ -1279,14 +1280,14 @@ CELERY_BEAT_SCHEDULE = {
 # Настройки безопасности для резервного копирования
 BACKUP_REQUIRE_2FA = True  # Требовать 2FA для доступа к резервным копиям
 BACKUP_ALLOWED_IPS = []  # Разрешенные IP для операций резервного копирования
-BACKUP_LOG_LEVEL = 'INFO'
+BACKUP_LOG_LEVEL = "INFO"
 
 # Настройки уведомлений
 BACKUP_EMAIL_NOTIFICATIONS = True
 BACKUP_NOTIFICATION_EMAILS = [DEFAULT_FROM_EMAIL]
 
 # Настройки мониторинга
-BACKUP_HEALTH_CHECK_URL = os.environ.get('BACKUP_HEALTH_CHECK_URL', '')
+BACKUP_HEALTH_CHECK_URL = os.environ.get("BACKUP_HEALTH_CHECK_URL", "")
 BACKUP_METRICS_ENABLED = True
 
 # ===== НАСТРОЙКИ ОПТИМИЗАЦИИ ПРОИЗВОДИТЕЛЬНОСТИ =====
@@ -1295,7 +1296,7 @@ BACKUP_METRICS_ENABLED = True
 if DEBUG:
     SILKY_PYTHON_PROFILER = True
     SILKY_PYTHON_PROFILER_BINARY = True
-    SILKY_PYTHON_PROFILER_RESULT_PATH = BASE_DIR / 'profiles'
+    SILKY_PYTHON_PROFILER_RESULT_PATH = BASE_DIR / "profiles"
     SILKY_INTERCEPT_PERCENT = 50  # Профилировать 50% запросов
     SILKY_MAX_REQUEST_BODY_SIZE = 1024  # 1KB
     SILKY_MAX_RESPONSE_BODY_SIZE = 1024  # 1KB
@@ -1310,27 +1311,27 @@ if DEBUG:
 
 # Django Cachalot - автоматическое кэширование ORM
 CACHALOT_ENABLED = True
-CACHALOT_CACHE = 'default'  # Использовать Redis кэш
+CACHALOT_CACHE = "default"  # Использовать Redis кэш
 CACHALOT_TIMEOUT = 3600  # 1 час TTL для кэша
 CACHALOT_CACHE_RANDOM = True  # Добавлять случайность к TTL
 CACHALOT_INVALIDATE_RAW = True  # Инвалидировать при raw SQL
 CACHALOT_ONLY_CACHABLE_TABLES = [
-    'products_product',
-    'products_category', 
-    'collections_collection',
-    'accounts_user',
+    "products_product",
+    "products_category",
+    "collections_collection",
+    "accounts_user",
 ]
 
 # Настройки Redis кэша с TTL
-CACHES['default']['TIMEOUT'] = 3600  # 1 час по умолчанию
-CACHES['default']['OPTIONS']['CONNECTION_POOL_KWARGS'] = {
-    'max_connections': 50,
-    'retry_on_timeout': True,
+CACHES["default"]["TIMEOUT"] = 3600  # 1 час по умолчанию
+CACHES["default"]["OPTIONS"]["CONNECTION_POOL_KWARGS"] = {
+    "max_connections": 50,
+    "retry_on_timeout": True,
 }
 
 # Database connection pooling для sync_to_async операций
 DATABASE_ROUTERS = []
-DATABASES['default']['CONN_HEALTH_CHECKS'] = True
+DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
 # Удалены неподдерживаемые PostgreSQL параметры MAX_CONNS и MIN_CONNS
 # Connection pooling настраивается через CONN_MAX_AGE выше
 
@@ -1341,73 +1342,66 @@ ASYNC_DATABASE_TIMEOUT = 30  # Таймаут для async операций
 # SECURITY SETTINGS - ГОТОВОЕ РЕШЕНИЕ ДЛЯ БЕЗОПАСНОСТИ
 # ============================================================================
 
-# Django Axes - защита от brute-force атак
-AXES_ENABLED = True
-AXES_FAILURE_LIMIT = 5  # Максимум 5 неудачных попыток
-AXES_COOLOFF_TIME = 1  # Блокировка на 1 час
-# AXES_LOCKOUT_CALLABLE = 'axes.helpers.lockout'  # Функция блокировки (отключено, используется по умолчанию)
-AXES_RESET_ON_SUCCESS = True  # Сброс счетчика при успешном входе
-# Современные настройки вместо устаревших
-AXES_LOCKOUT_PARAMETERS = ['ip_address', 'username']  # Блокировка по IP + пользователь
-AXES_ENABLE_ADMIN = True  # Включить защиту админки
-AXES_VERBOSE = True  # Подробное логирование
-AXES_HANDLER = 'axes.handlers.database.AxesDatabaseHandler'  # Хранение в БД
+# Django Axes - защита от brute-force атак - УДАЛЕНО
+# AXES_ENABLED = False
 
 # Admin Honeypot - защита админки (отключено из-за несовместимости)
 # ADMIN_HONEYPOT_EMAIL_ADMINS = True  # Уведомления на email
 # ADMIN_HONEYPOT_IP_WHITELIST = []  # Белый список IP (пустой = все проверяются)
 
 # Кастомный URL для настоящей админки (устанавливается через переменную окружения)
-ADMIN_URL = os.environ.get('ADMIN_URL', 'secure-admin-panel/')  # По умолчанию secure-admin-panel/
+ADMIN_URL = os.environ.get(
+    "ADMIN_URL", "secure-admin-panel/"
+)  # По умолчанию secure-admin-panel/
 
 # IP Whitelist для админки (через переменные окружения)
-ADMIN_IP_WHITELIST = os.environ.get('ADMIN_IP_WHITELIST', '').split(',') if os.environ.get('ADMIN_IP_WHITELIST') else []
+ADMIN_IP_WHITELIST = (
+    os.environ.get("ADMIN_IP_WHITELIST", "").split(",")
+    if os.environ.get("ADMIN_IP_WHITELIST")
+    else []
+)
 
 # Настройки логирования безопасности
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+            "style": "{",
         },
-        'security': {
-            'format': '[SECURITY] {asctime} {levelname} {message}',
-            'style': '{',
-        },
-    },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
-        },
-        'security_file': {
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'logs' / 'security.log',
-            'formatter': 'security',
+        "security": {
+            "format": "[SECURITY] {asctime} {levelname} {message}",
+            "style": "{",
         },
     },
-    'loggers': {
-        'axes': {
-            'handlers': ['console', 'security_file'],
-            'level': 'INFO',
-            'propagate': False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
         },
+        "security_file": {
+            "class": "logging.FileHandler",
+            "filename": BASE_DIR / "logs" / "security.log",
+            "formatter": "security",
+        },
+    },
+    "loggers": {
+
         # 'admin_honeypot': {  # Отключено из-за несовместимости
         #     'handlers': ['console', 'security_file'],
         #     'level': 'WARNING',
         #     'propagate': False,
         # },
-        'security': {
-            'handlers': ['console', 'security_file'],
-            'level': 'INFO',
-            'propagate': False,
+        "security": {
+            "handlers": ["console", "security_file"],
+            "level": "INFO",
+            "propagate": False,
         },
     },
 }
 
 # Создаем директорию для логов если её нет
-os.makedirs(BASE_DIR / 'logs', exist_ok=True)
+os.makedirs(BASE_DIR / "logs", exist_ok=True)
 ASYNC_CONNECTION_MAX_AGE = 300  # 5 минут для async соединений
 ASYNC_DATABASE_POOL_SIZE = 10  # Размер пула для async операций

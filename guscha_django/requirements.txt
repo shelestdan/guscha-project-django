@@ -26,7 +26,7 @@ django-guardian>=2.4.0
 django-ratelimit>=4.1.0
 django-otp>=1.5.0
 django-defender==0.9.8
-django-axes>=6.4.0
+
 # Caching & Performance
 django-redis>=5.4.0
 django-silk>=5.0.0

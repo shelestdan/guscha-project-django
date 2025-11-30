@@ -1,0 +1,36 @@
+{
+  "files": {
+    "main.css": "/static/css/main.697a1747.css",
+    "main.js": "/static/js/main.ff76a01d.js",
+    "static/css/444.27938003.chunk.css": "/static/css/444.27938003.chunk.css",
+    "static/js/444.95fbb765.chunk.js": "/static/js/444.95fbb765.chunk.js",
+    "static/js/963.cba9c89e.chunk.js": "/static/js/963.cba9c89e.chunk.js",
+    "static/js/808.60f6d7a9.chunk.js": "/static/js/808.60f6d7a9.chunk.js",
+    "static/js/989.49bee9fd.chunk.js": "/static/js/989.49bee9fd.chunk.js",
+    "static/js/337.f1b8b060.chunk.js": "/static/js/337.f1b8b060.chunk.js",
+    "static/js/767.14366068.chunk.js": "/static/js/767.14366068.chunk.js",
+    "static/js/465.de09767e.chunk.js": "/static/js/465.de09767e.chunk.js",
+    "reactPlayerHls.js": "/static/js/reactPlayerHls.c4627355.chunk.js",
+    "reactPlayerDash.js": "/static/js/reactPlayerDash.39a2bd05.chunk.js",
+    "reactPlayerMux.js": "/static/js/reactPlayerMux.054713ce.chunk.js",
+    "reactPlayerYouTube.js": "/static/js/reactPlayerYouTube.8329f267.chunk.js",
+    "reactPlayerVimeo.js": "/static/js/reactPlayerVimeo.1ceb7841.chunk.js",
+    "reactPlayerWistia.js": "/static/js/reactPlayerWistia.864ca086.chunk.js",
+    "reactPlayerSpotify.js": "/static/js/reactPlayerSpotify.8f27766a.chunk.js",
+    "reactPlayerTwitch.js": "/static/js/reactPlayerTwitch.6c723ccd.chunk.js",
+    "reactPlayerTiktok.js": "/static/js/reactPlayerTiktok.d18e0483.chunk.js",
+    "reactPlayerPreview.js": "/static/js/reactPlayerPreview.820f5e00.chunk.js",
+    "static/js/206.4588d44f.chunk.js": "/static/js/206.4588d44f.chunk.js",
+    "static/js/655.7053f711.chunk.js": "/static/js/655.7053f711.chunk.js",
+    "static/js/313.53be5873.chunk.js": "/static/js/313.53be5873.chunk.js",
+    "static/js/780.2d1ea858.chunk.js": "/static/js/780.2d1ea858.chunk.js",
+    "static/media/logo.svg": "/static/media/logo.cf654137a024406cbade9c254b442833.svg",
+    "static/media/instrument_x4fdrqsfczqn.svg": "/static/media/instrument_x4fdrqsfczqn.4a7efb845c2b844e443b92e46d63e8cc.svg",
+    "index.html": "/index.html",
+    "static/media/TelegramIcon.svg": "/static/media/TelegramIcon.3a0e1444dfc60df021cef070260a88fc.svg"
+  },
+  "entrypoints": [
+    "static/css/main.697a1747.css",
+    "static/js/main.ff76a01d.js"
+  ]
+}

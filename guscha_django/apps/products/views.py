@@ -134,7 +134,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class ProductViewSet(viewsets.ModelViewSet):
     """ViewSet для работы с товарами"""
     queryset = Product.objects.all()
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [AllowAny]
     lookup_field = 'slug'
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = ProductFilter

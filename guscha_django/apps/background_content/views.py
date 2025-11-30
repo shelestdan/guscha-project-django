@@ -43,9 +43,9 @@ def get_active_background(request):
         if not active_content:
             logger.warning("Нет активного фонового контента в базе данных")
             return Response({
-                'error': 'Нет активного фонового контента',
+                'success': True,
                 'data': None
-            }, status=status.HTTP_404_NOT_FOUND)
+            }, status=status.HTTP_200_OK)
         
         logger.info(f"Найден активный контент: {active_content.title} (тип: {active_content.content_type})")
         
@@ -109,6 +109,7 @@ class BackgroundContentListView(generics.ListAPIView):
     Список всего фонового контента с логированием и поддержкой плейлистов
     """
     serializer_class = BackgroundContentSerializer
+    permission_classes = [AllowAny]
     
     def get_queryset(self):
         """

@@ -1,7 +1,7 @@
 import logging
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import action, api_view, permission_classes
 from django.views.decorators.csrf import csrf_exempt
 
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class CartViewSet(viewsets.ModelViewSet):
     """ViewSet для работы с корзиной пользователя"""
     serializer_class = CartItemSerializer
-    permission_classes = []
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         if self.request.user.is_authenticated:

@@ -159,7 +159,7 @@ class UserCreateSerializer(BaseSerializer, serializers.ModelSerializer):
             elif not existing_user.is_telegram_verified:
                 # Если пользователь существует, но не подтвержден через Telegram,
                 # удаляем его для повторной регистрации
-                logger.info(f"Удаление неподтвержденного пользователя с телефоном {existing_user.phone} для повторной регистрации")
+                logger.info(f"Удаление неподтвержденного пользователя с телефоном {value[:4]}***{value[-2:]} для повторной регистрации")
                 existing_user.delete()
         
         return value
@@ -178,7 +178,7 @@ class UserCreateSerializer(BaseSerializer, serializers.ModelSerializer):
             elif not existing_user.is_telegram_verified:
                 # Если пользователь существует, но не подтвержден через Telegram,
                 # удаляем его для повторной регистрации
-                logger.info(f"Удаление неподтвержденного пользователя {existing_user.email} для повторной регистрации")
+                logger.info(f"Удаление неподтвержденного пользователя {value[:3]}***@*** для повторной регистрации")
                 existing_user.delete()
         
         # Проверка в pending регистрациях (удаляем старые)
@@ -253,7 +253,7 @@ class UserCreateSerializer(BaseSerializer, serializers.ModelSerializer):
         password = validated_data.pop('password')
         email = validated_data['email']
         
-        logger.info(f"Создание/обновление PendingUserRegistration для email: {email}")
+        logger.info(f"Создание/обновление PendingUserRegistration для email: {email[:3]}***@***")
         
         # Используем update_or_create для избежания race condition
         pending_registration, created = PendingUserRegistration.objects.update_or_create(
@@ -266,7 +266,7 @@ class UserCreateSerializer(BaseSerializer, serializers.ModelSerializer):
         )
         
         action = "создан" if created else "обновлен"
-        logger.info(f"PendingUserRegistration {action}: ID={pending_registration.id}, email={email}, expires_at={pending_registration.expires_at}")
+        logger.info(f"PendingUserRegistration {action}: ID={pending_registration.id}, email={email[:3]}***@***, expires_at={pending_registration.expires_at}")
         
         # Возвращаем объект с ID pending регистрации для дальнейшего использования
         user_data = validated_data.copy()
@@ -421,10 +421,10 @@ class PasswordResetRequestSerializer(BaseSerializer):
         try:
             user = User.objects.get(email=email)
             # Здесь будет вызван сервис для отправки email
-            logger.info(f'Password reset requested for user: {user.email}')
+            logger.info(f'Password reset requested for user: {email[:3]}***@***')
         except User.DoesNotExist:
             # Не раскрываем информацию о существовании пользователя
-            logger.info(f'Password reset requested for non-existent email: {email}')
+            logger.info(f'Password reset requested for non-existent email: {email[:3]}***@***')
         
         return email
 
@@ -485,7 +485,7 @@ class PasswordResetConfirmSerializer(BaseSerializer):
         user.set_password(new_password)
         user.save()
         
-        logger.info(f'Password reset completed for user: {user.email}')
+        logger.info(f'Password reset completed for user: {user.email[:3]}***@***')
         return user
 
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
@@ -26,17 +26,16 @@ const GoogleOAuthCallback = () => {
       try {
         console.log(`🔵 Обрабатываем Google OAuth callback (попытка ${attempt})`);
         setProcessingStep(`Обработка авторизации (попытка ${attempt})...`);
-        
+
         // Получаем параметры из URL
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
-        const error = urlParams.get('error');
-        const state = urlParams.get('state');
-        
-        if (error) {
-          throw new Error(`Google OAuth ошибка: ${error}`);
+        const errorParam = urlParams.get('error');
+
+        if (errorParam) {
+          throw new Error(`Google OAuth ошибка: ${errorParam}`);
         }
-        
+
         if (!code) {
           throw new Error('Код авторизации не получен от Google');
         }
@@ -53,7 +52,7 @@ const GoogleOAuthCallback = () => {
           return;
         }
 
-        console.log('🔵 Получен код авторизации:', code.substring(0, 20) + '...');
+        console.log('🔵 Получен код авторизации:', `${code.substring(0, 20)}...`);
         hasProcessed.current = true;
 
         // Определяем base URL для API
@@ -62,7 +61,7 @@ const GoogleOAuthCallback = () => {
           if (process.env.REACT_APP_API_URL) {
             return process.env.REACT_APP_API_URL;
           }
-          
+
           // Для контейнеризованного развертывания с nginx используем текущий origin
           return window.location.origin;
         };
@@ -73,20 +72,20 @@ const GoogleOAuthCallback = () => {
         // Отправляем код авторизации на сервер для обмена на токен
         console.log('🔵 Отправляем код на Django сервер...');
         setProcessingStep('Обмен кода на токен доступа...');
-        
+
         const requestBody = {
-          code: code,
+          code,
           redirect_uri: `${window.location.origin}/auth/google/callback`
         };
         console.log('🔵 Тело запроса:', {
-          code: code.substring(0, 20) + '...',
+          code: `${code.substring(0, 20)}...`,
           redirect_uri: requestBody.redirect_uri
         });
-        
+
         // Создаем новый AbortController для этого запроса
         const currentAbortController = new AbortController();
         abortController.current = currentAbortController;
-        
+
         // Используем axios instance с автоматическим добавлением CSRF токена
         const apiResponse = await axios.post('/api/accounts/users/google_login/', requestBody, {
           signal: currentAbortController.signal,
@@ -98,26 +97,30 @@ const GoogleOAuthCallback = () => {
           statusText: apiResponse.statusText,
           data: apiResponse.data
         });
-        
+
         const data = apiResponse.data;
         console.log('🟢 Успешный ответ Django сервера:', data);
-        
+
         // Помечаем код как обработанный
         sessionStorage.setItem('oauth_processed_code', code);
-        
-        // Сохраняем токен в localStorage
-        if (data.token) {
-          localStorage.setItem('token', data.token);
-          console.log('🟢 Токен сохранен в localStorage');
-          setProcessingStep('Сохранение данных пользователя...');
-        } else {
-          console.error('🔴 Токен не найден в ответе сервера');
+
+        // Токен теперь возвращается в ответе сервера
+        // Сохраняем токены в localStorage для фронтенда (используем правильные ключи)
+        if (data.access_token || data.token || data.access) {
+          const accessToken = data.access_token || data.token || data.access;
+          localStorage.setItem('access_token', accessToken);
+          console.log('🟢 Access токен сохранен в localStorage');
         }
-        
+        if (data.refresh_token || data.refresh) {
+          const refreshToken = data.refresh_token || data.refresh;
+          localStorage.setItem('refresh_token', refreshToken);
+          console.log('🟢 Refresh токен сохранен в localStorage');
+        }
+
         // Обновляем состояние пользователя
         if (data.user) {
-          authHook.setUser(data.user);
-          // Уведомление о успешном входе показывается в Account.jsx
+          authHook.setUserWithLogin(data.user);  // setUserWithLogin автоматически установит isLoggedIn
+          console.log('🟢 Пользователь установлен:', data.user);
           console.log('🟢 Google OAuth завершен успешно!');
           setProcessingStep('Завершение авторизации...');
         }
@@ -125,12 +128,12 @@ const GoogleOAuthCallback = () => {
         // Возвращаемся на исходную страницу
         const returnUrl = localStorage.getItem('oauth_return_url') || '/account';
         localStorage.removeItem('oauth_return_url');
-        
+
         // Очищаем обработанный код из sessionStorage после успешного завершения
         setTimeout(() => {
           sessionStorage.removeItem('oauth_processed_code');
         }, 5000);
-        
+
         // Небольшая задержка для показа успешного состояния
         setTimeout(() => {
           navigate(returnUrl, { replace: true });
@@ -142,40 +145,40 @@ const GoogleOAuthCallback = () => {
           stack: error.stack,
           name: error.name
         });
-        
+
         // Проверяем, не была ли операция отменена
         if (error.name === 'AbortError') {
           console.log('🔵 Запрос был отменен');
           return;
         }
-        
+
         // Retry логика для определенных ошибок
-        const isRetryableError = 
+        const isRetryableError =
           error.message.includes('Failed to exchange authorization code for token') ||
           error.message.includes('Network Error') ||
           error.message.includes('timeout') ||
           error.message.includes('fetch');
-        
+
         if (isRetryableError && attempt < 3) {
           console.log(`🔄 Повторная попытка через ${attempt * 2} секунд...`);
           setRetryCount(attempt);
           setProcessingStep(`Повторная попытка через ${attempt * 2} сек...`);
-          
+
           // Сбрасываем флаг обработки для retry
           hasProcessed.current = false;
-          
+
           setTimeout(() => {
             handleCallback(attempt + 1);
           }, attempt * 2000); // Экспоненциальная задержка
           return;
         }
-        
+
         // Если все попытки исчерпаны или ошибка не подлежит повтору
         hasProcessed.current = false;
         setError(error.message || 'Ошибка обработки Google OAuth');
         toastHook.showError(error.message || 'Ошибка входа через Google');
         setProcessingStep('Ошибка авторизации');
-        
+
         // Возвращаемся на страницу входа при ошибке
         setTimeout(() => {
           navigate('/account', { replace: true });
@@ -195,7 +198,7 @@ const GoogleOAuthCallback = () => {
     };
 
     handleCallback();
-    
+
     return cleanup;
   }, []); // Пустой массив зависимостей - выполняется только при монтировании
 
