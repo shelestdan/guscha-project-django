@@ -123,13 +123,15 @@ class ProductListSerializer(BaseSerializer):
     review_count = serializers.SerializerMethodField()
     is_in_stock = serializers.SerializerMethodField()
     in_wishlist = serializers.SerializerMethodField()
+    sizes = ProductSizeSerializer(many=True, read_only=True)
     
     class Meta:
         model = Product
         fields = [
             'id', 'name', 'slug', 'short_description', 'sku', 'category',
             'category_name', 'price', 'compare_price', 'is_active', 'is_featured',
-            'primary_image', 'average_rating', 'review_count', 'is_in_stock', 'in_wishlist'
+            'primary_image', 'average_rating', 'review_count', 'is_in_stock', 'in_wishlist',
+            'sizes'
         ]
     
     def get_category_name(self, obj):

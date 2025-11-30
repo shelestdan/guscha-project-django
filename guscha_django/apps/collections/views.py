@@ -1,7 +1,5 @@
 from django.http import JsonResponse, Http404
 from django.views.generic import ListView
-from django.views.decorators.cache import cache_page
-from django.utils.decorators import method_decorator
 from django.db.models import Prefetch, Q
 from django.conf import settings
 from .models import Collection, CollectionImage
@@ -13,7 +11,6 @@ logger = logging.getLogger(__name__)
 # Django представления удалены - используется только React фронтенд
 
 
-@method_decorator(cache_page(60 * 15), name='dispatch')  # Кэш на 15 минут
 class CollectionAPIView(ListView):
     """API для получения коллекций (для AJAX)"""
     model = Collection
@@ -75,10 +72,15 @@ class CollectionAPIView(ListView):
                 'images_count': len(images_data),
             })
         
-        return JsonResponse({
+        response = JsonResponse({
             'collections': collections_data,
             'count': len(collections_data)
         })
+        # Отключаем кэширование для моментального обновления
+        response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
 
 
 def collection_images_api(request, slug):

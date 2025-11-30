@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import axiosInstance from '../../../api/axiosInstance';
+import ChromaGrid from './ChromaGrid';
+import './ChromaGrid.css';
 import './ProductGrid.css';
 
 export default function ProductGrid() {
@@ -12,11 +13,8 @@ export default function ProductGrid() {
     axiosInstance.get('/api/products/products/')
       .then(response => {
         const data = response.data;
-        console.log('API Response:', data);
         const productList = Array.isArray(data) ? data : (data.results || data.products || []);
-        console.log('Product List:', productList);
         const filteredProducts = productList.filter(p => p.is_active !== false);
-        console.log('Filtered Products:', filteredProducts);
         setProducts(filteredProducts);
         setStatus('success');
       })
@@ -43,33 +41,26 @@ export default function ProductGrid() {
     );
   }
 
+  // Преобразуем продукты в формат ChromaGrid
+  const chromaItems = products.map(product => ({
+    id: product.id,
+    slug: product.slug,
+    image: product.image_url || product.primary_image,
+    title: product.name,
+    price: product.price,
+    sizes: product.sizes || []
+  }));
+
   return (
     <section className="product-grid-section">
-      <div className="product-grid-container">
-        <div className="product-grid">
-          {products.map(product => (
-            <div key={product.id} className="product-card">
-              <Link to={`/products/${product.slug}`} className="product-link">
-                <div className="product-image-container">
-                  <img 
-                    src={product.image_url || product.primary_image} 
-                    alt={product.name} 
-                    loading="lazy"
-                    className="product-image"
-                    onContextMenu={(e) => e.preventDefault()}
-                    onDragStart={(e) => e.preventDefault()}
-                    draggable="false"
-                  />
-                </div>
-                
-                <div className="product-info">
-                  <h3 className="product-name">{product.name}</h3>
-                  <div className="product-price">{product.price} ₽</div>
-                </div>
-              </Link>
-            </div>
-          ))}
-        </div>
+      <div className="product-grid-container chroma-container">
+        <ChromaGrid 
+          items={chromaItems}
+          radius={300}
+          damping={0.45}
+          fadeOut={0.6}
+          ease="power3.out"
+        />
       </div>
     </section>
   );

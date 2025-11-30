@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import FlowingMenu from '../components/FlowingMenu';
 import '../styles/CollectionsPage.css';
 
 const CollectionsPage = () => {
@@ -33,19 +33,26 @@ const CollectionsPage = () => {
     fetchCollections();
   }, []);
 
+  const handleCollectionSelect = (collectionId) => {
+    const collection = collections.find(c => c.id === collectionId);
+    if (collection) {
+      setSelectedCollection(collection);
+    }
+  };
+
+  // Преобразуем коллекции в формат для FlowingMenu
+  const menuItems = collections.map(collection => ({
+    id: collection.id,
+    text: collection.name,
+    image: collection.primary_image?.url || collection.images?.[0]?.image || null
+  }));
+
   if (loading) {
     return (
       <div className="collections-page">
-        <div className="collections-layout">
-          <div className="collections-sidebar">
-            <div className="loading-spinner"></div>
-            <p>Загрузка...</p>
-          </div>
-          <div className="collections-main">
-            <div className="loading-state">
-              <p>Загрузка коллекций...</p>
-            </div>
-          </div>
+        <div className="collections-loading">
+          <div className="loading-spinner"></div>
+          <p>Загрузка коллекций...</p>
         </div>
       </div>
     );
@@ -54,23 +61,26 @@ const CollectionsPage = () => {
   if (error) {
     return (
       <div className="collections-page">
-        <div className="collections-layout">
-          <div className="collections-sidebar">
-            <h3>Коллекции</h3>
-            <p>Ошибка загрузки</p>
-          </div>
-          <div className="collections-main">
-            <div className="error-state">
-              <h2>Ошибка загрузки</h2>
-              <p>{error}</p>
-              <button 
-                onClick={() => window.location.reload()}
-                className="retry-button"
-              >
-                Попробовать снова
-              </button>
-            </div>
-          </div>
+        <div className="collections-error">
+          <h2>Ошибка загрузки</h2>
+          <p>{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="retry-button"
+          >
+            Попробовать снова
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (collections.length === 0) {
+    return (
+      <div className="collections-page">
+        <div className="collections-empty">
+          <h2>Коллекции не найдены</h2>
+          <p>Скоро здесь появятся новые коллекции</p>
         </div>
       </div>
     );
@@ -78,92 +88,45 @@ const CollectionsPage = () => {
 
   return (
     <div className="collections-page">
-      <div className="collections-layout">
-        {/* Левая панель со списком коллекций */}
-        <div className="collections-sidebar">
-          <h3>Коллекции</h3>
-          {collections.length === 0 ? (
-            <p>Коллекции не найдены</p>
-          ) : (
-            <div className="collections-list">
-              {collections.map((collection) => (
-                <div 
-                  key={collection.id} 
-                  className={`collection-item ${
-                    selectedCollection?.id === collection.id ? 'active' : ''
-                  }`}
-                  onClick={() => setSelectedCollection(collection)}
-                >
-                  <span className="collection-name">{collection.name}</span>
+      {/* FlowingMenu в центре */}
+      <div className="collections-menu-section">
+        <FlowingMenu 
+          items={menuItems}
+          onItemClick={handleCollectionSelect}
+          activeId={selectedCollection?.id}
+        />
+      </div>
+
+      {/* Контент выбранной коллекции под меню */}
+      {selectedCollection && (
+        <div className="collection-content-section">
+          {selectedCollection.description && (
+            <div className="collection-description">
+              <div 
+                className="description-content"
+                dangerouslySetInnerHTML={{ __html: selectedCollection.description }}
+              />
+            </div>
+          )}
+
+          {selectedCollection.images && selectedCollection.images.length > 0 && (
+            <div className="collection-gallery">
+              {selectedCollection.images.map((image, index) => (
+                <div key={image.id || index} className="gallery-item">
+                  <img 
+                    src={image.image || image.image_url} 
+                    alt={image.alt_text || `${selectedCollection.name} ${index + 1}`}
+                    loading="lazy"
+                  />
+                  {image.caption && (
+                    <p className="image-caption">{image.caption}</p>
+                  )}
                 </div>
               ))}
             </div>
           )}
         </div>
-
-        {/* Основная область для отображения коллекции */}
-        <div className="collections-main">
-          {selectedCollection ? (
-            <div className="collection-display">
-              <div className="collection-header">
-                <h1>{selectedCollection.name}</h1>
-                {selectedCollection.short_description && (
-                  <p className="collection-subtitle">{selectedCollection.short_description}</p>
-                )}
-              </div>
-              
-              <div className="collection-content-area">
-                {selectedCollection.description && (
-                  <div className="collection-description">
-                    <h3>Описание коллекции</h3>
-                    <div 
-                      className="description-content"
-                      dangerouslySetInnerHTML={{ __html: selectedCollection.description }}
-                    />
-                  </div>
-                )}
-                
-                {/* Показываем все изображения коллекции */}
-                 {selectedCollection.images && selectedCollection.images.length > 0 ? (
-                   <div className="collection-images-gallery">
-                     <div className="images-grid">
-                      {selectedCollection.images.map((image, index) => (
-                        <div key={image.id} className="image-item">
-                          <img 
-                            src={image.image} 
-                            alt={image.alt_text || `${selectedCollection.name} ${index + 1}`}
-                          />
-                          {image.caption && (
-                            <p className="image-caption">{image.caption}</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : selectedCollection.primary_image ? (
-                  <div className="collection-main-image">
-                    <img 
-                      src={selectedCollection.primary_image.url} 
-                      alt={selectedCollection.primary_image.alt || selectedCollection.name}
-                    />
-                  </div>
-                ) : (
-                  <div className="collection-placeholder-main">
-                    <div className="placeholder-content">
-                      <h2>ФОТО КОЛЛЕКЦИИ</h2>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="no-collection-selected">
-              <h2>Выберите коллекцию</h2>
-              <p>Выберите коллекцию из списка слева для просмотра</p>
-            </div>
-          )}
-        </div>
-      </div>
+      )}
     </div>
   );
 };

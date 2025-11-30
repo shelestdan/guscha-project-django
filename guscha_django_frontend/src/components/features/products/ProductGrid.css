@@ -1,7 +1,7 @@
 /* Product Grid Styles */
 .product-grid-section {
   padding: 4rem 2rem 4rem 2rem;
-  background: #f8f9fa;
+  background: #111111;
   min-height: 80vh;
   position: relative;
   z-index: 15;
@@ -10,6 +10,11 @@
 .product-grid-container {
   max-width: 1400px;
   margin: 0 auto;
+}
+
+/* ChromaGrid Container */
+.product-grid-container.chroma-container {
+  background: #111111;
 }
 
 .product-grid {
