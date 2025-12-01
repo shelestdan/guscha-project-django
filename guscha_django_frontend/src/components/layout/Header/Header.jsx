@@ -50,7 +50,7 @@ const Header = ({ isHome, isBurgerMenuOpen, setIsBurgerMenuOpen, mainRef }) => {
             />
           </div>
           <div className="header-center">
-            <Logo isVisible={showLogo} black={black} size={64} />
+            <Logo isVisible={showLogo} black={black} size={128} />
           </div>
           <div className="header-right">
             <HeaderCartIcon isDark={black} />
@@ -74,7 +74,7 @@ const Header = ({ isHome, isBurgerMenuOpen, setIsBurgerMenuOpen, mainRef }) => {
           />
         </div>
         <div className="header-center">
-          <Logo isVisible={true} black={true} size={64} />
+          <Logo isVisible={true} black={true} size={128} />
         </div>
         <div className="header-right">
           <HeaderCartIcon isDark={true} />

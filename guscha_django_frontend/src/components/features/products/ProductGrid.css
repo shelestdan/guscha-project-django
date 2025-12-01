@@ -1,16 +1,16 @@
 /* A24-style Product Grid */
 .products-section {
   background: #f5f5f5;
-  padding: 60px 40px;
+  padding: 60px clamp(20px, 8vw, 120px);
   min-height: 60vh;
 }
 
 .products-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 40px 24px;
-  max-width: 1400px;
-  margin: 0 auto;
+  gap: 40px 20px;
+  max-width: 100%;
+  margin: 0;
 }
 
 /* Product Card */
@@ -55,7 +55,7 @@
 
 .products-section .product-card .product-name {
   font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 500;
   color: #1a1a1a;
   margin: 0;
@@ -64,7 +64,7 @@
 
 .products-section .product-card .product-price {
   font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 500;
   color: #888;
   margin: 0;
@@ -93,7 +93,7 @@
 
 .size-text {
   font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 400;
   color: #1a1a1a;
 }
@@ -120,26 +120,42 @@
 }
 
 /* Responsive */
+@media (max-width: 1400px) {
+  .products-section {
+    padding: 60px 80px;
+  }
+  
+  .products-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 36px 18px;
+  }
+}
+
 @media (max-width: 1200px) {
+  .products-section {
+    padding: 50px 60px;
+  }
+  
   .products-grid {
     grid-template-columns: repeat(3, 1fr);
+    gap: 32px 16px;
   }
 }
 
 @media (max-width: 900px) {
   .products-section {
-    padding: 40px 24px;
+    padding: 40px 40px;
   }
   
   .products-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 32px 16px;
+    gap: 28px 14px;
   }
 }
 
 @media (max-width: 600px) {
   .products-section {
-    padding: 32px 16px;
+    padding: 32px 20px;
   }
   
   .products-grid {
@@ -162,5 +178,15 @@
   
   .size-text {
     font-size: 9px;
+  }
+}
+
+@media (max-width: 400px) {
+  .products-section {
+    padding: 24px 12px;
+  }
+  
+  .products-grid {
+    gap: 20px 10px;
   }
 }
