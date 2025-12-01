@@ -136,6 +136,16 @@ const CheckoutPage = () => {
     }
   }, [items.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Проверка валидности формы
+  const isFormValid = 
+    formData.billing_address.first_name.trim() !== '' &&
+    formData.billing_address.last_name.trim() !== '' &&
+    formData.billing_address.email.trim() !== '' &&
+    formData.billing_address.phone.trim() !== '' &&
+    formData.billing_address.address_line1.trim() !== '' &&
+    formData.billing_address.city.trim() !== '' &&
+    formData.billing_address.postal_code.trim() !== '';
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -291,7 +301,7 @@ const CheckoutPage = () => {
       <h1>Оформление заказа</h1>
 
       <div className="checkout-container">
-        <form className="checkout-form" onSubmit={handleSubmit}>
+        <form id="checkout-form" className="checkout-form" onSubmit={handleSubmit}>
           <div className="form-section">
             <h2>Информация о плательщике</h2>
 
@@ -540,9 +550,6 @@ const CheckoutPage = () => {
             </div>
           </div>
 
-          <button type="submit" className="checkout-button" disabled={loading}>
-            {loading ? 'Оформление...' : 'Оформить заказ'}
-          </button>
         </form>
 
         <div className="order-summary">
@@ -586,6 +593,15 @@ const CheckoutPage = () => {
               </span>
             </div>
           </div>
+
+          <button 
+            type="submit" 
+            form="checkout-form"
+            className="checkout-button" 
+            disabled={loading || !isFormValid}
+          >
+            {loading ? 'Оформление...' : 'Оформить заказ'}
+          </button>
         </div>
       </div>
     </div>

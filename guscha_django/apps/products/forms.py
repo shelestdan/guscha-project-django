@@ -5,7 +5,7 @@ from unfold.widgets import (
     UnfoldAdminImageFieldWidget,
     UnfoldAdminMoneyWidget
 )
-from .models import ProductSize, Product, ProductImage, PreorderImage, PreorderSize
+from .models import ProductSize, Product, ProductImage, ProductColor, PreorderImage, PreorderSize, PreorderColor
 import logging
 
 logger = logging.getLogger(__name__)
@@ -102,6 +102,62 @@ class ProductForm(forms.ModelForm):
                 })
         
         return cleaned_data
+
+
+class ProductColorForm(forms.ModelForm):
+    """Форма для цветов товара"""
+    
+    class Meta:
+        model = ProductColor
+        fields = ['name', 'hex_code', 'stock_quantity', 'is_active']
+        widgets = {
+            'name': UnfoldAdminTextInputWidget(attrs={
+                'placeholder': 'Например: Черный, Белый, Красный'
+            }),
+            'hex_code': UnfoldAdminTextInputWidget(attrs={
+                'type': 'color',
+                'style': 'width: 60px; height: 30px; padding: 0;'
+            }),
+            'stock_quantity': UnfoldAdminTextInputWidget(attrs={
+                'type': 'number',
+                'min': '0'
+            })
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['name'].label = 'Название цвета'
+        self.fields['hex_code'].label = 'Цвет (HEX)'
+        self.fields['stock_quantity'].label = 'Количество на складе'
+        self.fields['is_active'].label = 'Активен'
+
+
+class PreorderColorForm(forms.ModelForm):
+    """Форма для цветов предзаказа"""
+    
+    class Meta:
+        model = PreorderColor
+        fields = ['name', 'hex_code', 'stock_quantity', 'is_active']
+        widgets = {
+            'name': UnfoldAdminTextInputWidget(attrs={
+                'placeholder': 'Например: Черный, Белый, Красный'
+            }),
+            'hex_code': UnfoldAdminTextInputWidget(attrs={
+                'type': 'color',
+                'style': 'width: 60px; height: 30px; padding: 0;'
+            }),
+            'stock_quantity': UnfoldAdminTextInputWidget(attrs={
+                'type': 'number',
+                'min': '0'
+            })
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['name'].label = 'Название цвета'
+        self.fields['hex_code'].label = 'Цвет (HEX)'
+        self.fields['stock_quantity'].label = 'Количество на складе'
+        self.fields['is_active'].label = 'Активен'
 
 
 class ProductSizeForm(forms.ModelForm):

@@ -174,6 +174,31 @@ class ProductSize(BaseModel):
         return self.is_active and not self.is_sold_out and self.stock_quantity > 0
 
 
+class ProductColor(BaseModel):
+    """Модель цвета товара"""
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='colors', 
+                              verbose_name='Товар')
+    name = models.CharField(max_length=50, verbose_name='Название цвета')
+    hex_code = models.CharField(max_length=7, verbose_name='HEX код цвета',
+                               help_text='Например: #FF0000 для красного')
+    stock_quantity = models.IntegerField(default=0, verbose_name='Количество на складе')
+    is_active = models.BooleanField(default=True, verbose_name='Активен')
+    sort_order = models.IntegerField(default=0, verbose_name='Порядок сортировки')
+    
+    class Meta:
+        verbose_name = 'Цвет товара'
+        verbose_name_plural = 'Цвета товаров'
+        ordering = ['sort_order']
+    
+    def __str__(self):
+        return f"{self.product.name} - {self.name}"
+    
+    @property
+    def is_available(self):
+        """Проверка доступности цвета"""
+        return self.is_active and self.stock_quantity > 0
+
+
 class ProductImage(BaseModel):
     """Модель изображения товара"""
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_images', 
@@ -511,6 +536,31 @@ class PreorderImage(BaseModel):
         if self.is_primary and self.pk is not None:
             self.preorder.image_url = self.get_image_url
             self.preorder.save(update_fields=['image_url'])
+
+
+class PreorderColor(BaseModel):
+    """Модель цвета предзаказа"""
+    preorder = models.ForeignKey(Preorder, on_delete=models.CASCADE, related_name='colors', 
+                               verbose_name='Предзаказ')
+    name = models.CharField(max_length=50, verbose_name='Название цвета')
+    hex_code = models.CharField(max_length=7, verbose_name='HEX код цвета',
+                               help_text='Например: #FF0000 для красного')
+    stock_quantity = models.IntegerField(default=0, verbose_name='Количество на складе')
+    is_active = models.BooleanField(default=True, verbose_name='Активен')
+    sort_order = models.IntegerField(default=0, verbose_name='Порядок сортировки')
+    
+    class Meta:
+        verbose_name = 'Цвет предзаказа'
+        verbose_name_plural = 'Цвета предзаказов'
+        ordering = ['sort_order']
+    
+    def __str__(self):
+        return f"{self.preorder.name} - {self.name}"
+    
+    @property
+    def is_available(self):
+        """Проверка доступности цвета"""
+        return self.is_active and self.stock_quantity > 0
 
 
 class PreorderSize(BaseModel):

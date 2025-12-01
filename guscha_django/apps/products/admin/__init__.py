@@ -7,19 +7,23 @@
 """
 
 from .category_admin import CategoryAdmin
-from .product_admin import ProductAdmin, ProductSizeAdmin, ProductImageAdmin, ProductSizeInline, ProductImageInline
-from .preorder_admin import PreorderAdmin, PreorderSizeAdmin, PreorderImageAdmin, PreorderSizeInline, PreorderImageInline
+from .product_admin import ProductAdmin, ProductSizeAdmin, ProductImageAdmin, ProductColorAdmin, ProductSizeInline, ProductImageInline, ProductColorInline
+from .preorder_admin import PreorderAdmin, PreorderSizeAdmin, PreorderImageAdmin, PreorderColorAdmin, PreorderSizeInline, PreorderImageInline, PreorderColorInline
 
 __all__ = [
     'CategoryAdmin',
     'ProductAdmin',
     'ProductSizeAdmin',
     'ProductImageAdmin',
+    'ProductColorAdmin',
     'ProductSizeInline', 
     'ProductImageInline',
+    'ProductColorInline',
     'PreorderAdmin',
     'PreorderSizeAdmin',
     'PreorderImageAdmin',
+    'PreorderColorAdmin',
     'PreorderSizeInline',
-    'PreorderImageInline'
+    'PreorderImageInline',
+    'PreorderColorInline'
 ]

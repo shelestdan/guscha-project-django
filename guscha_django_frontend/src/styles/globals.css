@@ -72,14 +72,7 @@ html {
   margin-right: calc(-50vw + 50%);
 }
 
-/* Исключения для страниц, которым нужна ограниченная ширина */
-.checkout-page {
-  width: 100% !important;
-  min-width: auto !important;
-  max-width: 1200px !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
-}
+/* Checkout page - стили управляются в CheckoutPage.css */
 
 /* Исключение для ProductShowcase - он должен иметь свои собственные стили ширины */
 .product-showcase-root {
@@ -119,37 +112,7 @@ body.scrolling-no-bg::before {
   max-width: 100%;
 } */
 
-/* Scoped checkout exceptions: разрешаем контейнеру и форме не наследовать global max-width */
-.checkout-page .checkout-container,
-.checkout-page .checkout-form {
-  max-width: none;
-}
-
-/* Ограничиваем только контейнер страницы */
-.checkout-page {
-  max-width: 900px !important;
-  margin: 0 auto !important;
-}
-
-/* Ограничиваем поля ввода */
-.checkout-page input,
-.checkout-page select,
-.checkout-page textarea {
-  max-width: 350px !important;
-}
-
-.checkout-page input[name*='zip'],
-.checkout-page input[name*='postal'],
-.checkout-page input[name*='code'] {
-  max-width: 120px !important;
-}
-
-.checkout-page .form-row {
-  max-width: 650px !important;
-  display: grid !important;
-  grid-template-columns: 1fr 1fr !important;
-  gap: 1rem !important;
-}
+/* Checkout page - все стили управляются в CheckoutPage.css */
 
 /* Исключения для элементов, которым нужна полная ширина viewport */
 .background-content,
