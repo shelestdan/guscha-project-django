@@ -471,18 +471,20 @@ class PreorderListSerializer(BaseSerializer):
     class Meta:
         model = Preorder
         fields = [
-            'id', 'name', 'slug', 'short_description', 'price',
+            'id', 'name', 'slug', 'description', 'short_description', 'price',
             'image_url', 'model_image', 'product_image', 'is_active', 'is_featured', 'is_active_now',
             'sizes', 'colors', 'created_at', 'updated_at'
         ]
     
     def get_model_image(self, obj):
-        """Получение изображения модели"""
-        return obj.model_image
+        """Получение изображения модели с fallback на основное"""
+        model_img = obj.model_image
+        return model_img if model_img else obj.image_url
     
     def get_product_image(self, obj):
-        """Получение изображения товара"""
-        return obj.product_image
+        """Получение изображения товара с fallback на основное"""
+        product_img = obj.product_image
+        return product_img if product_img else obj.image_url
 
 
 class PreorderDetailSerializer(BaseSerializer):
@@ -504,12 +506,14 @@ class PreorderDetailSerializer(BaseSerializer):
         ]
     
     def get_model_image(self, obj):
-        """Получение изображения модели"""
-        return obj.model_image
+        """Получение изображения модели (detail) с fallback"""
+        model_img = obj.model_image
+        return model_img if model_img else obj.image_url
     
     def get_product_image(self, obj):
-        """Получение изображения товара"""
-        return obj.product_image
+        """Получение изображения товара (detail) с fallback"""
+        product_img = obj.product_image
+        return product_img if product_img else obj.image_url
     
     def get_product_images(self, obj):
         """Получение всех изображений предзаказа (основное + дополнительные)"""

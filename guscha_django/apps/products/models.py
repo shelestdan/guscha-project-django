@@ -461,16 +461,30 @@ class Preorder(BaseModel):
         """Получение изображения модели"""
         model_image = self.preorder_images.filter(image_type='model').first()
         if model_image:
-            return model_image.get_image_url
-        return None
+            url = model_image.get_image_url
+            if url:
+                return url
+        # Fallback: пробуем первое изображение
+        first_image = self.preorder_images.first()
+        if first_image:
+            return first_image.get_image_url
+        return self.image_url
     
     @property
     def product_image(self):
         """Получение изображения товара"""
         product_image = self.preorder_images.filter(image_type='product').first()
         if product_image:
-            return product_image.get_image_url
-        return None
+            url = product_image.get_image_url
+            if url:
+                return url
+        # Fallback: пробуем второе изображение или первое
+        images = list(self.preorder_images.all()[:2])
+        if len(images) > 1:
+            return images[1].get_image_url
+        elif len(images) == 1:
+            return images[0].get_image_url
+        return self.image_url
 
 
 class PreorderImage(BaseModel):

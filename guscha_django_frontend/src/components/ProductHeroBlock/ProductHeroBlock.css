@@ -1,0 +1,496 @@
+/* ============================================
+   ProductHeroBlock - Fashion Editorial Style
+   Точная копия референса
+   ============================================ */
+
+.product-hero-block {
+  position: relative;
+  background-color: #f5f5f5;
+  padding: 50px 120px;
+  min-height: 620px;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Бумажная текстура - grain эффект */
+.hero-texture-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  opacity: 0.4;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  z-index: 1;
+}
+
+/* ===== ЛЕВАЯ СЕКЦИЯ - ТЕКСТ (АБСОЛЮТНАЯ) ===== */
+.hero-text-section {
+  position: absolute;
+  left: 120px;
+  top: 20%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  z-index: 20;
+}
+
+/* ЗАГОЛОВОК - Condensed Black, очень крупный */
+.hero-title {
+  font-family: 'Impact', 'Arial Black', 'Helvetica Neue', sans-serif;
+  font-size: clamp(80px, 12vw, 140px);
+  font-weight: 900;
+  color: #000000;
+  margin: 0;
+  line-height: 0.85;
+  letter-spacing: -2px;
+  text-transform: uppercase;
+  /* Вытягиваем по высоте для condensed эффекта */
+  transform: scaleY(1.25) scaleX(0.85);
+  transform-origin: left top;
+}
+
+/* ЦЕНА - моноширинный стиль */
+.hero-price {
+  font-family: 'Courier New', 'Monaco', monospace;
+  font-size: 18px;
+  font-weight: 400;
+  color: #000000;
+  margin: 60px 0 35px 0;
+  letter-spacing: 0.5px;
+}
+
+/* КНОПКА ПРЕДЗАКАЗ - тонкая контурная */
+.hero-preorder-btn {
+  background: transparent;
+  border: 1px solid #000000;
+  color: #000000;
+  padding: 14px 32px;
+  font-family: 'Arial', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  margin-bottom: 20px;
+}
+
+.hero-preorder-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* СТРЕЛКА */
+.hero-arrow-btn {
+  background: transparent;
+  border: none;
+  color: #000000;
+  font-size: 20px;
+  font-weight: 300;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.2s ease;
+  font-family: 'Arial', sans-serif;
+}
+
+/* ===== ПРАВАЯ СЕКЦИЯ - ВИЗУАЛ ===== */
+.hero-visual-section {
+  position: absolute;
+  right: 1%;
+  left: 35%;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  z-index: 10;
+}
+
+/* ШЕСТИУГОЛЬНЫЙ КОНТЕЙНЕР */
+.hero-hexagon-container {
+  position: relative;
+  z-index: 5;
+}
+
+.hero-hexagon-mask {
+  width: 420px;
+  height: 480px;
+  position: relative;
+  overflow: hidden;
+  /* Неправильный шестиугольник как на референсе */
+  clip-path: polygon(
+    15% 0%,      /* верхний левый угол срезан */
+    100% 0%,     /* верхний правый */
+    100% 70%,    /* правый верхний угол нижней части */
+    85% 100%,    /* нижний правый срезан */
+    0% 100%,     /* нижний левый */
+    0% 25%       /* левый нижний угол верхней части */
+  );
+  background: #ddd9d0;
+}
+
+.hero-model-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.hero-model-img.loaded {
+  opacity: 1;
+}
+
+.hero-model-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #d5d0c8 0%, #c5c0b8 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  font-size: 14px;
+  font-family: 'Arial', sans-serif;
+}
+
+/* ===== КОЛЛАЖ-ЭЛЕМЕНТ - РВАНАЯ БУМАГА ===== */
+.hero-collage-element {
+  position: relative;
+  z-index: 15;
+  margin-left: -30px;
+  align-self: center;
+}
+
+.hero-torn-paper {
+  position: relative;
+  width: 110px;
+  transform: rotate(2deg);
+}
+
+/* SVG для рваного края */
+.hero-torn-edge {
+  position: absolute;
+  right: -8px;
+  top: 0;
+  width: 15px;
+  height: 100%;
+  z-index: 1;
+}
+
+.hero-collage-inner {
+  background: #c9c4b8;
+  padding: 8px 8px 12px 8px;
+  position: relative;
+  /* Эффект рваной бумаги через тень и неровности */
+  box-shadow: 
+    2px 3px 8px rgba(0, 0, 0, 0.15),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+  border-radius: 1px;
+}
+
+/* Дополнительная текстура для бумаги */
+.hero-collage-inner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='paper'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23paper)'/%3E%3C/svg%3E");
+  opacity: 0.08;
+  pointer-events: none;
+}
+
+.hero-product-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  background: #1a1a1a;
+  min-height: 150px;
+  position: relative;
+  z-index: 2;
+}
+
+.hero-product-img.loaded {
+  opacity: 1;
+}
+
+.hero-product-placeholder {
+  width: 100%;
+  min-height: 150px;
+  background: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #444;
+  font-size: 10px;
+  font-family: 'Arial', sans-serif;
+}
+
+/* ===== БЛОК ОПИСАНИЯ СПРАВА ===== */
+.hero-description-section {
+  position: absolute;
+  right: 15%;
+  top: 22%;
+  max-width: 320px;
+  z-index: 15;
+  text-align: left;
+}
+
+.hero-description-title {
+  font-family: 'Arial', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #000;
+  margin: 0 0 22px 0;
+  text-align: left;
+}
+
+.hero-description-text {
+  font-family: 'Arial', sans-serif;
+  font-size: 19px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #000;
+  margin: 0;
+  text-align: left;
+  white-space: pre-line;
+}
+
+.hero-description-specs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hero-spec-item {
+  font-family: 'Arial', sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: #000;
+  margin: 0;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.hero-spec-label {
+  font-weight: 400;
+}
+
+/* ===== SKELETON LOADING ===== */
+.hero-skeleton {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    #e0dcd4 0%,
+    #ebe7df 50%,
+    #e0dcd4 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+}
+
+.hero-skeleton--dark {
+  background: linear-gradient(
+    90deg,
+    #2a2a2a 0%,
+    #3a3a3a 50%,
+    #2a2a2a 100%
+  );
+  background-size: 200% 100%;
+  position: relative;
+  min-height: 150px;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 1400px) {
+  .hero-description-section {
+    right: 80px;
+    max-width: 240px;
+  }
+  
+  .hero-description-text {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .product-hero-block {
+    padding: 40px 60px;
+    min-height: 450px;
+  }
+  
+  .hero-text-section {
+    left: 60px;
+  }
+  
+  .hero-visual-section {
+    right: 60px;
+  }
+  
+  .hero-description-section {
+    display: none;
+  }
+  
+  .hero-title {
+    font-size: clamp(70px, 10vw, 110px);
+  }
+  
+  .hero-price {
+    margin: 50px 0 30px 0;
+  }
+  
+  .hero-hexagon-mask {
+    width: 350px;
+    height: 400px;
+  }
+  
+  .hero-torn-paper {
+    width: 95px;
+  }
+  
+  .hero-collage-element {
+    margin-left: -25px;
+  }
+}
+
+@media (max-width: 900px) {
+  .product-hero-block {
+    padding: 35px 30px;
+    min-height: auto;
+    padding-bottom: 400px;
+  }
+  
+  .hero-text-section {
+    position: relative;
+    left: auto;
+    top: auto;
+    transform: none;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .hero-title {
+    font-size: clamp(55px, 15vw, 80px);
+    transform: scaleY(1.2) scaleX(0.88);
+    transform-origin: center top;
+  }
+  
+  .hero-price {
+    margin: 35px 0 25px 0;
+    font-size: 16px;
+  }
+  
+  .hero-preorder-btn {
+    padding: 12px 28px;
+  }
+  
+  .hero-visual-section {
+    position: absolute;
+    right: 50%;
+    transform: translateX(50%);
+    bottom: 30px;
+    top: auto;
+  }
+  
+  .hero-hexagon-mask {
+    width: 280px;
+    height: 320px;
+  }
+  
+  .hero-torn-paper {
+    width: 80px;
+  }
+  
+  .hero-collage-element {
+    margin-left: -20px;
+  }
+  
+  .hero-product-img,
+  .hero-product-placeholder {
+    min-height: 120px;
+  }
+}
+
+@media (max-width: 600px) {
+  .product-hero-block {
+    padding: 25px 20px;
+    padding-bottom: 320px;
+  }
+  
+  .hero-title {
+    font-size: clamp(45px, 18vw, 60px);
+    letter-spacing: -1px;
+  }
+  
+  .hero-price {
+    font-size: 15px;
+    margin: 30px 0 20px 0;
+  }
+  
+  .hero-preorder-btn {
+    padding: 11px 24px;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+  }
+  
+  .hero-arrow-btn {
+    font-size: 18px;
+  }
+  
+  .hero-hexagon-mask {
+    width: 220px;
+    height: 260px;
+  }
+  
+  .hero-torn-paper {
+    width: 65px;
+  }
+  
+  .hero-collage-inner {
+    padding: 6px 6px 10px 6px;
+  }
+  
+  .hero-product-img,
+  .hero-product-placeholder {
+    min-height: 95px;
+  }
+  
+  .hero-collage-element {
+    margin-left: -15px;
+  }
+}
+
+@media (max-width: 400px) {
+  .hero-title {
+    font-size: 40px;
+  }
+  
+  .hero-hexagon-mask {
+    width: 180px;
+    height: 210px;
+  }
+  
+  .hero-torn-paper {
+    width: 55px;
+  }
+}

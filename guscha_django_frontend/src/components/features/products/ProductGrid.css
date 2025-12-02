@@ -75,6 +75,7 @@
   display: flex;
   gap: 4px;
   flex-shrink: 0;
+  margin-left: 12px;
 }
 
 .color-dot {
@@ -89,6 +90,7 @@
   display: flex;
   gap: 5px;
   flex-shrink: 0;
+  margin-left: 18px;
 }
 
 .size-text {

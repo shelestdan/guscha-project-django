@@ -138,7 +138,9 @@ const DetailPage = ({ item, itemType }) => {
 
         <div className="pdp-image-gallery">
           {extraImages.map((img, idx) => (
-            <img key={idx} src={img.image_url} alt={img.alt_text || (item.name + ' - дополнительное фото ' + (idx + 1))} className="pdp-image" />
+            <div key={idx} className="pdp-image-item">
+              <img src={img.image_url} alt={img.alt_text || (item.name + ' - дополнительное фото ' + (idx + 1))} className="pdp-image" />
+            </div>
           ))}
         </div>
       </div>
