@@ -1,0 +1,324 @@
+/* ============================================
+   Hero Section Parallax Effects
+   Многослойный параллакс для главного экрана
+   ============================================ */
+
+.hero-parallax {
+  position: relative;
+  overflow: hidden;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+/* ===== PARALLAX BACKGROUND WRAPPER ===== */
+.parallax-bg-wrapper {
+  position: absolute;
+  top: -10%;
+  left: -5%;
+  right: -5%;
+  bottom: -10%;
+  will-change: transform;
+  z-index: 1;
+}
+
+.parallax-bg-wrapper .background-content {
+  width: 100%;
+  height: 100%;
+}
+
+.parallax-bg-wrapper .background-image,
+.parallax-bg-wrapper .background-slideshow,
+.parallax-bg-wrapper .background-video {
+  width: 100%;
+  height: 100%;
+}
+
+.parallax-bg-wrapper .background-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* ===== SCROLL OVERLAY ===== */
+.parallax-scroll-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* ===== FLOATING DECORATIVE ELEMENTS ===== */
+.parallax-float {
+  position: absolute;
+  pointer-events: none;
+  will-change: transform;
+  z-index: 10;
+}
+
+.parallax-float-1 {
+  top: 15%;
+  right: 10%;
+  width: 150px;
+  height: 150px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  animation: float-pulse 8s ease-in-out infinite;
+}
+
+.parallax-float-2 {
+  bottom: 20%;
+  left: 8%;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: float-pulse 6s ease-in-out infinite reverse;
+}
+
+.parallax-float-3 {
+  top: 40%;
+  left: 15%;
+  width: 80px;
+  height: 80px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transform: rotate(45deg);
+  animation: float-rotate 12s linear infinite;
+}
+
+@keyframes float-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+@keyframes float-rotate {
+  0% {
+    transform: rotate(45deg);
+  }
+  100% {
+    transform: rotate(405deg);
+  }
+}
+
+/* ===== ANIMATED LINES ===== */
+.parallax-line {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.parallax-line-1 {
+  top: 30%;
+  left: 0;
+  width: 200px;
+  height: 1px;
+  transform-origin: left center;
+}
+
+.parallax-line-2 {
+  top: 20%;
+  right: 15%;
+  width: 1px;
+  height: 120px;
+  transform-origin: center top;
+}
+
+/* ===== GRAIN TEXTURE ===== */
+.parallax-grain {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  opacity: 0.25;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  z-index: 15;
+  mix-blend-mode: overlay;
+}
+
+/* ===== SCROLL INDICATOR ===== */
+.parallax-scroll-indicator {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  z-index: 25;
+}
+
+.scroll-mouse {
+  width: 26px;
+  height: 42px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 13px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding-top: 8px;
+  backdrop-filter: blur(4px);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.scroll-wheel {
+  width: 4px;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 2px;
+}
+
+.scroll-text {
+  font-family: 'Arial', sans-serif;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 300;
+}
+
+/* ===== VIGNETTE EFFECT ===== */
+.hero-parallax::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.3) 100%);
+  pointer-events: none;
+  z-index: 6;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 1200px) {
+  .parallax-float-1 {
+    width: 120px;
+    height: 120px;
+    right: 5%;
+  }
+  
+  .parallax-float-2 {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .parallax-float-3 {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .parallax-line-1 {
+    width: 150px;
+  }
+  
+  .parallax-line-2 {
+    height: 80px;
+  }
+}
+
+@media (max-width: 900px) {
+  .parallax-float-1,
+  .parallax-float-3 {
+    display: none;
+  }
+  
+  .parallax-float-2 {
+    width: 60px;
+    height: 60px;
+    opacity: 0.5;
+  }
+  
+  .parallax-line-1,
+  .parallax-line-2 {
+    opacity: 0.5;
+  }
+  
+  .parallax-scroll-indicator {
+    bottom: 30px;
+  }
+  
+  .scroll-mouse {
+    width: 22px;
+    height: 36px;
+  }
+  
+  .scroll-text {
+    font-size: 10px;
+    letter-spacing: 2px;
+  }
+}
+
+@media (max-width: 600px) {
+  .parallax-float-1,
+  .parallax-float-2,
+  .parallax-float-3 {
+    display: none;
+  }
+  
+  .parallax-line-1,
+  .parallax-line-2 {
+    display: none;
+  }
+  
+  .parallax-scroll-indicator {
+    bottom: 20px;
+  }
+  
+  .scroll-mouse {
+    width: 20px;
+    height: 32px;
+  }
+  
+  .parallax-grain {
+    opacity: 0.15;
+  }
+}
+
+/* ===== REDUCED MOTION ===== */
+@media (prefers-reduced-motion: reduce) {
+  .parallax-bg-wrapper,
+  .parallax-float,
+  .parallax-line {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  .parallax-scroll-indicator {
+    display: none;
+  }
+  
+  .parallax-float-1,
+  .parallax-float-2,
+  .parallax-float-3 {
+    animation: none;
+  }
+}
+
+/* ===== PERFORMANCE ===== */
+.hero-parallax * {
+  backface-visibility: hidden;
+}
+
+@supports (content-visibility: auto) {
+  .parallax-float,
+  .parallax-line {
+    content-visibility: auto;
+  }
+}

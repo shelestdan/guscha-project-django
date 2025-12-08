@@ -48,7 +48,6 @@
   line-height: 0.85;
   letter-spacing: -2px;
   text-transform: uppercase;
-  /* Вытягиваем по высоте для condensed эффекта */
   transform: scaleY(1.25) scaleX(0.85);
   transform-origin: left top;
 }
@@ -119,14 +118,13 @@
   height: 480px;
   position: relative;
   overflow: hidden;
-  /* Неправильный шестиугольник как на референсе */
   clip-path: polygon(
-    15% 0%,      /* верхний левый угол срезан */
-    100% 0%,     /* верхний правый */
-    100% 70%,    /* правый верхний угол нижней части */
-    85% 100%,    /* нижний правый срезан */
-    0% 100%,     /* нижний левый */
-    0% 25%       /* левый нижний угол верхней части */
+    15% 0%,
+    100% 0%,
+    100% 70%,
+    85% 100%,
+    0% 100%,
+    0% 25%
   );
   background: #ddd9d0;
 }
@@ -166,7 +164,7 @@
 
 .hero-torn-paper {
   position: relative;
-  width: 110px;
+  width: 140px;
   transform: rotate(2deg);
 }
 
@@ -184,7 +182,6 @@
   background: #c9c4b8;
   padding: 8px 8px 12px 8px;
   position: relative;
-  /* Эффект рваной бумаги через тень и неровности */
   box-shadow: 
     2px 3px 8px rgba(0, 0, 0, 0.15),
     inset 0 0 0 1px rgba(0, 0, 0, 0.05);
@@ -210,7 +207,7 @@
   display: block;
   opacity: 0;
   transition: opacity 0.4s ease;
-  background: #1a1a1a;
+  background: transparent;
   min-height: 150px;
   position: relative;
   z-index: 2;
@@ -223,11 +220,11 @@
 .hero-product-placeholder {
   width: 100%;
   min-height: 150px;
-  background: #1a1a1a;
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #444;
+  color: #888;
   font-size: 10px;
   font-family: 'Arial', sans-serif;
 }
@@ -235,7 +232,7 @@
 /* ===== БЛОК ОПИСАНИЯ СПРАВА ===== */
 .hero-description-section {
   position: absolute;
-  right: 15%;
+  right: 5%;
   top: 22%;
   max-width: 320px;
   z-index: 15;
@@ -304,9 +301,9 @@
 .hero-skeleton--dark {
   background: linear-gradient(
     90deg,
-    #2a2a2a 0%,
-    #3a3a3a 50%,
-    #2a2a2a 100%
+    #d5d0c8 0%,
+    #e0dcd4 50%,
+    #d5d0c8 100%
   );
   background-size: 200% 100%;
   position: relative;

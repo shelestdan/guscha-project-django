@@ -10,7 +10,7 @@ const BoxOfficeSection = () => {
       <div className="box-office-container" ref={containerRef}>
         <div className="box-office-content">
           <VariableProximity
-            label="BOX OFFICE"
+            label="RAVIX"
             className="box-office-text"
             fromFontVariationSettings="'wght' 400, 'opsz' 9"
             toFontVariationSettings="'wght' 800, 'opsz' 40"
@@ -20,7 +20,7 @@ const BoxOfficeSection = () => {
           />
           <div className="box-office-number-container">
             <VariableProximity
-              label="10 000 000"
+              label="ТВОИ ПРАВИЛА СТИЛЯ"
               className="box-office-number"
               fromFontVariationSettings="'wght' 400, 'opsz' 9"
               toFontVariationSettings="'wght' 800, 'opsz' 40"

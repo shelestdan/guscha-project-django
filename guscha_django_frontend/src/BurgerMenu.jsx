@@ -180,7 +180,7 @@ const BurgerMenu = ({
             Аккаунт
           </Link>
           <button className="burger-nav-button" onClick={() => scrollToSection('box-office')}>
-            BOX OFFICE
+            RAVIX
           </button>
           <button className="burger-nav-button" onClick={() => scrollToSection('contacts')}>
             Контакты

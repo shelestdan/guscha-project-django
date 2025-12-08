@@ -1,14 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import FlowingMenu from '../components/FlowingMenu';
-import ProductHeroBlock from '../components/ProductHeroBlock';
 import '../styles/CollectionsPage.css';
 
 const CollectionsPage = () => {
-  const navigate = useNavigate();
   const [collections, setCollections] = useState([]);
   const [selectedCollection, setSelectedCollection] = useState(null);
-  const [heroPreorder, setHeroPreorder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -36,38 +32,6 @@ const CollectionsPage = () => {
 
     fetchCollections();
   }, []);
-
-  // Загрузка featured предзаказа для hero блока
-  useEffect(() => {
-    const fetchHeroPreorder = async () => {
-      try {
-        const response = await fetch('/api/products/preorders/?is_featured=true&is_active=true');
-        if (response.ok) {
-          const data = await response.json();
-          const preorders = data.results || data;
-          if (preorders.length > 0) {
-            setHeroPreorder(preorders[0]);
-          }
-        }
-      } catch (err) {
-        console.error('Ошибка загрузки hero предзаказа:', err);
-      }
-    };
-
-    fetchHeroPreorder();
-  }, []);
-
-  const handlePreorder = () => {
-    if (heroPreorder) {
-      navigate(`/preorders/${heroPreorder.id}`);
-    }
-  };
-
-  const handleNavigateToProduct = () => {
-    if (heroPreorder) {
-      navigate(`/preorders/${heroPreorder.id}`);
-    }
-  };
 
   const handleCollectionSelect = (collectionId) => {
     const collection = collections.find(c => c.id === collectionId);
@@ -124,19 +88,6 @@ const CollectionsPage = () => {
 
   return (
     <div className="collections-page">
-      {/* Hero блок с featured предзаказом */}
-      {heroPreorder && (
-        <ProductHeroBlock
-          title={heroPreorder.name}
-          price={heroPreorder.price}
-          modelImage={heroPreorder.model_image}
-          productImage={heroPreorder.product_image}
-          onPreorder={handlePreorder}
-          onNavigate={handleNavigateToProduct}
-          productId={heroPreorder.id}
-        />
-      )}
-
       {/* FlowingMenu в центре */}
       <div className="collections-menu-section">
         <FlowingMenu 
