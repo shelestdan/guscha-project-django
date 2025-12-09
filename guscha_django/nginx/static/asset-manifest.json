@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/static/css/main.697a1747.css",
-    "main.js": "/static/js/main.ff76a01d.js",
-    "static/css/444.27938003.chunk.css": "/static/css/444.27938003.chunk.css",
-    "static/js/444.95fbb765.chunk.js": "/static/js/444.95fbb765.chunk.js",
+    "main.css": "/static/css/main.1e3707bd.css",
+    "main.js": "/static/js/main.96b95049.js",
+    "static/css/414.27938003.chunk.css": "/static/css/414.27938003.chunk.css",
+    "static/js/414.01607d98.chunk.js": "/static/js/414.01607d98.chunk.js",
     "static/js/963.cba9c89e.chunk.js": "/static/js/963.cba9c89e.chunk.js",
-    "static/js/808.60f6d7a9.chunk.js": "/static/js/808.60f6d7a9.chunk.js",
+    "static/js/808.dd436b2c.chunk.js": "/static/js/808.dd436b2c.chunk.js",
     "static/js/989.49bee9fd.chunk.js": "/static/js/989.49bee9fd.chunk.js",
     "static/js/337.f1b8b060.chunk.js": "/static/js/337.f1b8b060.chunk.js",
-    "static/js/767.14366068.chunk.js": "/static/js/767.14366068.chunk.js",
-    "static/js/465.de09767e.chunk.js": "/static/js/465.de09767e.chunk.js",
+    "static/js/767.c4fdb5ab.chunk.js": "/static/js/767.c4fdb5ab.chunk.js",
+    "static/js/465.ae224791.chunk.js": "/static/js/465.ae224791.chunk.js",
     "reactPlayerHls.js": "/static/js/reactPlayerHls.c4627355.chunk.js",
     "reactPlayerDash.js": "/static/js/reactPlayerDash.39a2bd05.chunk.js",
     "reactPlayerMux.js": "/static/js/reactPlayerMux.054713ce.chunk.js",
@@ -23,14 +23,15 @@
     "static/js/206.4588d44f.chunk.js": "/static/js/206.4588d44f.chunk.js",
     "static/js/655.7053f711.chunk.js": "/static/js/655.7053f711.chunk.js",
     "static/js/313.53be5873.chunk.js": "/static/js/313.53be5873.chunk.js",
-    "static/js/780.2d1ea858.chunk.js": "/static/js/780.2d1ea858.chunk.js",
-    "static/media/logo.svg": "/static/media/logo.cf654137a024406cbade9c254b442833.svg",
+    "static/js/430.8a8f4d7e.chunk.js": "/static/js/430.8a8f4d7e.chunk.js",
+    "static/media/Tovar.otf": "/static/media/Tovar.d7d8c00fc2a306c9cac4.otf",
+    "static/media/logo.svg": "/static/media/logo.9f279452f6c3d59ccd6eb8fbe720443d.svg",
     "static/media/instrument_x4fdrqsfczqn.svg": "/static/media/instrument_x4fdrqsfczqn.4a7efb845c2b844e443b92e46d63e8cc.svg",
     "index.html": "/index.html",
     "static/media/TelegramIcon.svg": "/static/media/TelegramIcon.3a0e1444dfc60df021cef070260a88fc.svg"
   },
   "entrypoints": [
-    "static/css/main.697a1747.css",
-    "static/js/main.ff76a01d.js"
+    "static/css/main.1e3707bd.css",
+    "static/js/main.96b95049.js"
   ]
 }

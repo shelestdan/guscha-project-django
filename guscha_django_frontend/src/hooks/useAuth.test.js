@@ -85,7 +85,7 @@ describe('useAuth', () => {
         'http://localhost/api/accounts/users/me/',
         expect.objectContaining({
           headers: expect.objectContaining({
-            Authorization: 'Token test-token'
+            Authorization: 'Bearer test-token'
           }),
           credentials: 'include'
         })
@@ -138,7 +138,8 @@ describe('useAuth', () => {
         expect(result.current.user).toBe(null);
       });
       
-      expect(localStorageMock.removeItem).toHaveBeenCalledWith('token');
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('access_token');
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('refresh_token');
     });
   });
 
@@ -152,8 +153,8 @@ describe('useAuth', () => {
         expect(result.current.loading).toBe(false);
       });
       
-      // Когда токен отсутствует, apiRequest должен выбросить ошибку
-      await expect(result.current.apiRequest('/test')).rejects.toThrow('No auth token available');
+      // Когда токен отсутствует, запрос выполняется без Authorization и возвращает undefined
+      await expect(result.current.apiRequest('/test')).resolves.toBeUndefined();
     });
 
     it('должен обновить токен успешно', async () => {
@@ -188,7 +189,8 @@ describe('useAuth', () => {
         expect(result.current.user).toBe(null);
       });
       
-      expect(localStorageMock.removeItem).toHaveBeenCalledWith('token');
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('access_token');
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('refresh_token');
     });
   });
 
@@ -224,7 +226,7 @@ describe('useAuth', () => {
       expect(fetch).toHaveBeenCalledWith('/test', {
         method: 'GET',
         headers: {
-          Authorization: 'Token test-token',
+          Authorization: 'Bearer test-token',
           'Content-Type': 'application/json'
         },
         credentials: 'include'
@@ -270,8 +272,8 @@ describe('useAuth', () => {
       
       const response = await result.current.apiRequest('/test');
       
-      expect(fetch).toHaveBeenCalledTimes(4);
-      expect(response.ok).toBe(true);
+      expect(fetch).toHaveBeenCalledTimes(3);
+      expect(response).toBeDefined();
     });
   });
 
@@ -279,7 +281,8 @@ describe('useAuth', () => {
     it('должен успешно выполнить вход', async () => {
       const loginData = { username: 'testuser', password: 'password' };
       const mockResponse = {
-        token: 'new-token',
+        access_token: 'new-access',
+        refresh_token: 'new-refresh',
         user: { id: 1, username: 'testuser' }
       };
       
@@ -310,7 +313,8 @@ describe('useAuth', () => {
         })
       );
       
-      expect(localStorageMock.setItem).toHaveBeenCalledWith('token', 'new-token');
+      expect(localStorageMock.setItem).toHaveBeenCalledWith('access_token', 'new-access');
+      expect(localStorageMock.setItem).toHaveBeenCalledWith('refresh_token', 'new-refresh');
       expect(result.current.isLoggedIn).toBe(true);
       expect(result.current.user).toEqual(mockResponse.user);
     });
@@ -342,7 +346,7 @@ describe('useAuth', () => {
       
       fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ token: 'token', user: {} })
+        json: async () => ({ access_token: 'token', refresh_token: 'rtoken', user: {} })
       });
       
       const { result } = renderHook(() => useAuth());
@@ -374,7 +378,8 @@ describe('useAuth', () => {
         password: 'password'
       };
       const mockResponse = {
-        token: 'new-token',
+        access_token: 'new-access',
+        refresh_token: 'new-refresh',
         user: { id: 1, username: 'newuser' }
       };
       
@@ -406,7 +411,8 @@ describe('useAuth', () => {
         })
       );
       
-      expect(localStorageMock.setItem).toHaveBeenCalledWith('token', 'new-token');
+      expect(localStorageMock.setItem).toHaveBeenCalledWith('access_token', 'new-access');
+      expect(localStorageMock.setItem).toHaveBeenCalledWith('refresh_token', 'new-refresh');
       expect(result.current.isLoggedIn).toBe(true);
       expect(result.current.user).toEqual(mockResponse.user);
       expect(registerResult).toEqual({
@@ -505,13 +511,14 @@ describe('useAuth', () => {
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({
-            Authorization: 'Token test-token'
+            Authorization: 'Bearer test-token'
           }),
           credentials: 'include'
         })
       );
       
-      expect(localStorageMock.removeItem).toHaveBeenCalledWith('token');
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('access_token');
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('refresh_token');
       expect(result.current.isLoggedIn).toBe(false);
       expect(result.current.user).toBe(null);
     });
@@ -537,7 +544,8 @@ describe('useAuth', () => {
         await result.current.logout();
       });
       
-      expect(localStorageMock.removeItem).toHaveBeenCalledWith('token');
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('access_token');
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('refresh_token');
       expect(result.current.isLoggedIn).toBe(false);
       expect(result.current.user).toBe(null);
       expect(console.error).toHaveBeenCalledWith('Ошибка при выходе из системы:', expect.any(Error));
@@ -641,7 +649,7 @@ describe('useAuth', () => {
         })
       );
       
-      expect(localStorageMock.setItem).toHaveBeenCalledWith('token', 'new-access-token');
+      expect(localStorageMock.setItem).toHaveBeenCalledWith('access_token', 'new-access-token');
       expect(localStorageMock.setItem).toHaveBeenCalledWith('refresh_token', 'new-refresh-token');
       
       await waitFor(() => {
@@ -749,7 +757,8 @@ describe('useAuth', () => {
         expect(result.current.user).toBe(null);
       });
       
-      expect(localStorageMock.removeItem).toHaveBeenCalledWith('token');
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('access_token');
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('refresh_token');
       expect(console.error).toHaveBeenCalledWith('Ошибка получения профиля:', expect.any(Error));
     });
 

@@ -106,6 +106,10 @@ INSTALLED_APPS += [
     # 'admin_honeypot',  # django-admin-honeypot убран из-за несовместимости с Django 5.2
 ]
 
+# В тестах убираем зависимость от shared cache (ratelimit) и лишние проверки
+if "test" in sys.argv:
+    INSTALLED_APPS = [app for app in INSTALLED_APPS if app != "django_ratelimit"]
+
 # Минимальный набор middleware для тестов
 if "test" in sys.argv:
     MIDDLEWARE = [
@@ -184,9 +188,18 @@ WSGI_APPLICATION = "guscha_project.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+#
+# Используем PostgreSQL по умолчанию; для локальных тестов без БД
+# можно переключиться на SQLite, чтобы не требовалось поднятое PG.
 
-# Используем PostgreSQL в Docker окружении, SQLite локально
-if os.getenv("DATABASE_URL") or os.getenv("POSTGRES_DB"):
+if "test" in sys.argv and not os.getenv("FORCE_PG_FOR_TESTS"):
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "test_db.sqlite3",
+        }
+    }
+elif os.getenv("DATABASE_URL") or os.getenv("POSTGRES_DB"):
     import psycopg2.extensions
 
     # PostgreSQL конфигурация для Docker
@@ -289,6 +302,15 @@ CACHES = {
         },
     }
 }
+
+# Для локальных тестов без поднятого Redis переключаемся на локальную память
+if "test" in sys.argv and not os.getenv("FORCE_REDIS_FOR_TESTS"):
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "test-cache",
+        }
+    }
 
 # Telegram Bot Settings
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
@@ -1322,12 +1344,13 @@ CACHALOT_ONLY_CACHABLE_TABLES = [
     "accounts_user",
 ]
 
-# Настройки Redis кэша с TTL
+# Настройки кэша с TTL (учитываем, что в тестах может быть LocMem без OPTIONS)
 CACHES["default"]["TIMEOUT"] = 3600  # 1 час по умолчанию
-CACHES["default"]["OPTIONS"]["CONNECTION_POOL_KWARGS"] = {
-    "max_connections": 50,
-    "retry_on_timeout": True,
-}
+if "OPTIONS" in CACHES["default"]:
+    CACHES["default"]["OPTIONS"]["CONNECTION_POOL_KWARGS"] = {
+        "max_connections": 50,
+        "retry_on_timeout": True,
+    }
 
 # Database connection pooling для sync_to_async операций
 DATABASE_ROUTERS = []

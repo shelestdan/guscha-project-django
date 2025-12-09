@@ -62,7 +62,7 @@ describe('cartApi', () => {
       const result = await getCartItems();
 
       expect(localStorageMock.getItem).toHaveBeenCalledWith('cart_session_id');
-      expect(mockedAxios.get).toHaveBeenCalledWith('/api/cart/items/');
+      expect(mockedAxios.get).toHaveBeenCalledWith('/api/cart/items/', { headers: { 'X-Session-ID': 'session-123' } });
       expect(result).toEqual(mockCartData);
       expect(consoleSpy.log).toHaveBeenCalledWith('🛒 cartApi.getCartItems called');
       expect(consoleSpy.log).toHaveBeenCalledWith('🛒 Frontend session ID:', 'session-123');
@@ -97,10 +97,11 @@ describe('cartApi', () => {
 
       const result = await addCartItem(1);
 
-      expect(mockedAxios.post).toHaveBeenCalledWith('/api/cart/add/', {
-        product: 1,
-        quantity: 1
-      });
+      expect(mockedAxios.post).toHaveBeenCalledWith(
+        '/api/cart/add/',
+        { product: 1, quantity: 1 },
+        { headers: { 'X-Session-ID': 'session-123' } }
+      );
       expect(result).toEqual(mockResponse.data);
       expect(consoleSpy.log).toHaveBeenCalledWith('🛒 cartApi.addCartItem request:', {
         product: 1,
@@ -115,11 +116,11 @@ describe('cartApi', () => {
 
       const result = await addCartItem(1, 3, 2);
 
-      expect(mockedAxios.post).toHaveBeenCalledWith('/api/cart/add/', {
-        product: 1,
-        quantity: 3,
-        size: 2
-      });
+      expect(mockedAxios.post).toHaveBeenCalledWith(
+        '/api/cart/add/',
+        { product: 1, quantity: 3, size: 2 },
+        { headers: { 'X-Session-ID': 'session-123' } }
+      );
       expect(result).toEqual(mockResponse.data);
     });
 
@@ -141,10 +142,14 @@ describe('cartApi', () => {
 
       const result = await addPreorderItem(1);
 
-      expect(mockedAxios.post).toHaveBeenCalledWith('/api/cart/add_preorder/', {
-        preorder: 1,
-        quantity: 1
-      });
+      expect(mockedAxios.post).toHaveBeenCalledWith(
+        '/api/cart/add_preorder/',
+        {
+          preorder: 1,
+          quantity: 1
+        },
+        { headers: { 'X-Session-ID': 'session-123' } }
+      );
       expect(result).toEqual(mockResponse.data);
       expect(consoleSpy.log).toHaveBeenCalledWith('🛒 cartApi.addPreorderItem request:', {
         preorder: 1,
@@ -159,11 +164,15 @@ describe('cartApi', () => {
 
       const result = await addPreorderItem(1, 2, 3);
 
-      expect(mockedAxios.post).toHaveBeenCalledWith('/api/cart/add_preorder/', {
-        preorder: 1,
-        quantity: 2,
-        size: 3
-      });
+      expect(mockedAxios.post).toHaveBeenCalledWith(
+        '/api/cart/add_preorder/',
+        {
+          preorder: 1,
+          quantity: 2,
+          size: 3
+        },
+        { headers: { 'X-Session-ID': 'session-123' } }
+      );
       expect(result).toEqual(mockResponse.data);
     });
 
@@ -184,7 +193,7 @@ describe('cartApi', () => {
 
       const result = await updateCartItem(1, 5);
 
-      expect(mockedAxios.put).toHaveBeenCalledWith('/api/cart/update/1/', { quantity: 5 });
+      expect(mockedAxios.put).toHaveBeenCalledWith('/api/cart/update/1/', { quantity: 5 }, { headers: {} });
       expect(result).toEqual(mockResponse.data);
       expect(consoleSpy.log).toHaveBeenCalledWith(
         '🛒 cartApi.updateCartItem called for item 1 with quantity 5'
@@ -221,7 +230,7 @@ describe('cartApi', () => {
 
       const result = await removeCartItem(1);
 
-      expect(mockedAxios.delete).toHaveBeenCalledWith('/api/cart/remove/1/');
+      expect(mockedAxios.delete).toHaveBeenCalledWith('/api/cart/remove/1/', { headers: {} });
       expect(result).toEqual(mockResponse.data);
       expect(consoleSpy.log).toHaveBeenCalledWith('🛒 cartApi.removeCartItem called for item 1');
     });
@@ -257,7 +266,7 @@ describe('cartApi', () => {
 
       const result = await clearCart();
 
-      expect(mockedAxios.delete).toHaveBeenCalledWith('/api/cart/clear/');
+      expect(mockedAxios.delete).toHaveBeenCalledWith('/api/cart/clear/', { headers: {} });
       expect(result).toEqual(mockResponse.data);
       expect(consoleSpy.log).toHaveBeenCalledWith('🛒 cartApi.clearCart called');
     });
@@ -279,7 +288,11 @@ describe('cartApi', () => {
 
       const result = await createCartReservations();
 
-      expect(mockedAxios.post).toHaveBeenCalledWith('/api/cart/create-reservations/');
+      expect(mockedAxios.post).toHaveBeenCalledWith(
+        '/api/cart/create-reservations/',
+        {},
+        { headers: { 'X-Session-ID': 'session-123' } }
+      );
       expect(result).toEqual(mockResponse.data);
       expect(consoleSpy.log).toHaveBeenCalledWith('🛒 cartApi.createCartReservations called');
       expect(consoleSpy.log).toHaveBeenCalledWith('🛒 Frontend session ID for reservations:', 'session-123');

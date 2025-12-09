@@ -151,8 +151,9 @@ class Order(models.Model):
             'total': float(self.total.amount),
             'billing_address': self.get_billing_address_display(),
             'shipping_address': self.get_shipping_address_display(),
-            'billing_address_obj': self.billing_address_obj.to_dict() if self.billing_address_obj else null,
-            'shipping_address_obj': self.shipping_address_obj.to_dict() if self.shipping_address_obj else null,
+            # Return None to keep JSON-serializable output without undefined names
+            'billing_address_obj': self.billing_address_obj.to_dict() if self.billing_address_obj else None,
+            'shipping_address_obj': self.shipping_address_obj.to_dict() if self.shipping_address_obj else None,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'items': [item.to_dict() for item in self.items.all()],
         }
