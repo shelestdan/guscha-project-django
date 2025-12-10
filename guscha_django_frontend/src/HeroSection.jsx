@@ -1,140 +1,229 @@
-import { useRef, useEffect } from 'react';
-import { motion, useScroll, useTransform, useSpring, useMotionValue } from 'framer-motion';
-import BackgroundContent from './components/BackgroundContent/BackgroundContent';
+import { useEffect, useRef, useState } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import heroImage from './assets/images/Guscha_back.png';
+import backgroundApi from './api/backgroundApi';
 import './styles/App.css';
 import './styles/HeroParallax.css';
 
-const HeroSection = () => {
-  const containerRef = useRef(null);
-  
-  // Mouse parallax
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
+gsap.registerPlugin(ScrollTrigger);
 
-  // Smooth spring physics
-  const springConfig = { damping: 25, stiffness: 120 };
-  const mouseXSpring = useSpring(mouseX, springConfig);
-  const mouseYSpring = useSpring(mouseY, springConfig);
-
-  // Scroll-based parallax
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end start"]
+const preloadImage = (url) =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(url);
+    img.onerror = reject;
+    img.src = url;
   });
 
-  // Parallax transforms
-  const bgY = useTransform(scrollYProgress, [0, 1], ['0%', '40%']);
-  const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.15]);
-  const overlayOpacity = useTransform(scrollYProgress, [0, 0.5], [0, 0.3]);
-  const contentY = useTransform(scrollYProgress, [0, 1], ['0%', '25%']);
-  
-  // Floating elements parallax
-  const float1Y = useTransform(scrollYProgress, [0, 1], ['0%', '-30%']);
-  const float2Y = useTransform(scrollYProgress, [0, 1], ['0%', '-50%']);
-  const float3Y = useTransform(scrollYProgress, [0, 1], ['0%', '-20%']);
+const HeroSection = () => {
+  const containerRef = useRef(null);
+  const rightRef = useRef(null);
+  const logoRef = useRef(null);
+  const primaryCopyRef = useRef(null);
+  const secondaryCopyRef = useRef(null);
+  const [bgUrl, setBgUrl] = useState(null);
 
-  // Mouse-based transforms
-  const bgXMouse = useTransform(mouseXSpring, v => v * 0.5);
-  const bgYMouse = useTransform(mouseYSpring, v => v * 0.3);
-  const float1XMouse = useTransform(mouseXSpring, v => v * 1.2);
-  const float1YMouse = useTransform(mouseYSpring, v => v * 1.2);
-  const float2XMouse = useTransform(mouseXSpring, v => v * -0.8);
-  const float2YMouse = useTransform(mouseYSpring, v => v * -0.8);
-  const float3XMouse = useTransform(mouseXSpring, v => v * 0.6);
-
-  // Mouse move handler
   useEffect(() => {
-    const handleMouseMove = (e) => {
-      const { clientX, clientY } = e;
-      const { innerWidth, innerHeight } = window;
-      
-      const x = (clientX / innerWidth - 0.5) * 2;
-      const y = (clientY / innerHeight - 0.5) * 2;
-      
-      mouseX.set(x * 15);
-      mouseY.set(y * 15);
+    let isMounted = true;
+
+    const loadBg = async () => {
+      let candidateUrl = null;
+      let isVideo = false;
+
+      try {
+        const res = await backgroundApi.getActiveBackground();
+        const data = res?.data;
+
+        if (data?.content_type === 'video') {
+          isVideo = true;
+        } else if (data?.content_type === 'image' && data.image_url) {
+          candidateUrl = data.image_url;
+        } else if (data?.content_type === 'slideshow' && data.images?.length) {
+          const primary = data.images.find((i) => i.is_primary) || data.images[0];
+          candidateUrl = primary?.image_url || null;
+        }
+      } catch (e) {
+        // keep fallback logic below
+      }
+
+      // Если режим видео, мы НЕ ставим картинку (показываем глобальный фон-видео)
+      if (isVideo) {
+        if (isMounted) setBgUrl(null);
+        return;
+      }
+
+      // Иначе используем полученный URL
+      const finalUrl = candidateUrl;
+
+      if (!finalUrl) {
+        if (isMounted) setBgUrl(null);
+        return;
+      }
+
+      try {
+        await preloadImage(finalUrl);
+        if (isMounted) setBgUrl(finalUrl);
+      } catch (e) {
+        if (isMounted) setBgUrl(null);
+      }
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [mouseX, mouseY]);
+    loadBg();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!containerRef.current) return undefined;
+
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ defaults: { ease: 'power2.out' }, delay: 0.2 });
+
+      // Чёрная панель собирается
+      tl.from('.hero-split-left', {
+        clipPath: 'inset(0 100% 0 0)',
+        duration: 0.6,
+      });
+
+      // Текст слева по очереди
+      tl.from(
+        '.hero-left-inner > *',
+        {
+          y: 24,
+          opacity: 0,
+          stagger: 0.12,
+          duration: 0.5,
+        },
+        '-=0.2'
+      );
+
+      // Фото справа
+      if (rightRef.current) {
+        tl.from(
+          rightRef.current,
+          {
+            opacity: 0,
+            scale: 1.06,
+            y: 20,
+            duration: 0.6,
+          },
+          '-=0.25'
+        );
+      }
+
+      // Надпись RAVIX (обёртка)
+      if (logoRef.current) {
+        tl.from(
+          logoRef.current,
+          {
+            opacity: 0,
+            y: -12,
+            duration: 0.55,
+          },
+          '-=0.35'
+        );
+      }
+    }, containerRef);
+
+    return () => ctx.revert();
+  }, []);
+
+  useEffect(() => {
+    if (!containerRef.current) return undefined;
+
+    const createConfig = (overrides = {}) => ({
+      trigger: containerRef.current,
+      start: 'top top',
+      end: '+=160%', // Увеличена длина анимации
+      scrub: 1.2, // Увеличена плавность (больше = плавнее)
+      ...overrides,
+    });
+
+    const ctx = gsap.context(() => {
+      // Логотип — без параллакса (фиксированная позиция)
+      if (logoRef.current) {
+        gsap.set(logoRef.current, { yPercent: 0 });
+      }
+
+      // Основной текст - сильно отстаёт от скролла
+      if (primaryCopyRef.current) {
+        gsap.fromTo(
+          primaryCopyRef.current,
+          { yPercent: 0 },
+          {
+            yPercent: 140, // Максимальное отставание текста
+            ease: 'none',
+            scrollTrigger: createConfig({ end: '+=140%' }),
+          }
+        );
+      }
+
+      // Вторичный текст - ещё больше отстаёт (каскадный эффект)
+      if (secondaryCopyRef.current) {
+        gsap.fromTo(
+          secondaryCopyRef.current,
+          { yPercent: 0 },
+          {
+            yPercent: 180, // Экстремальное отставание для каскада
+            ease: 'none',
+            scrollTrigger: createConfig({ start: 'top+=30 top', end: '+=130%' }),
+          }
+        );
+      }
+
+      // Фотография - быстрая реакция на скролл
+      if (rightRef.current) {
+        gsap.fromTo(
+          rightRef.current,
+          { yPercent: 0 },
+          {
+            yPercent: 35,
+            ease: 'none',
+            scrollTrigger: createConfig({
+              end: '+=140%',
+              scrub: 0.3, // Быстрее реагирует на скролл (меньше = быстрее)
+            }),
+          }
+        );
+      }
+    }, containerRef);
+
+    return () => ctx.revert();
+  }, []);
 
   return (
-    <section 
-      ref={containerRef}
-      className="hero-section hero-section-main hero-parallax" 
-      style={{
-        marginTop: -96,
-        position: 'relative'
-      }}
-    >
-      {/* Parallax Background Layer */}
-      <motion.div 
-        className="parallax-bg-wrapper"
-        style={{ 
-          y: bgY, 
-          scale: bgScale,
-          x: bgXMouse,
-        }}
-      >
-        <BackgroundContent />
-      </motion.div>
+    <section ref={containerRef} className="hero-section hero-split">
+      <div className="hero-logo-overlay" ref={logoRef}>
+        RAVIX
+      </div>
 
-      {/* Gradient Overlay on scroll */}
-      <motion.div 
-        className="parallax-scroll-overlay"
-        style={{ opacity: overlayOpacity }}
-      />
+      <div className="hero-split-left">
+        <div className="hero-left-inner">
+          <p className="hero-left-copy" ref={primaryCopyRef}>
+            REWRITE THE RULES
+            <br />
+            UNAPOLOGETIC STYLE,
+            <br />
+            FEARLESS VIBE
+          </p>
+          <p className="hero-left-copy hero-left-copy--secondary" ref={secondaryCopyRef}>
+            BEYOND LIMITS
+            <br />
+            PURE ADRENALINE
+            <br />
+            OWN THE MOMENT
+          </p>
+        </div>
+      </div>
 
-      {/* Floating Decorative Elements */}
-      <motion.div 
-        className="parallax-float parallax-float-1"
-        style={{ y: float1Y, x: float1XMouse }}
+      <div
+        className="hero-split-right"
+        ref={rightRef}
+        style={bgUrl ? { backgroundImage: `url(${bgUrl})` } : undefined}
       />
-      <motion.div 
-        className="parallax-float parallax-float-2"
-        style={{ y: float2Y, x: float2XMouse }}
-      />
-      <motion.div 
-        className="parallax-float parallax-float-3"
-        style={{ y: float3Y, x: float3XMouse }}
-      />
-
-      {/* Animated Lines */}
-      <motion.div 
-        className="parallax-line parallax-line-1"
-        style={{ y: float1Y }}
-        initial={{ scaleX: 0 }}
-        animate={{ scaleX: 1 }}
-        transition={{ duration: 1.2, delay: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-      />
-      <motion.div 
-        className="parallax-line parallax-line-2"
-        style={{ y: float2Y }}
-        initial={{ scaleY: 0 }}
-        animate={{ scaleY: 1 }}
-        transition={{ duration: 1, delay: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
-      />
-
-      {/* Grain Texture Overlay */}
-      <div className="parallax-grain" />
-
-      {/* Scroll Indicator */}
-      <motion.div 
-        className="parallax-scroll-indicator"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.5, duration: 0.6 }}
-      >
-        <motion.div 
-          className="scroll-mouse"
-          animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <div className="scroll-wheel" />
-        </motion.div>
-        <span className="scroll-text">Scroll</span>
-      </motion.div>
     </section>
   );
 };

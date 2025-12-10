@@ -13,7 +13,7 @@ const BackgroundContent = () => {
   const [healthStatus, setHealthStatus] = useState('unknown');
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  
+
   const MAX_RETRY_ATTEMPTS = 3;
   const RETRY_DELAY = 2000;
 
@@ -30,25 +30,25 @@ const BackgroundContent = () => {
       } else {
         setIsRetrying(true);
       }
-      
+
       console.log(`🔄 Загрузка фонового контента (попытка ${retryCount + 1}/${MAX_RETRY_ATTEMPTS + 1})`);
       const response = await backgroundApi.getActiveBackground();
-      
+
       // Валидация полученных данных
       if (!response) {
         throw new Error('Получены пустые данные от сервера');
       }
-      
+
       if (!response.success || !response.data) {
         throw new Error('Некорректная структура ответа сервера');
       }
-      
+
       const data = response.data;
-      
+
       if (!data.content_type) {
         throw new Error('Отсутствует тип контента в ответе сервера');
       }
-      
+
       // Проверка целостности данных в зависимости от типа контента
       switch (data.content_type) {
         case 'image':
@@ -80,26 +80,26 @@ const BackgroundContent = () => {
         default:
           throw new Error(`Неизвестный тип контента: ${data.content_type}`);
       }
-      
+
       setBackgroundData(data);
       setError(null);
       setRetryCount(0);
       setHealthStatus('healthy');
       console.log('✅ Фоновый контент успешно загружен');
-      
+
     } catch (err) {
       console.error('❌ Ошибка загрузки фонового контента:', err);
-      
+
       const errorMessage = err.response?.data?.error || err.message || 'Неизвестная ошибка';
       const statusCode = err.response?.status;
-      
+
       let detailedError = `Ошибка загрузки: ${errorMessage}`;
       if (statusCode) {
         detailedError += ` (HTTP ${statusCode})`;
       }
-      
+
       setHealthStatus('unhealthy');
-      
+
       // Автоматический retry при определенных ошибках
       if (retryCount < MAX_RETRY_ATTEMPTS && shouldRetry(err)) {
         console.log(`🔄 Повторная попытка через ${RETRY_DELAY}ms...`);
@@ -109,22 +109,22 @@ const BackgroundContent = () => {
         }, RETRY_DELAY);
         return;
       }
-      
+
       setError(detailedError);
-      
+
     } finally {
       setLoading(false);
       setIsRetrying(false);
     }
   }, [retryCount]);
-  
+
   // Определяет, стоит ли повторять запрос при данной ошибке
   const shouldRetry = (error) => {
     const status = error.response?.status;
     // Повторяем при сетевых ошибках, таймаутах и серверных ошибках 5xx
     return !status || status >= 500 || status === 408 || status === 429;
   };
-  
+
   // Ручной retry
   const handleRetry = () => {
     setRetryCount(0);
@@ -134,9 +134,9 @@ const BackgroundContent = () => {
   // Функция плавного переключения слайдов
   const switchToNextSlide = useCallback(() => {
     if (!backgroundData?.images?.length) return;
-    
+
     setIsTransitioning(true);
-    
+
     // Через 300ms (время затухания) переключаем слайд
     setTimeout(() => {
       setCurrentSlideIndex(
@@ -164,8 +164,8 @@ const BackgroundContent = () => {
       case 'image':
         return (
           <div className="background-image">
-            <img 
-              src={backgroundData.image_url} 
+            <img
+              src={backgroundData.image_url}
               alt="Фоновое изображение"
               className="background-img"
               onError={(e) => {
@@ -179,19 +179,19 @@ const BackgroundContent = () => {
 
       case 'slideshow':
         if (!backgroundData.images?.length) return null;
-        
+
         const currentImage = backgroundData.images[currentSlideIndex];
         return (
           <div className="background-slideshow">
-            <img 
-              src={currentImage.image_url} 
+            <img
+              src={currentImage.image_url}
               alt={currentImage.alt_text || "Слайд фонового изображения"}
               className={`background-img slideshow-img ${currentImage.is_primary ? 'primary-image' : ''} ${isTransitioning ? 'fading-out' : ''}`}
               onError={(e) => {
                 console.error('❌ Ошибка загрузки слайда:', e.target.src);
                 // Переключаемся на следующий слайд при ошибке
                 if (backgroundData.images.length > 1) {
-          setCurrentSlideIndex(prev => (prev + 1) % backgroundData.images.length);
+                  setCurrentSlideIndex(prev => (prev + 1) % backgroundData.images.length);
                 }
               }}
               onLoad={() => console.log(`✅ Слайд ${currentSlideIndex + 1} загружен`)}
@@ -221,17 +221,17 @@ const BackgroundContent = () => {
           );
         } else {
           // Одиночное видео
-          console.log('🎬 Воспроизведение одиночного видео');
+          console.log(`🎬 Воспроизведение одиночного видео (${backgroundData.platform})`);
           return (
             <div className="background-video">
               <VideoPlayer
-                url={backgroundData.video_type === 'file' ? backgroundData.video_url : backgroundData.embed_url}
-                autoplay={backgroundData.autoplay !== false}
-                muted={backgroundData.muted !== false}
+                url={backgroundData.embed_url}
+                autoplay={true}
+                muted={true}
                 loop={backgroundData.loop !== false}
                 className="background-video-player"
-                onError={() => {
-                  console.error('❌ Ошибка воспроизведения видео:', backgroundData.video_url);
+                onError={(e) => {
+                  console.error('❌ Ошибка воспроизведения видео:', backgroundData.video_url || backgroundData.embed_url, e);
                   setError('Не удалось воспроизвести видео');
                 }}
               />
@@ -258,8 +258,8 @@ const BackgroundContent = () => {
             {retryCount > 0 && <p>Попыток повтора: {retryCount}/{MAX_RETRY_ATTEMPTS}</p>}
           </div>
           <div className="error-actions">
-            <button 
-              onClick={handleRetry} 
+            <button
+              onClick={handleRetry}
               disabled={isRetrying}
               className="retry-button"
             >

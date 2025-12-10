@@ -100,3 +100,4 @@ class CartItemTotalTests(TestCase):
 
         self.assertEqual(item.total, Money("450.00", "RUB"))
 
+

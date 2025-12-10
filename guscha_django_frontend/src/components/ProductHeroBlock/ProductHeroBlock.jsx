@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import './ProductHeroBlock.css';
@@ -24,6 +24,7 @@ const ProductHeroBlock = ({
   productId = null
 }) => {
   const navigate = useNavigate();
+  const sectionRef = useRef(null);
   const [modelImageError, setModelImageError] = useState(false);
   const [productImageError, setProductImageError] = useState(false);
   const [modelImageLoaded, setModelImageLoaded] = useState(false);
@@ -71,6 +72,7 @@ const ProductHeroBlock = ({
   return (
     <motion.section
       className="product-hero-block"
+      ref={sectionRef}
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.35 }}

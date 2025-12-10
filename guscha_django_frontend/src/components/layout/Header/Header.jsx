@@ -27,7 +27,8 @@ const Header = ({ isHome, isBurgerMenuOpen, setIsBurgerMenuOpen, mainRef }) => {
     // НЕ делаем элементы "чёрными" когда открыто меню или корзина — это причина появления чёрного логотипа/иконки
     const black = !isAtTop && !isScrollingDown && !isBurgerMenuOpen && !cartIsOpen;
     const showMenuLabel = !isScrollingDown;
-    const showLogo = !isScrollingDown;
+    // Скрываем логотип в хедере когда в самом верху (там есть RAVIX в hero)
+    const showLogo = !isScrollingDown && !isAtTop;
 
     return (
       <header

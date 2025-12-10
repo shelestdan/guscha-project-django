@@ -1,5 +1,6 @@
 import React, { useEffect, Suspense, lazy, useRef, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { ReactLenis } from 'lenis/react';
 import './styles/App.css';
 import { Header, Footer } from './components/layout';
 import { HomePage } from './pages';
@@ -8,6 +9,8 @@ import { CartSidebar } from './components/features/cart';
 import { useCartStore } from './store/cartStore';
 import ToastContainer from './components/ui/ToastContainer';
 import scrollBackgroundToggle from './utils/scrollBackgroundToggle';
+import { useLenisScrollTrigger } from './utils/smoothScroll';
+import BackgroundContent from './components/BackgroundContent/BackgroundContent';
 
 // Импортируем крупные страницы лениво
 const Account = lazy(() => import('./components/Account'));
@@ -27,6 +30,9 @@ function AppContent() {
   const fetchCart = useCartStore((state) => state.fetchCart);
   const mainRef = useRef(null);
   const [isBurgerMenuOpen, setIsBurgerMenuOpen] = useState(false);
+
+  // Синхронизация Lenis с GSAP ScrollTrigger для параллакса
+  useLenisScrollTrigger();
 
   // Загружаем корзину при инициализации приложения
   useEffect(() => {
@@ -68,7 +74,7 @@ function AppContent() {
 
   return (
     <div className="App">
-
+      <BackgroundContent />
       <Header isHome={isHome} isBurgerMenuOpen={isBurgerMenuOpen} setIsBurgerMenuOpen={setIsBurgerMenuOpen} mainRef={mainRef} />
       <main ref={mainRef} style={{
         background: isHome ? 'transparent' : '#f1f1f1',
@@ -102,8 +108,15 @@ function AppContent() {
 
 export default function App() {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <ReactLenis root options={{
+      duration: 1.5,
+      smoothWheel: true,
+      wheelMultiplier: 0.8,
+      touchMultiplier: 1.5,
+    }}>
+      <Router>
+        <AppContent />
+      </Router>
+    </ReactLenis>
   );
 }
