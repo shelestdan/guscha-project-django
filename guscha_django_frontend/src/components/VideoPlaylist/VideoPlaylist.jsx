@@ -2,13 +2,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import VideoPlayer from '../VideoPlayer';
 import './VideoPlaylist.css';
 
-const VideoPlaylist = ({ 
-  videos = [], 
-  autoplay = false, 
-  muted = false, 
+const VideoPlaylist = ({
+  videos = [],
+  autoplay = false,
+  muted = false,
   loop = false,
   className = '',
-  ...props 
+  ...props
 }) => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(autoplay);
@@ -19,7 +19,7 @@ const VideoPlaylist = ({
   // Обработчик завершения видео
   const handleVideoEnded = useCallback(() => {
     console.log(`✅ Видео ${currentVideoIndex + 1} завершено`);
-    
+
     if (currentVideoIndex < videos.length - 1) {
       // Переходим к следующему видео
       setCurrentVideoIndex(prev => prev + 1);
@@ -73,7 +73,7 @@ const VideoPlaylist = ({
   return (
     <div className={`video-playlist-container ${className}`}>
       <VideoPlayer
-        url={currentVideo.video_type === 'file' ? currentVideo.video_url : currentVideo.embed_url}
+        url={currentVideo.platform === 'file' ? currentVideo.embed_url : (currentVideo.video_url || currentVideo.embed_url)}
         autoplay={isPlaying}
         muted={currentVideo.muted !== false}
         loop={false} // Отключаем loop для отдельного видео, управляем на уровне плейлиста
@@ -89,7 +89,7 @@ const VideoPlaylist = ({
         }}
         {...props}
       />
-      
+
       {/* Индикатор плейлиста */}
       {videos.length > 1 && (
         <div className="playlist-indicator">
@@ -97,7 +97,7 @@ const VideoPlaylist = ({
             {currentVideoIndex + 1} / {videos.length}
           </span>
           <div className="playlist-progress">
-            <div 
+            <div
               className="playlist-progress-bar"
               style={{ width: `${((currentVideoIndex + 1) / videos.length) * 100}%` }}
             />

@@ -535,3 +535,28 @@
     bottom: 22px;
   }
 }
+
+
+/* Видео в правой части hero */
+.hero-split-right .hero-video-player {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-split-right .video-player-container {
+  width: 100%;
+  height: 100%;
+}
+
+.hero-split-right .video-player-container > div {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.hero-split-right .video-player-container iframe,
+.hero-split-right .video-player-container video {
+  object-fit: cover;
+}

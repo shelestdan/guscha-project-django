@@ -3,6 +3,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import heroImage from './assets/images/Guscha_back.png';
 import backgroundApi from './api/backgroundApi';
+import VideoPlayer from './components/VideoPlayer';
 import './styles/App.css';
 import './styles/HeroParallax.css';
 
@@ -23,20 +24,31 @@ const HeroSection = () => {
   const primaryCopyRef = useRef(null);
   const secondaryCopyRef = useRef(null);
   const [bgUrl, setBgUrl] = useState(null);
+  const [videoData, setVideoData] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
 
     const loadBg = async () => {
       let candidateUrl = null;
-      let isVideo = false;
 
       try {
         const res = await backgroundApi.getActiveBackground();
         const data = res?.data;
 
         if (data?.content_type === 'video') {
-          isVideo = true;
+          // Для видео сохраняем данные для отображения в правой части
+          const videoUrl = data.platform === 'file'
+            ? data.embed_url
+            : (data.video_url || data.embed_url);
+          if (isMounted) {
+            setVideoData({
+              url: videoUrl,
+              loop: data.loop !== false,
+              platform: data.platform
+            });
+          }
+          return;
         } else if (data?.content_type === 'image' && data.image_url) {
           candidateUrl = data.image_url;
         } else if (data?.content_type === 'slideshow' && data.images?.length) {
@@ -45,12 +57,6 @@ const HeroSection = () => {
         }
       } catch (e) {
         // keep fallback logic below
-      }
-
-      // Если режим видео, мы НЕ ставим картинку (показываем глобальный фон-видео)
-      if (isVideo) {
-        if (isMounted) setBgUrl(null);
-        return;
       }
 
       // Иначе используем полученный URL
@@ -223,7 +229,17 @@ const HeroSection = () => {
         className="hero-split-right"
         ref={rightRef}
         style={bgUrl ? { backgroundImage: `url(${bgUrl})` } : undefined}
-      />
+      >
+        {videoData && (
+          <VideoPlayer
+            url={videoData.url}
+            autoplay={true}
+            muted={true}
+            loop={videoData.loop}
+            className="hero-video-player"
+          />
+        )}
+      </div>
     </section>
   );
 };

@@ -201,43 +201,9 @@ const BackgroundContent = () => {
         );
 
       case 'video':
-        // Проверяем, есть ли плейлист видео
-        if (backgroundData.playlist && Array.isArray(backgroundData.playlist) && backgroundData.playlist.length > 1) {
-          console.log(`🎵 Обнаружен плейлист из ${backgroundData.playlist.length} видео`);
-          return (
-            <div className="background-video">
-              <VideoPlaylist
-                videos={backgroundData.playlist}
-                autoplay={backgroundData.autoplay !== false}
-                muted={backgroundData.muted !== false}
-                loop={backgroundData.loop !== false}
-                className="background-video-player"
-                onError={() => {
-                  console.error('❌ Ошибка воспроизведения плейлиста');
-                  setError('Не удалось воспроизвести плейлист видео');
-                }}
-              />
-            </div>
-          );
-        } else {
-          // Одиночное видео
-          console.log(`🎬 Воспроизведение одиночного видео (${backgroundData.platform})`);
-          return (
-            <div className="background-video">
-              <VideoPlayer
-                url={backgroundData.embed_url}
-                autoplay={true}
-                muted={true}
-                loop={backgroundData.loop !== false}
-                className="background-video-player"
-                onError={(e) => {
-                  console.error('❌ Ошибка воспроизведения видео:', backgroundData.video_url || backgroundData.embed_url, e);
-                  setError('Не удалось воспроизвести видео');
-                }}
-              />
-            </div>
-          );
-        }
+        // Видео теперь рендерится в HeroSection (только в правой части)
+        // Здесь возвращаем null, чтобы не дублировать видео на весь экран
+        return null;
 
       default:
         return null;
