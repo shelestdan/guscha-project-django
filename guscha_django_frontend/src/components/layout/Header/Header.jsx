@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { memo, useMemo } from 'react';
 import useScrollDirection from '../../../hooks/useScrollDirection';
 import Logo from '../../Logo/Logo';
 import BurgerMenu from '../../../BurgerMenu';
@@ -7,7 +7,7 @@ import { useCartStore } from '../../../store/cartStore';
 import '../../../styles/Header.css';
 import './HeaderCartIcon.css';
 
-const Header = ({ isHome, isBurgerMenuOpen, setIsBurgerMenuOpen, mainRef }) => {
+const Header = memo(({ isHome, isBurgerMenuOpen, setIsBurgerMenuOpen, mainRef }) => {
   // Получаем направление и позицию скролла (слушаем mainRef если передан)
   const { scrollDirection, scrollPosition } = useScrollDirection(mainRef);
 
@@ -83,6 +83,8 @@ const Header = ({ isHome, isBurgerMenuOpen, setIsBurgerMenuOpen, mainRef }) => {
       </div>
     </header>
   );
-};
+});
+
+Header.displayName = 'Header';
 
 export default Header;

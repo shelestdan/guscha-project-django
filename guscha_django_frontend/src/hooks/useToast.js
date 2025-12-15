@@ -8,8 +8,6 @@ const useToastStore = create((set, get) => ({
     const id = state.nextId + Date.now() + Math.random(); // Комбинированный уникальный ID
     const toast = { id, message, type, duration };
     
-    console.log('🔔 Добавляем тост:', { id, message, type, duration });
-    
     set((prevState) => ({
       toasts: [...prevState.toasts, toast],
       nextId: prevState.nextId + 1 // Увеличиваем счетчик
@@ -17,7 +15,6 @@ const useToastStore = create((set, get) => ({
 
     // Автоматически удаляем toast через duration
     setTimeout(() => {
-      console.log('⏰ Удаляем тост по ID:', id);
       get().removeToast(id);
     }, duration + 300); // Добавляем время для анимации
   },

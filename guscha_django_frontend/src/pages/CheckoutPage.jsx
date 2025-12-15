@@ -40,29 +40,18 @@ const CheckoutPage = () => {
 
   // Функция для загрузки сохраненных адресов
   const fetchSavedAddresses = async () => {
-    console.log('🔥 НАЧАЛО fetchSavedAddresses - функция вызвана!');
     try {
       // Токен теперь в httpOnly cookie, поэтому просто пробуем загрузить адреса
-
-      console.log('🏠 Загружаем сохраненные адреса...');
       const response = await addressesApi.getAddresses();
-      console.log('🔥 Ответ от API:', response);
 
       if (response.data) {
         // API возвращает массив адресов напрямую
         const addresses = Array.isArray(response.data) ? response.data : response.data.results || [];
-        console.log('🏠 Загружено адресов:', addresses.length, addresses);
         setSavedAddresses(addresses);
-      } else {
-        console.log('🔥 response.data пустой:', response.data);
       }
     } catch (error) {
-      console.error('🔥 ОШИБКА в fetchSavedAddresses:', error);
-      console.error('🔥 Детали ошибки:', error.response?.data);
-      console.error('🔥 Статус ошибки:', error.response?.status);
       // Не показываем ошибку пользователю, так как это не критично
     }
-    console.log('🔥 КОНЕЦ fetchSavedAddresses');
   };
 
   // Загрузка данных пользователя, если он авторизован
@@ -82,58 +71,48 @@ const CheckoutPage = () => {
         }));
       }
     } catch (error) {
-      console.error('Ошибка загрузки данных пользователя:', error);
+      // Ошибка загрузки данных пользователя
     }
   };
 
   // Создание резервирований для товаров в корзине
   const createReservations = async () => {
     try {
-      console.log('🛒 Создаем резервирования для товаров в корзине...');
       const result = await createCartReservations();
-      console.log('🛒 Резервирования созданы:', result);
 
       if (result.errors && result.errors.length > 0) {
-        console.warn('🛒 Некоторые товары не удалось зарезервировать:', result.errors);
         showError('Некоторые товары могут быть недоступны. Проверьте корзину.');
         return;
       }
 
       // Подсчитываем новые и существующие резервирования
       const newReservations = result.reservations_created?.filter(r => r.status === 'created') || [];
-      const existingReservations = result.reservations_created?.filter(r => r.status === 'already_exists') || [];
 
       if (newReservations.length > 0) {
-        console.log(`🛒 Создано новых резервирований: ${newReservations.length}`);
         showSuccess(`Товары зарезервированы на 30 минут (${newReservations.length} новых)`);
-      } else if (existingReservations.length > 0) {
-        console.log(`🛒 Все товары уже зарезервированы: ${existingReservations.length}`);
-        // Не показываем уведомление, если все резервирования уже существуют
-      } else {
-        console.log('🛒 Нет товаров для резервирования');
       }
     } catch (error) {
-      console.error('🛒 Ошибка создания резервирований:', error);
       showError('Не удалось зарезервировать товары. Некоторые позиции могут быть недоступны.');
     }
   };
 
   // Проверяем, есть ли товары в корзине и загружаем адреса и данные пользователя
   useEffect(() => {
-    console.log('🔥 useEffect ЗАПУЩЕН! items.length:', items.length);
+    let isMounted = true;
+    
     if (items.length === 0) {
-      console.log('🔥 Корзина пуста, перенаправляем на главную');
       navigate('/');
       showError('Корзина пуста. Добавьте товары перед оформлением заказа.');
     } else {
-      console.log('🔥 Корзина НЕ пуста, загружаем данные...');
       // Создаем резервирования для товаров в корзине
-      createReservations();
-      console.log('🔥 Вызываем fetchSavedAddresses...');
-      fetchSavedAddresses();
-      console.log('🔥 Вызываем fetchUserData...');
-      fetchUserData();
+      if (isMounted) createReservations();
+      if (isMounted) fetchSavedAddresses();
+      if (isMounted) fetchUserData();
     }
+    
+    return () => {
+      isMounted = false;
+    };
   }, [items.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Проверка валидности формы
@@ -171,15 +150,6 @@ const CheckoutPage = () => {
     const address = savedAddresses.find(addr => addr.id === parseInt(addressId));
     if (!address) return;
 
-    console.log('🏠 Выбран адрес:', address);
-    console.log('🏠 full_address:', address.full_address);
-    console.log('🏠 Отдельные поля:', {
-      address_line1: address.address_line1,
-      address_line2: address.address_line2,
-      city: address.city,
-      postal_code: address.postal_code
-    });
-
     // Парсим full_name в first_name и last_name
     const fullName = address.full_name || `${address.first_name || ''} ${address.last_name || ''}`.trim();
     const nameParts = fullName.split(' ');
@@ -199,51 +169,29 @@ const CheckoutPage = () => {
 
     // Если есть full_address, попробуем извлечь из него данные
     if (address.full_address) {
-      console.log('🏠 Парсим full_address:', address.full_address);
-
       // Разделяем по запятым и анализируем структуру
       const addressParts = address.full_address.split(',').map(part => part.trim());
-      console.log('🏠 Части адреса:', addressParts);
 
       // Реальный формат: "Улица дом", "Квартира", "Город", "Индекс", "Страна" (5 частей)
-      // Исправляем логику парсинга согласно фактическому формату
       if (addressParts.length >= 1) {
-        // Первая часть - улица и номер дома
         addressData.address_line1 = addressParts[0];
       }
       if (addressParts.length >= 2) {
-        // Вторая часть - квартира
         addressData.address_line2 = addressParts[1];
       }
       if (addressParts.length >= 3) {
-        // Третья часть - город
         addressData.city = addressParts[2];
       }
       if (addressParts.length >= 4) {
-        // Четвертая часть - почтовый индекс
         addressData.postal_code = addressParts[3];
       }
       if (addressParts.length >= 5) {
-        // Пятая часть - страна
         addressData.country = addressParts[4];
       }
-
-      console.log('🏠 Результат парсинга:', addressData);
     }
 
     setSelectedBillingAddress(addressId);
     setFormData({
-      ...formData,
-      billing_address: {
-        ...formData.billing_address,
-        ...addressData,
-        // Email и phone берем из адреса, если есть, иначе оставляем из профиля
-        email: formData.billing_address.email, // Email остается из профиля пользователя
-        phone: address.phone || formData.billing_address.phone // Phone из адреса или профиля
-      }
-    });
-
-    console.log('🏠 Финальные данные формы:', {
       ...formData,
       billing_address: {
         ...formData.billing_address,
@@ -277,8 +225,6 @@ const CheckoutPage = () => {
         checkoutData.billing_address_id = parseInt(selectedBillingAddress);
       }
 
-      console.log('Отправляем данные заказа:', checkoutData);
-
       const orderResult = await createOrder(checkoutData);
 
       // Очищаем корзину после успешного оформления заказа
@@ -289,7 +235,6 @@ const CheckoutPage = () => {
       // Перенаправляем на страницу подтверждения заказа
       navigate(`/order-confirmation/${orderResult.id}`);
     } catch (error) {
-      console.error('Ошибка при создании заказа:', error);
       showError(error.response?.data?.detail || error.response?.data?.message || 'Произошла ошибка при оформлении заказа');
     } finally {
       setLoading(false);

@@ -32,7 +32,6 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onC
       
       return cookieValue || '';
     } catch (error) {
-      console.error('Ошибка при получении CSRF токена:', error);
       return '';
     }
   };
@@ -54,7 +53,6 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onC
     const error = urlParams.get('error');
 
     if (code || error) {
-      console.log('🔵 Обнаружен Google OAuth callback в URL');
       handleGoogleCallback();
     }
   }, []);
@@ -70,7 +68,6 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onC
       // благодаря изменению isLoggedIn в хуке useAuth
       // Уведомление о успешном входе показывается в Account.jsx
     } catch (error) {
-      console.error('Ошибка входа:', error);
       const errorMessage = error.response?.data?.detail ||
         error.response?.data?.message ||
         'Неверный email или пароль';
@@ -92,9 +89,7 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onC
 
   const handleRegistrationSuccess = async (registrationData) => {
     try {
-      console.log('Вызов реальной функции регистрации с данными:', registrationData);
       const result = await onRegister(registrationData);
-      console.log('Регистрация успешна:', result);
 
       // Проверяем, что результат содержит pending_registration_id
       if (result && result.pending_registration_id) {
@@ -108,24 +103,17 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onC
         setOriginalRegistrationData(registrationData);
         // Сразу переходим к QR-коду
         setMode('qr-verify');
-      } else {
-        console.error('Не получен pending_registration_id от сервера');
-        // Можно показать ошибку пользователю
       }
 
       return result;
     } catch (error) {
-      console.error('Ошибка при регистрации в AdvancedAuth:', error);
       throw error; // Пробрасываем ошибку в AdvancedRegistration для обработки
     }
   };
 
   const handleTelegramVerificationComplete = async (result) => {
-    console.log('Telegram-верификация завершена:', result);
-
     // Проверяем, требуется ли завершить регистрацию
     if (result && result.requiresRegistration) {
-      console.log('Требуется завершить регистрацию');
       // Переходим к форме регистрации для завершения процесса
       setMode('register');
       return;
@@ -150,25 +138,18 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onC
 
   const handleGoogleLogin = async () => {
     try {
-      console.log('🔵 Начинаем Google OAuth процесс (redirect flow)');
-      console.log('🔵 Текущий URL:', window.location.href);
-      console.log('🔵 Origin:', window.location.origin);
       setIsLoading(true);
       setError('');
 
       // Проверяем client_id
       const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
-      console.log('🔵 Google Client ID:', clientId);
       if (!clientId || clientId === 'your-google-client-id') {
         const errorMsg = 'Google Client ID не настроен в .env файле';
-        console.error('❌', errorMsg);
         throw new Error(errorMsg);
       }
 
       // Определяем redirect URI (для nginx на порту 80)
       const redirectUri = 'http://localhost/auth/google/callback';
-      console.log('🔵 Redirect URI:', redirectUri);
-      console.log('🔵 ВАЖНО: Убедитесь, что этот URI добавлен в Google Console!');
 
       // Параметры для Google OAuth
       const params = new URLSearchParams({
@@ -185,25 +166,10 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onC
 
       // Перенаправляем на Google OAuth
       const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
-      console.log('🔵 Перенаправляем на Google OAuth:', googleAuthUrl);
-      console.log('🔵 Параметры запроса:');
-      console.log('   - client_id:', clientId);
-      console.log('   - redirect_uri:', redirectUri);
-      console.log('   - response_type: code');
-      console.log('   - scope: email + profile');
-
-      console.log('🔵 ДИАГНОСТИКА: Если получите redirect_uri_mismatch:');
-      console.log('   1. Откройте https://console.cloud.google.com/');
-      console.log('   2. APIs & Services → Credentials');
-      console.log('   3. Найдите Client ID:', clientId);
-      console.log('   4. Добавьте redirect_uri:', redirectUri);
-      console.log('   5. Подождите 10 минут и очистите кэш браузера');
 
       window.location.href = googleAuthUrl;
 
     } catch (error) {
-      console.error('❌ Ошибка Google OAuth:', error);
-      console.error('❌ Стек ошибки:', error.stack);
 
       // Показываем уведомление об ошибке Google OAuth
       if (error.message.includes('Client ID')) {
@@ -221,11 +187,9 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onC
 
   const handleTelegramLogin = async () => {
     try {
-      console.log('🔵 Открываем модальное окно Telegram входа');
       setError('');
       setShowTelegramModal(true);
     } catch (error) {
-      console.error('❌ Ошибка открытия Telegram модального окна:', error);
       showError(`📱 Ошибка открытия Telegram входа: ${error.message}`, 5000);
       setError(`Ошибка: ${error.message}`);
     }
@@ -233,7 +197,6 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onC
 
   const handleTelegramPhoneSubmit = async (phoneNumber) => {
     try {
-      console.log('🔵 Отправляем номер телефона для Telegram входа:', phoneNumber);
       setTelegramLoginLoading(true);
 
       // Получаем CSRF токен
@@ -270,7 +233,6 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onC
       }
 
     } catch (error) {
-      console.error(' Ошибка отправки номера телефона:', error);
       throw error; // Пробрасываем ошибку в модальное окно
     } finally {
       setTelegramLoginLoading(false);
@@ -308,16 +270,13 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onC
 
       if (data.success && data.authenticated) {
         // Пользователь успешно авторизован через Telegram
-        console.log('🟢 Успешный вход через Telegram:', data);
 
         // Сохраняем JWT токены в localStorage
         if (data.access_token) {
           localStorage.setItem('access_token', data.access_token);
-          console.log('🟢 Access токен сохранен в localStorage');
         }
         if (data.refresh_token) {
           localStorage.setItem('refresh_token', data.refresh_token);
-          console.log('🟢 Refresh токен сохранен в localStorage');
         }
 
         // Уведомление о успешном входе показывается в Account.jsx
@@ -342,7 +301,6 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onC
 
       return false; // Еще ожидаем подтверждения
     } catch (error) {
-      console.error('❌ Ошибка проверки статуса входа через Telegram:', error);
       return false;
     }
   };
@@ -367,7 +325,6 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onC
         setTelegramStatusInterval(null);
 
         if (attempts >= maxAttempts && !isAuthenticated) {
-          console.log('⏰ Время ожидания входа через Telegram истекло');
           showWarning('⏰ Время ожидания истекло. Попробуйте войти снова', 6000);
           alert('Время ожидания истекло. Попробуйте войти снова.');
         }
@@ -389,7 +346,6 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onC
   // Обработчик callback от Google OAuth
   const handleGoogleCallback = async () => {
     try {
-      console.log('🔵 Обрабатываем Google OAuth callback');
       setIsLoading(true);
       setError('');
 
@@ -406,8 +362,6 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onC
         throw new Error('Код авторизации не получен от Google');
       }
 
-      console.log(`🔵 Получен код авторизации: ${code.substring(0, 20)}...`);
-
       // Определяем base URL для API
       const getBaseURL = () => {
         // Проверяем переменную окружения
@@ -420,21 +374,14 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onC
       };
 
       const baseURL = getBaseURL();
-      console.log('🔵 Base URL:', baseURL);
 
       // Отправляем код авторизации на сервер для обмена на токен
-      console.log('🔵 Отправляем код на Django сервер...');
       const endpoint = `${baseURL}/api/accounts/users/google_login/`;
-      console.log('🔵 Endpoint:', endpoint);
 
       const requestBody = {
         code,
         redirect_uri: `${window.location.origin}/auth/google/callback`
       };
-      console.log('🔵 Тело запроса:', {
-        code: `${code.substring(0, 20)}...`,
-        redirect_uri: requestBody.redirect_uri
-      });
 
       const apiResponse = await fetch(endpoint, {
         method: 'POST',
@@ -444,23 +391,13 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onC
         body: JSON.stringify(requestBody),
       });
 
-      console.log('🔵 Ответ Django сервера:', {
-        status: apiResponse.status,
-        statusText: apiResponse.statusText,
-        ok: apiResponse.ok,
-        headers: Object.fromEntries(apiResponse.headers.entries())
-      });
-
       if (!apiResponse.ok) {
         const errorText = await apiResponse.text();
-        console.error('🔴 Ошибка Django сервера:', errorText);
 
         let errorData;
         try {
           errorData = JSON.parse(errorText);
-          console.error('🔴 Ошибка сервера (JSON):', errorData);
         } catch (parseError) {
-          console.error('🔴 Не удалось распарсить ошибку как JSON:', parseError);
           errorData = { error: errorText };
         }
 
@@ -468,14 +405,11 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onC
       }
 
       const responseText = await apiResponse.text();
-      console.log('🔵 Ответ Django сервера (текст):', responseText);
 
       let data;
       try {
         data = JSON.parse(responseText);
-        console.log('🟢 Успешный ответ Django сервера:', data);
       } catch (parseError) {
-        console.error('🔴 Не удалось распарсить ответ как JSON:', parseError);
         throw new Error('Неверный формат ответа сервера');
       }
 
@@ -484,9 +418,7 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onC
 
       // Вызываем onGoogleLogin callback
       if (onGoogleLogin) {
-        console.log('🔵 Вызываем onGoogleLogin callback');
         await onGoogleLogin(data);
-        console.log('🟢 Google OAuth завершен успешно!');
       }
 
       // Очищаем URL и возвращаемся на исходную страницу
@@ -495,11 +427,6 @@ const AdvancedAuth = ({ onLogin, onRegister, onGoogleLogin, onTelegramLogin, onC
       window.history.replaceState({}, document.title, returnUrl);
 
     } catch (error) {
-      console.error('🔴 Google OAuth callback ошибка:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
       setError(error.message || 'Ошибка обработки Google OAuth');
     } finally {
       setIsLoading(false);

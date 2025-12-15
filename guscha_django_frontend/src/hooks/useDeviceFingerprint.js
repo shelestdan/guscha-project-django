@@ -172,7 +172,6 @@ export const useDeviceFingerprint = () => {
       setFingerprint(result);
       return result;
     } catch (error) {
-      console.error('Error generating fingerprint:', error);
       return null;
     } finally {
       setIsLoading(false);

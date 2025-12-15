@@ -8,25 +8,11 @@ export async function login(email, password) {
 
 export async function register(userData) {
   try {
-    console.log('🔄 Отправка запроса регистрации:', userData);
     const response = await axios.post('/api/accounts/users/', userData);
-    console.log('✅ Успешный ответ сервера:', response.data);
     // Токен сохраняется в httpOnly cookie автоматически
     // Ожидаем, что сервер вернет verification_id для Telegram-верификации
     return response.data;
   } catch (error) {
-    // Выводим детальную информацию об ошибке ДО того, как ее обработает interceptor
-    console.error('🚨 === ДЕТАЛЬНАЯ ИНФОРМАЦИЯ ОБ ОШИБКЕ РЕГИСТРАЦИИ ===');
-    console.error('❌ Полная ошибка:', error);
-    console.error('❌ HTTP статус:', error.response?.status);
-    console.error('❌ Статус текст:', error.response?.statusText);
-    console.error('❌ Данные ошибки от сервера:', error.response?.data);
-    console.error('❌ Заголовки ответа:', error.response?.headers);
-    console.error('❌ URL запроса:', error.config?.url);
-    console.error('❌ Метод запроса:', error.config?.method);
-    console.error('❌ Данные запроса:', error.config?.data);
-    console.error('🚨 === КОНЕЦ ДЕТАЛЬНОЙ ИНФОРМАЦИИ ===');
-
     // Обрабатываем специфичные ошибки от сервера
     if (error.response?.data) {
       const serverError = error.response.data;
@@ -61,7 +47,6 @@ export async function register(userData) {
         }
       }
 
-      console.error('📝 Обработанное сообщение об ошибке:', errorMessage);
       const detailedError = new Error(errorMessage);
       detailedError.response = error.response;
       detailedError.serverData = serverError;

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import heroImage from './assets/images/Guscha_back.png';
@@ -7,7 +7,10 @@ import VideoPlayer from './components/VideoPlayer';
 import './styles/App.css';
 import './styles/HeroParallax.css';
 
-gsap.registerPlugin(ScrollTrigger);
+// Регистрируем плагин один раз
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 const preloadImage = (url) =>
   new Promise((resolve, reject) => {
@@ -82,10 +85,12 @@ const HeroSection = () => {
     };
   }, []);
 
+  // Объединённый useEffect для всех GSAP анимаций - избегаем множественных контекстов
   useEffect(() => {
     if (!containerRef.current) return undefined;
 
     const ctx = gsap.context(() => {
+      // === INTRO ANIMATIONS ===
       const tl = gsap.timeline({ defaults: { ease: 'power2.out' }, delay: 0.2 });
 
       // Чёрная панель собирается
@@ -132,23 +137,16 @@ const HeroSection = () => {
           '-=0.35'
         );
       }
-    }, containerRef);
 
-    return () => ctx.revert();
-  }, []);
+      // === SCROLL PARALLAX ANIMATIONS ===
+      const createConfig = (overrides = {}) => ({
+        trigger: containerRef.current,
+        start: 'top top',
+        end: '+=160%',
+        scrub: 1.2,
+        ...overrides,
+      });
 
-  useEffect(() => {
-    if (!containerRef.current) return undefined;
-
-    const createConfig = (overrides = {}) => ({
-      trigger: containerRef.current,
-      start: 'top top',
-      end: '+=160%', // Увеличена длина анимации
-      scrub: 1.2, // Увеличена плавность (больше = плавнее)
-      ...overrides,
-    });
-
-    const ctx = gsap.context(() => {
       // Логотип — без параллакса (фиксированная позиция)
       if (logoRef.current) {
         gsap.set(logoRef.current, { yPercent: 0 });
@@ -160,7 +158,7 @@ const HeroSection = () => {
           primaryCopyRef.current,
           { yPercent: 0 },
           {
-            yPercent: 140, // Максимальное отставание текста
+            yPercent: 140,
             ease: 'none',
             scrollTrigger: createConfig({ end: '+=140%' }),
           }
@@ -173,7 +171,7 @@ const HeroSection = () => {
           secondaryCopyRef.current,
           { yPercent: 0 },
           {
-            yPercent: 180, // Экстремальное отставание для каскада
+            yPercent: 180,
             ease: 'none',
             scrollTrigger: createConfig({ start: 'top+=30 top', end: '+=130%' }),
           }
@@ -190,14 +188,22 @@ const HeroSection = () => {
             ease: 'none',
             scrollTrigger: createConfig({
               end: '+=140%',
-              scrub: 0.3, // Быстрее реагирует на скролл (меньше = быстрее)
+              scrub: 0.3,
             }),
           }
         );
       }
     }, containerRef);
 
-    return () => ctx.revert();
+    return () => {
+      ctx.revert();
+      // Дополнительная очистка ScrollTrigger instances
+      ScrollTrigger.getAll().forEach(trigger => {
+        if (trigger.vars.trigger === containerRef.current) {
+          trigger.kill();
+        }
+      });
+    };
   }, []);
 
   return (

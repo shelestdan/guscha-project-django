@@ -80,7 +80,6 @@ const PhoneChange = ({ user, onUserUpdate }) => {
         showError(data.error || 'Ошибка отправки кода');
       }
     } catch (error) {
-      console.error('Ошибка отправки кода:', error);
       showError('Ошибка отправки кода. Попробуйте позже.');
     } finally {
       setIsLoading(false);
@@ -118,7 +117,6 @@ const PhoneChange = ({ user, onUserUpdate }) => {
         showError(data.error || 'Неверный код');
       }
     } catch (error) {
-      console.error('Ошибка проверки кода:', error);
       showError('Ошибка проверки кода. Попробуйте позже.');
     } finally {
       setIsLoading(false);
@@ -155,7 +153,6 @@ const PhoneChange = ({ user, onUserUpdate }) => {
         showError(data.error || 'Ошибка запроса смены номера');
       }
     } catch (error) {
-      console.error('Ошибка запроса смены номера:', error);
       showError('Ошибка запроса смены номера. Попробуйте позже.');
     } finally {
       setIsLoading(false);
@@ -194,7 +191,6 @@ const PhoneChange = ({ user, onUserUpdate }) => {
         showError(data.error || 'Ошибка проверки статуса');
       }
     } catch (error) {
-      console.error('Ошибка проверки статуса:', error);
       showError('Ошибка проверки статуса. Попробуйте позже.');
     } finally {
       setIsLoading(false);

@@ -257,9 +257,10 @@
 }
 
 .hero-split-left {
-  width: 40%;
+  width: 51%;
   background: #000;
   padding: 96px 64px;
+  padding-left: 160px; /* Выравнивание с левым краем фото модели в блоке предзаказа */
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -282,8 +283,10 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-family: 'Anton', 'Impact', 'Arial Black', sans-serif;
+  /* GPU acceleration для плавного параллакса */
   will-change: transform;
-  transform: translateZ(0);
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 
 .hero-left-copy--secondary {
@@ -296,15 +299,18 @@
   background-size: cover;
   background-position: center;
   filter: saturate(110%);
-  transition: transform 0.4s ease;
   z-index: 1;
+  /* GPU acceleration для плавного параллакса */
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 
 .hero-logo-overlay {
   position: absolute;
   top: 2%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate3d(-50%, 0, 0);
   will-change: transform;
   font-size: clamp(72px, 14vw, 210px);
   font-weight: 900;
@@ -317,6 +323,7 @@
   width: 100%;
   color: #ffffff;
   mix-blend-mode: difference;
+  backface-visibility: hidden;
 }
 
 @media (max-width: 960px) {

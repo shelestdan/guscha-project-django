@@ -54,7 +54,7 @@ const QRCodeVerification = ({ onVerificationComplete, onBack, userData }) => {
             showSuccess('QR-код отсканирован! Ожидаем запуска бота...');
           }
         } catch (error) {
-          console.error('Ошибка проверки статуса QR-кода:', error);
+          // Ошибка проверки статуса QR-кода
         }
       }, 2000);
     }
@@ -107,7 +107,6 @@ const QRCodeVerification = ({ onVerificationComplete, onBack, userData }) => {
       setStep('qr');
       showSuccess('Новый QR-код создан!');
     } catch (error) {
-      console.error('Ошибка создания QR-кода:', error);
       showError('Не удалось создать QR-код');
     } finally {
       setIsLoading(false);
@@ -146,7 +145,6 @@ const QRCodeVerification = ({ onVerificationComplete, onBack, userData }) => {
         }
       }
     } catch (error) {
-      console.error('Ошибка верификации:', error);
       const errorMessage = error.message || 'Неверный код верификации';
       showError(errorMessage);
     } finally {

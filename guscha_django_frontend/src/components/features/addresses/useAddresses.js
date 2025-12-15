@@ -27,7 +27,6 @@ export const useAddresses = (addressType = null) => {
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Ошибка при загрузке адресов');
-            console.error('Error fetching addresses:', err);
         } finally {
             setLoading(false);
         }
@@ -38,7 +37,6 @@ export const useAddresses = (addressType = null) => {
             const response = await addressesApi.getDefaultAddresses();
             return response.data;
         } catch (err) {
-            console.error('Error fetching default addresses:', err);
             return { shipping: null, billing: null };
         }
     }, []);

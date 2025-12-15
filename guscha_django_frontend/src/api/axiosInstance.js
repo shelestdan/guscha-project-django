@@ -48,11 +48,6 @@ instance.interceptors.request.use((config) => {
 
     if (csrfToken) {
       config.headers['X-CSRFToken'] = csrfToken;
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🔒 CSRF токен добавлен к запросу');
-      }
-    } else {
-      console.warn('⚠️ CSRF токен не найден');
     }
   }
 
@@ -68,8 +63,6 @@ instance.interceptors.request.use((config) => {
 instance.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('🔥 Axios error:', error);
-
     // Не показываем toast для ошибок корзины и регистрации (обрабатываются отдельно)
     if (!error.config?.url?.includes('/api/cart/') &&
       !error.config?.url?.includes('/api/accounts/users/')) {

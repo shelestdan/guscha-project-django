@@ -109,10 +109,17 @@ function AppContent() {
 export default function App() {
   return (
     <ReactLenis root options={{
-      duration: 1.5,
+      // Уменьшаем duration для более отзывчивого скролла
+      duration: 1.2,
       smoothWheel: true,
-      wheelMultiplier: 0.8,
+      // Увеличиваем wheelMultiplier для более естественного ощущения скролла
+      wheelMultiplier: 1.0,
       touchMultiplier: 1.5,
+      // Оптимизация производительности
+      lerp: 0.1, // Линейная интерполяция для плавности
+      infinite: false,
+      // Предотвращаем конфликты с модальными окнами
+      prevent: (node) => node.classList.contains('lenis-prevent'),
     }}>
       <Router>
         <AppContent />

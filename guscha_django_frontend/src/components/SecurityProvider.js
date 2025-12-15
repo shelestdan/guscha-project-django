@@ -116,7 +116,6 @@ export const SecurityProvider = ({
       
       return newAnalysis;
     } catch (error) {
-      console.error('Ошибка анализа безопасности:', error);
       return null;
     }
   }, [fingerprintData, behaviorAnalysis, securityMiddleware, debugMode, onSecurityUpdate, onSecurityBlock]);

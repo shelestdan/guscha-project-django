@@ -1,1 +1,1 @@
-export { default, formatPrice } from './ProductHeroBlock';
+export { default } from './ProductHeroBlock';

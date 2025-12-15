@@ -39,7 +39,6 @@ const TelegramPasswordResetRequest = () => {
         showError(errorMessage);
       }
     } catch (error) {
-      console.error('Ошибка при запросе сброса пароля через Telegram:', error);
       showError('Произошла ошибка при отправке запроса');
     } finally {
       setIsLoading(false);

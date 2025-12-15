@@ -48,8 +48,6 @@ const VideoPlayer = ({
     }
   };
 
-  console.log('🎥 VideoPlayer rendering with URL:', url);
-
   return (
     <div className={`video-player-container ${className}`}>
       <ReactPlayer
@@ -61,12 +59,8 @@ const VideoPlayer = ({
         height="100%"
         config={playerConfig}
         onEnded={onEnded}
-        onError={(error) => {
-          console.error('❌ Ошибка воспроизведения видео:', error);
-        }}
-        onReady={() => {
-          console.log('✅ Видео готово к воспроизведению');
-        }}
+        onError={() => {}}
+        onReady={() => {}}
         {...props}
       />
       {/* Защитный слой для предотвращения взаимодействия */}

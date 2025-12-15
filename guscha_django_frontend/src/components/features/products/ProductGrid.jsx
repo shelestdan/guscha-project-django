@@ -8,16 +8,28 @@ export default function ProductGrid() {
   const [status, setStatus] = useState('loading');
 
   useEffect(() => {
+    let isMounted = true;
+    const abortController = new AbortController();
+    
     setStatus('loading');
-    axiosInstance.get('/api/products/products/')
+    axiosInstance.get('/api/products/products/', { signal: abortController.signal })
       .then(response => {
+        if (!isMounted) return;
         const data = response.data;
         const productList = Array.isArray(data) ? data : (data.results || data.products || []);
         const filteredProducts = productList.filter(p => p.is_active !== false);
         setProducts(filteredProducts);
         setStatus('success');
       })
-      .catch(() => setStatus('error'));
+      .catch((err) => {
+        if (err.name === 'AbortError' || err.name === 'CanceledError') return;
+        if (isMounted) setStatus('error');
+      });
+      
+    return () => {
+      isMounted = false;
+      abortController.abort();
+    };
   }, []);
 
   if (status === 'loading') {

@@ -34,7 +34,6 @@ const DetailPage = ({ item, itemType }) => {
 
   const handleQuantityClick = (clickedQuantity) => {
     setQuantity(clickedQuantity);
-    console.log(`📦 Выбрано количество: ${clickedQuantity}`);
   };
 
   if (!item) return null;

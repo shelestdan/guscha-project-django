@@ -292,7 +292,6 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
     
     // 🛡️ ЗАЩИТА ОТ БОТОВ: Проверка honeypot полей
     if (formData.website || formData.company || formData.address) {
-      console.warn('🚫 Обнаружен бот: заполнены honeypot поля');
       showError('Ошибка при регистрации. Попробуйте позже.');
       return;
     }
@@ -301,7 +300,6 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
     const formFillTime = Date.now() - formStartTime;
     const minFillTime = 10000; // Минимум 10 секунд для заполнения формы
     if (formFillTime < minFillTime) {
-      console.warn(`🚫 Обнаружен бот: форма заполнена слишком быстро (${formFillTime}мс < ${minFillTime}мс)`);
       showError('Пожалуйста, заполните форму внимательнее.');
       return;
     }
@@ -329,14 +327,7 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
         terms_accepted: formData.termsAccepted
       };
       
-      console.log('DEBUG: Registration data being sent:', registrationData);
-      console.log('DEBUG: termsAccepted value:', formData.termsAccepted);
-      console.log('DEBUG: termsAccepted in registrationData:', registrationData.terms_accepted);
-
-      console.log('🔐 Отправка данных регистрации');
       const result = await onRegister(registrationData);
-      
-      console.log('✅ Регистрация успешна:', result);
       
       // Показываем уведомление об успешной регистрации
       showSuccess('🎉 Регистрация прошла успешно! Проверьте Telegram для подтверждения', 5000);
@@ -345,12 +336,6 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
       // Родительский компонент (AdvancedAuth) обработает переход к Telegram-верификации
       // если в result есть verification_id
     } catch (error) {
-      console.error('Ошибка регистрации:', error);
-      console.log('Подробности ошибки:');
-      console.log('Статус:', error.response?.status);
-      console.log('Данные ошибки:', error.response?.data);
-      console.log('Сообщение ошибки:', error.message);
-      
       // Очищаем предыдущие ошибки
       setServerErrors({ email: '', phone: '', general: '' });
       
@@ -369,23 +354,16 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
             newServerErrors.email = Array.isArray(errorData.details.email) 
               ? errorData.details.email[0] 
               : errorData.details.email;
-            // Показываем уведомление для ошибки email
-            console.log('🔔 Отправляем тост об ошибке email');
-            const emailErrorMsg = `❌ Пользователь с таким email уже зарегистрирован (${new Date().toLocaleTimeString()})`;
-            showError(emailErrorMsg, 6000);
+            showError('❌ Пользователь с таким email уже зарегистрирован', 6000);
           }
           
           if (errorData.details.phone) {
             newServerErrors.phone = Array.isArray(errorData.details.phone) 
               ? errorData.details.phone[0] 
               : errorData.details.phone;
-            // Показываем уведомление для ошибки телефона
-            console.log('🔔 Отправляем тост об ошибке телефона');
-            const phoneErrorMsg = `📱 Пользователь с таким номером телефона уже зарегистрирован (${new Date().toLocaleTimeString()})`;
-            showError(phoneErrorMsg, 6000);
+            showError('📱 Пользователь с таким номером телефона уже зарегистрирован', 6000);
           }
           
-          console.log('Установлены серверные ошибки:', newServerErrors);
           setServerErrors(newServerErrors);
         }
         // Резервная проверка старого формата ошибок (на случай изменения API)
@@ -406,7 +384,6 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
             showError('📱 Пользователь с таким номером телефона уже зарегистрирован', 6000);
           }
           
-          console.log('Установлены серверные ошибки:', newServerErrors);
           setServerErrors(newServerErrors);
         } 
         // Проверяем общие ошибки
@@ -430,8 +407,6 @@ const AdvancedRegistration = ({ onRegister, onSwitchToLogin }) => {
       } else {
         // Нет ошибок сервера или нет response.data
         const errorMessage = error.message || 'Произошла ошибка при регистрации. Попробуйте позже.';
-        console.log('Общая ошибка:', errorMessage);
-        
         setServerErrors({ email: '', phone: '', general: errorMessage });
         
         // Показываем уведомление с подробной информацией

@@ -48,11 +48,6 @@ const AccountAddresses = ({ user }) => {
       
       setAddresses(addressesArray);
     } catch (error) {
-      console.error('❌ Ошибка загрузки адресов:', error);
-      console.error('❌ Детали ошибки:', error.response);
-      console.error('❌ Статус ошибки:', error.response?.status);
-      console.error('❌ Данные ошибки:', error.response?.data);
-      console.error('❌ Показываем ошибку пользователю');
       // showError('Не удалось загрузить адреса');
       setAddresses([]); // Устанавливаем пустой массив в случае ошибки
     } finally {
@@ -87,18 +82,6 @@ const AccountAddresses = ({ user }) => {
   };
 
   const handleEditAddress = (address) => {
-    console.log('🏠 AccountAddresses: клик по кнопке редактирования, address:', address);
-    console.log('🏠 AccountAddresses: поля адреса:', {
-      id: address.id,
-      first_name: address.first_name,
-      last_name: address.last_name,
-      address_line1: address.address_line1,
-      address_line2: address.address_line2,
-      city: address.city,
-      postal_code: address.postal_code,
-      phone: address.phone,
-      is_default: address.is_default
-    });
     setEditingAddress(address);
     setShowAddressModal(true);
     document.body.classList.add('modal-open');
@@ -113,19 +96,16 @@ const AccountAddresses = ({ user }) => {
   const handleDeleteAddress = async (addressId) => {
     // Проверяем, что ID определен
     if (!addressId || addressId === undefined) {
-      console.error('❌ Ошибка: ID адреса не определен:', addressId);
       showError('Ошибка: не удалось определить ID адреса');
       return;
     }
 
     if (window.confirm('Вы уверены, что хотите удалить этот адрес?')) {
       try {
-        console.log('🗑️ Удаляем адрес с ID:', addressId);
         await addressesApi.deleteAddress(addressId);
         setAddresses(prev => prev.filter(addr => addr.id !== addressId));
         showSuccess('Адрес успешно удален!');
       } catch (error) {
-        console.error('Ошибка при удалении адреса:', error);
         showError('Не удалось удалить адрес');
       }
     }
@@ -143,12 +123,7 @@ const AccountAddresses = ({ user }) => {
             {loading ? (
               <p>Загрузка адресов...</p>
             ) : addresses.length > 0 ? (
-              addresses.map((address) => {
-                // Отладочная информация
-                console.log('🏠 Рендерим адрес:', address);
-                console.log('🆔 ID адреса:', address.id);
-                
-                return (
+              addresses.map((address) => (
                 <div key={address.id || `address-${Math.random()}`} className="address-item">
                   <div className="address-content">
                     <strong>{address.full_name || `${address.first_name} ${address.last_name}`}</strong>
@@ -183,18 +158,13 @@ const AccountAddresses = ({ user }) => {
                     </button>
                     <button
                       className="address-edit-btn address-delete-btn"
-                      onClick={() => {
-                        console.log('🗑️ Клик по кнопке удаления, address:', address);
-                        console.log('🆔 ID для удаления:', address.id);
-                        handleDeleteAddress(address.id);
-                      }}
+                      onClick={() => handleDeleteAddress(address.id)}
                     >
                       УДАЛИТЬ
                     </button>
                   </div>
                 </div>
-                );
-              })
+              ))
             ) : (
               <p>У вас пока нет сохраненных адресов</p>
             )}

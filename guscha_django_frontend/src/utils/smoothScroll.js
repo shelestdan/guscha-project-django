@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useLenis } from 'lenis/react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -8,16 +8,29 @@ gsap.registerPlugin(ScrollTrigger);
 /**
  * Хук для синхронизации Lenis с GSAP ScrollTrigger
  * Используется внутри ReactLenis
+ * 
+ * ОПТИМИЗАЦИЯ: ScrollTrigger.update() теперь вызывается через RAF
+ * вместо каждого scroll event для предотвращения торможения
  */
 export const useLenisScrollTrigger = () => {
   const lenis = useLenis();
   const updateRef = useRef(null);
+  const scrollUpdateScheduledRef = useRef(false);
 
   useEffect(() => {
     if (!lenis) return;
 
-    // Функция обновления ScrollTrigger
-    const scrollUpdate = () => ScrollTrigger.update();
+    // Оптимизированная функция обновления ScrollTrigger через RAF
+    // Предотвращает множественные вызовы update() за один кадр
+    const scrollUpdate = () => {
+      if (!scrollUpdateScheduledRef.current) {
+        scrollUpdateScheduledRef.current = true;
+        requestAnimationFrame(() => {
+          ScrollTrigger.update();
+          scrollUpdateScheduledRef.current = false;
+        });
+      }
+    };
     
     // Синхронизация Lenis с ScrollTrigger
     lenis.on('scroll', scrollUpdate);
@@ -28,6 +41,7 @@ export const useLenisScrollTrigger = () => {
         lenis.raf(time * 1000);
       };
       gsap.ticker.add(updateRef.current);
+      // Отключаем lag smoothing для более плавной анимации
       gsap.ticker.lagSmoothing(0);
     }
 
@@ -40,6 +54,9 @@ export const useLenisScrollTrigger = () => {
         gsap.ticker.remove(updateRef.current);
         updateRef.current = null;
       }
+      
+      // Сбрасываем флаг
+      scrollUpdateScheduledRef.current = false;
     };
   }, [lenis]);
 

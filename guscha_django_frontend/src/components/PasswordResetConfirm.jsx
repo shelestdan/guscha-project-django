@@ -98,7 +98,6 @@ const PasswordResetConfirm = () => {
       setIsSuccess(true);
       showSuccess('Пароль успешно изменен! Теперь вы можете войти с новым паролем.');
     } catch (error) {
-      console.error('Ошибка при подтверждении сброса пароля:', error);
       const errorMessage = error.response?.data?.detail ||
                           error.response?.data?.new_password?.[0] ||
                           error.response?.data?.token?.[0] ||

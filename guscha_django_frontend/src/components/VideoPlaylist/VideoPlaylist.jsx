@@ -18,20 +18,15 @@ const VideoPlaylist = ({
 
   // Обработчик завершения видео
   const handleVideoEnded = useCallback(() => {
-    console.log(`✅ Видео ${currentVideoIndex + 1} завершено`);
-
     if (currentVideoIndex < videos.length - 1) {
       // Переходим к следующему видео
       setCurrentVideoIndex(prev => prev + 1);
-      console.log(`🎬 Переключение на видео ${currentVideoIndex + 2}`);
     } else if (loop) {
       // Если включено зацикливание, начинаем сначала
       setCurrentVideoIndex(0);
-      console.log('🔄 Плейлист завершен, начинаем сначала');
     } else {
       // Плейлист завершен
       setIsPlaying(false);
-      console.log('🏁 Плейлист завершен');
     }
   }, [currentVideoIndex, videos.length, loop]);
 
@@ -42,13 +37,7 @@ const VideoPlaylist = ({
     }
   }, [videos, currentVideoIndex]);
 
-  // Логирование изменений плейлиста
-  useEffect(() => {
-    if (videos.length > 0) {
-      console.log(`🎵 Плейлист загружен: ${videos.length} видео`);
-      console.log(`▶️ Текущее видео: ${currentVideoIndex + 1}/${videos.length}`);
-    }
-  }, [videos, currentVideoIndex]);
+
 
   if (!videos || videos.length === 0) {
     return (
@@ -78,13 +67,11 @@ const VideoPlaylist = ({
         muted={currentVideo.muted !== false}
         loop={false} // Отключаем loop для отдельного видео, управляем на уровне плейлиста
         onEnded={handleVideoEnded}
-        onError={(error) => {
-          console.error(`❌ Ошибка воспроизведения видео ${currentVideoIndex + 1}:`, error);
+        onError={() => {
           // При ошибке пытаемся перейти к следующему видео
           handleVideoEnded();
         }}
         onReady={() => {
-          console.log(`✅ Видео ${currentVideoIndex + 1} готово к воспроизведению`);
           setIsPlaying(autoplay);
         }}
         {...props}

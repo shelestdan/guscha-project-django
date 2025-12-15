@@ -34,7 +34,6 @@ const PasswordReset = () => {
       setIsEmailSent(true);
       showSuccess('Инструкции по сбросу пароля отправлены на ваш email');
     } catch (error) {
-      console.error('Ошибка при запросе сброса пароля:', error);
       const errorMessage = error.response?.data?.detail || 
                           error.response?.data?.email?.[0] ||
                           'Произошла ошибка при отправке запроса';

@@ -208,7 +208,6 @@ export const sendSecurityData = async (securityData, endpoint = '/api/security/r
     
     return await response.json();
   } catch (error) {
-    console.error('Ошибка отправки данных безопасности:', error);
     throw error;
   }
 };
@@ -235,13 +234,11 @@ export const createSecurityMiddleware = (options = {}) => {
       try {
         await sendSecurityData(securityData, serverEndpoint);
       } catch (error) {
-        console.warn('Не удалось отправить данные безопасности на сервер:', error);
+        // Не удалось отправить данные безопасности на сервер
       }
     }
     
     if (autoBlock && blockDecision.shouldBlock) {
-      // Можно добавить дополнительную логику блокировки
-      console.warn('Пользователь заблокирован:', blockDecision.reason);
       return {
         blocked: true,
         reason: blockDecision.reason,

@@ -30,7 +30,6 @@ const ProductCard = ({ product, showAddToCart = true }) => {
       });
       showToast('Товар добавлен в корзину', 'success');
     } catch (error) {
-      console.error('Ошибка при добавлении в корзину:', error);
       showToast('Ошибка при добавлении в корзину', 'error');
     } finally {
       setIsLoading(false);

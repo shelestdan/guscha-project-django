@@ -12,7 +12,6 @@ class BackgroundAPI {
       const response = await axiosInstance.get('/api/background/active/');
       return response.data;
     } catch (error) {
-      console.error('Ошибка при получении активного фонового контента:', error);
       throw error;
     }
   }
@@ -25,7 +24,6 @@ class BackgroundAPI {
       const response = await axiosInstance.get('/api/background/list/');
       return response.data;
     } catch (error) {
-      console.error('Ошибка при получении списка фонового контента:', error);
       throw error;
     }
   }
@@ -39,7 +37,6 @@ class BackgroundAPI {
       const response = await axiosInstance.get(`/api/background/detail/${id}/`);
       return response.data;
     } catch (error) {
-      console.error(`Ошибка при получении деталей фонового контента ${id}:`, error);
       throw error;
     }
   }
@@ -53,7 +50,6 @@ class BackgroundAPI {
       const response = await axiosInstance.post(`/api/background/activate/${id}/`);
       return response.data;
     } catch (error) {
-      console.error(`Ошибка при активации фонового контента ${id}:`, error);
       throw error;
     }
   }
@@ -66,7 +62,6 @@ class BackgroundAPI {
       const response = await axiosInstance.get('/api/background/images/');
       return response.data;
     } catch (error) {
-      console.error('Ошибка при получении списка фоновых изображений:', error);
       throw error;
     }
   }
@@ -79,7 +74,6 @@ class BackgroundAPI {
       const response = await axiosInstance.get('/api/background/slideshows/');
       return response.data;
     } catch (error) {
-      console.error('Ошибка при получении списка слайдшоу:', error);
       throw error;
     }
   }
@@ -93,7 +87,6 @@ class BackgroundAPI {
       const response = await axiosInstance.get(`/api/background/slideshows/${id}/`);
       return response.data;
     } catch (error) {
-      console.error(`Ошибка при получении деталей слайдшоу ${id}:`, error);
       throw error;
     }
   }
@@ -106,7 +99,6 @@ class BackgroundAPI {
       const response = await axiosInstance.get('/api/background/videos/');
       return response.data;
     } catch (error) {
-      console.error('Ошибка при получении списка фоновых видео:', error);
       throw error;
     }
   }

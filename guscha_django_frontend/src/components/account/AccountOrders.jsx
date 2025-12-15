@@ -23,7 +23,6 @@ const AccountOrders = ({ user }) => {
       const ordersData = await fetchUserOrders();
       setOrders(ordersData);
     } catch (error) {
-      console.error('Ошибка загрузки заказов:', error);
       showError('Не удалось загрузить заказы');
     } finally {
       setLoading(false);

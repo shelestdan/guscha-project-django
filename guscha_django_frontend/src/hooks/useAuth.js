@@ -53,7 +53,6 @@ export const useAuth = () => {
 
       return null;
     } catch (error) {
-      console.error('Ошибка обновления токена:', error);
       return null;
     }
   };
@@ -123,7 +122,6 @@ export const useAuth = () => {
         setUser(null);
       }
     } catch (error) {
-      console.error('Ошибка получения профиля:', error);
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
       setIsLoggedIn(false);
@@ -151,7 +149,7 @@ export const useAuth = () => {
           await fetchUserProfile();
         }
       } catch (error) {
-        console.error('Ошибка инициализации:', error);
+        // Ошибка инициализации
       } finally {
         setLoading(false);
       }
@@ -261,7 +259,7 @@ export const useAuth = () => {
         credentials: 'include'
       });
     } catch (error) {
-      console.error('Ошибка при выходе из системы:', error);
+      // Ошибка при выходе из системы
     } finally {
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
@@ -326,7 +324,6 @@ export const useAuth = () => {
 
       if (response.ok) {
         // После успешной верификации устанавливаем пользователя как авторизованного
-        console.log('Ответ сервера при верификации Telegram:', data);
         
         // Если требуется регистрация, не устанавливаем токен и не логиним пользователя
         if (data.requires_registration) {
@@ -337,7 +334,6 @@ export const useAuth = () => {
         const token = data.access_token || data.token || data.access;
         if (token) {
           localStorage.setItem('access_token', token);
-          console.log('Telegram-верификация завершена:', data.user || data);
           // Если есть refresh_token, сохраняем и его
           if (data.refresh_token) {
             localStorage.setItem('refresh_token', data.refresh_token);

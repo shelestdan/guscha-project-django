@@ -19,12 +19,10 @@ const GoogleOAuthCallback = () => {
     const handleCallback = async (attempt = 1) => {
       // Предотвращаем повторные вызовы
       if (hasProcessed.current) {
-        console.log('🔵 OAuth callback уже обрабатывается, пропускаем');
         return;
       }
 
       try {
-        console.log(`🔵 Обрабатываем Google OAuth callback (попытка ${attempt})`);
         setProcessingStep(`Обработка авторизации (попытка ${attempt})...`);
 
         // Получаем параметры из URL
@@ -43,7 +41,6 @@ const GoogleOAuthCallback = () => {
         // Проверяем, не был ли этот код уже обработан
         const processedCode = sessionStorage.getItem('oauth_processed_code');
         if (processedCode === code) {
-          console.log('🔵 Этот код авторизации уже был обработан');
           setProcessingStep('Завершение авторизации...');
           // Перенаправляем на страницу аккаунта
           const returnUrl = localStorage.getItem('oauth_return_url') || '/account';
@@ -52,7 +49,6 @@ const GoogleOAuthCallback = () => {
           return;
         }
 
-        console.log('🔵 Получен код авторизации:', `${code.substring(0, 20)}...`);
         hasProcessed.current = true;
 
         // Определяем base URL для API
@@ -67,20 +63,14 @@ const GoogleOAuthCallback = () => {
         };
 
         const baseURL = getBaseURL();
-        console.log('🔵 Base URL:', baseURL);
 
         // Отправляем код авторизации на сервер для обмена на токен
-        console.log('🔵 Отправляем код на Django сервер...');
         setProcessingStep('Обмен кода на токен доступа...');
 
         const requestBody = {
           code,
           redirect_uri: `${window.location.origin}/auth/google/callback`
         };
-        console.log('🔵 Тело запроса:', {
-          code: `${code.substring(0, 20)}...`,
-          redirect_uri: requestBody.redirect_uri
-        });
 
         // Создаем новый AbortController для этого запроса
         const currentAbortController = new AbortController();
@@ -92,14 +82,7 @@ const GoogleOAuthCallback = () => {
           timeout: 10000
         });
 
-        console.log('🔵 Ответ Django сервера:', {
-          status: apiResponse.status,
-          statusText: apiResponse.statusText,
-          data: apiResponse.data
-        });
-
         const data = apiResponse.data;
-        console.log('🟢 Успешный ответ Django сервера:', data);
 
         // Помечаем код как обработанный
         sessionStorage.setItem('oauth_processed_code', code);
@@ -109,19 +92,15 @@ const GoogleOAuthCallback = () => {
         if (data.access_token || data.token || data.access) {
           const accessToken = data.access_token || data.token || data.access;
           localStorage.setItem('access_token', accessToken);
-          console.log('🟢 Access токен сохранен в localStorage');
         }
         if (data.refresh_token || data.refresh) {
           const refreshToken = data.refresh_token || data.refresh;
           localStorage.setItem('refresh_token', refreshToken);
-          console.log('🟢 Refresh токен сохранен в localStorage');
         }
 
         // Обновляем состояние пользователя
         if (data.user) {
           authHook.setUserWithLogin(data.user);  // setUserWithLogin автоматически установит isLoggedIn
-          console.log('🟢 Пользователь установлен:', data.user);
-          console.log('🟢 Google OAuth завершен успешно!');
           setProcessingStep('Завершение авторизации...');
         }
 
@@ -140,15 +119,8 @@ const GoogleOAuthCallback = () => {
         }, 1000);
 
       } catch (error) {
-        console.error(`🔴 Google OAuth callback ошибка (попытка ${attempt}):`, {
-          message: error.message,
-          stack: error.stack,
-          name: error.name
-        });
-
         // Проверяем, не была ли операция отменена
         if (error.name === 'AbortError') {
-          console.log('🔵 Запрос был отменен');
           return;
         }
 
@@ -160,7 +132,6 @@ const GoogleOAuthCallback = () => {
           error.message.includes('fetch');
 
         if (isRetryableError && attempt < 3) {
-          console.log(`🔄 Повторная попытка через ${attempt * 2} секунд...`);
           setRetryCount(attempt);
           setProcessingStep(`Повторная попытка через ${attempt * 2} сек...`);
 

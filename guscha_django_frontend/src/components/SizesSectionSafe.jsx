@@ -10,12 +10,10 @@ const SizesSectionSafe = ({
 }) => {
   // Проверяем, что все пропсы переданы корректно
   if (!formData || !formData.sizes || !Array.isArray(formData.sizes)) {
-    console.error('SizesSectionSafe: Invalid formData or sizes array');
     return <div>Ошибка загрузки размеров</div>;
   }
 
   if (typeof handleSizeChange !== 'function') {
-    console.error('SizesSectionSafe: handleSizeChange is not a function');
     return <div>Ошибка: handleSizeChange не является функцией</div>;
   }
 

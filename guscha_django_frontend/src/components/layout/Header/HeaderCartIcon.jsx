@@ -1,7 +1,26 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useCartStore } from '../../../store/cartStore';
 import InstrumentCartIcon from '../../../assets/icons/instrument_x4fdrqsfczqn.svg';
+
+// Throttle helper для оптимизации scroll events
+const throttle = (fn, delay) => {
+  let lastCall = 0;
+  let timeoutId = null;
+  return (...args) => {
+    const now = Date.now();
+    if (now - lastCall >= delay) {
+      lastCall = now;
+      fn(...args);
+    } else if (!timeoutId) {
+      timeoutId = setTimeout(() => {
+        lastCall = Date.now();
+        timeoutId = null;
+        fn(...args);
+      }, delay - (now - lastCall));
+    }
+  };
+};
 
 const HeaderCartIcon = ({ isDark = false }) => {
   const [iconTop, setIconTop] = useState('28px');
@@ -37,8 +56,12 @@ const HeaderCartIcon = ({ isDark = false }) => {
   // Отслеживание изменений позиции и состояния хедера
   useEffect(() => {
     updateIconPos();
+    
+    // Throttled версия для scroll - вызывается максимум раз в 100ms
+    const throttledUpdateIconPos = throttle(updateIconPos, 100);
+    
     window.addEventListener('resize', updateIconPos);
-    window.addEventListener('scroll', updateIconPos);
+    window.addEventListener('scroll', throttledUpdateIconPos, { passive: true });
 
     const header = document.querySelector('.header-container');
     let observer = null;
@@ -64,7 +87,7 @@ const HeaderCartIcon = ({ isDark = false }) => {
 
     return () => {
       window.removeEventListener('resize', updateIconPos);
-      window.removeEventListener('scroll', updateIconPos);
+      window.removeEventListener('scroll', throttledUpdateIconPos);
       if (observer) observer.disconnect();
       if (debounceTimer) clearTimeout(debounceTimer);
     };

@@ -64,25 +64,12 @@ class ScrollBackgroundToggle {
   }
 
   addEventListeners() {
-    const hasWindow = typeof window !== 'undefined' && window;
-    const hasDocument = typeof document !== 'undefined' && document && document.querySelectorAll;
+    // Сохраняем bound функцию для корректного удаления
+    this.boundOnScroll = this.onScroll.bind(this);
     
-    if (hasWindow) {
-      window.addEventListener('scroll', this.onScroll.bind(this), { passive: true });
-    }
-    
-    if (hasDocument) {
-      document.addEventListener('scroll', this.onScroll.bind(this), { passive: true });
-    }
-    
-    // Добавляем обработчики для элементов с overflow
-    if (typeof document !== 'undefined' && document.querySelectorAll) {
-      const scrollableElements = document.querySelectorAll('[style*="overflow"], .overflow-auto, .overflow-scroll, .overflow-y-auto, .overflow-y-scroll');
-      scrollableElements.forEach(element => {
-        if (element && element.addEventListener) {
-          element.addEventListener('scroll', this.onScroll.bind(this), { passive: true });
-        }
-      });
+    if (typeof window !== 'undefined') {
+      window.addEventListener('scroll', this.boundOnScroll, { passive: true });
+      this.eventListeners.push({ target: window, handler: this.boundOnScroll });
     }
   }
 
@@ -150,6 +137,14 @@ class ScrollBackgroundToggle {
     if (this.scrollTimeout) {
       clearTimeout(this.scrollTimeout);
     }
+    
+    // Удаляем все event listeners
+    this.eventListeners.forEach(({ target, handler }) => {
+      if (target && handler) {
+        target.removeEventListener('scroll', handler);
+      }
+    });
+    this.eventListeners = [];
     
     // Восстанавливаем оригинальный фон
     if (this.targetElement && this.originalBackground) {

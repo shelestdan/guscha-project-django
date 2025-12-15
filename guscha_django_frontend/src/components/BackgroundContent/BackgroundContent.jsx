@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import backgroundApi from '../../api/backgroundApi';
 import VideoPlayer from '../VideoPlayer';
 import VideoPlaylist from '../VideoPlaylist';
@@ -13,6 +13,10 @@ const BackgroundContent = () => {
   const [healthStatus, setHealthStatus] = useState('unknown');
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  
+  // Refs для очистки таймеров
+  const retryTimeoutRef = useRef(null);
+  const slideTimeoutRef = useRef(null);
 
   const MAX_RETRY_ATTEMPTS = 3;
   const RETRY_DELAY = 2000;
@@ -31,7 +35,7 @@ const BackgroundContent = () => {
         setIsRetrying(true);
       }
 
-      console.log(`🔄 Загрузка фонового контента (попытка ${retryCount + 1}/${MAX_RETRY_ATTEMPTS + 1})`);
+
       const response = await backgroundApi.getActiveBackground();
 
       // Валидация полученных данных
@@ -85,10 +89,8 @@ const BackgroundContent = () => {
       setError(null);
       setRetryCount(0);
       setHealthStatus('healthy');
-      console.log('✅ Фоновый контент успешно загружен');
 
     } catch (err) {
-      console.error('❌ Ошибка загрузки фонового контента:', err);
 
       const errorMessage = err.response?.data?.error || err.message || 'Неизвестная ошибка';
       const statusCode = err.response?.status;
@@ -102,8 +104,7 @@ const BackgroundContent = () => {
 
       // Автоматический retry при определенных ошибках
       if (retryCount < MAX_RETRY_ATTEMPTS && shouldRetry(err)) {
-        console.log(`🔄 Повторная попытка через ${RETRY_DELAY}ms...`);
-        setTimeout(() => {
+        retryTimeoutRef.current = setTimeout(() => {
           setRetryCount(prev => prev + 1);
           loadActiveBackground(true);
         }, RETRY_DELAY);
@@ -138,13 +139,21 @@ const BackgroundContent = () => {
     setIsTransitioning(true);
 
     // Через 300ms (время затухания) переключаем слайд
-    setTimeout(() => {
+    slideTimeoutRef.current = setTimeout(() => {
       setCurrentSlideIndex(
         (currentIndex) => (currentIndex + 1) % backgroundData.images.length
       );
       setIsTransitioning(false);
     }, 300);
   }, [backgroundData?.images?.length]);
+  
+  // Очистка таймеров при размонтировании
+  useEffect(() => {
+    return () => {
+      if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
+      if (slideTimeoutRef.current) clearTimeout(slideTimeoutRef.current);
+    };
+  }, []);
 
   // Автоматическое переключение слайдов для слайдшоу
   useEffect(() => {
@@ -168,11 +177,8 @@ const BackgroundContent = () => {
               src={backgroundData.image_url}
               alt="Фоновое изображение"
               className="background-img"
-              onError={(e) => {
-                console.error('❌ Ошибка загрузки изображения:', e.target.src);
-                setError('Не удалось загрузить изображение');
-              }}
-              onLoad={() => console.log('✅ Изображение успешно загружено')}
+              onError={() => setError('Не удалось загрузить изображение')}
+              onLoad={() => {}}
             />
           </div>
         );
@@ -187,14 +193,13 @@ const BackgroundContent = () => {
               src={currentImage.image_url}
               alt={currentImage.alt_text || "Слайд фонового изображения"}
               className={`background-img slideshow-img ${currentImage.is_primary ? 'primary-image' : ''} ${isTransitioning ? 'fading-out' : ''}`}
-              onError={(e) => {
-                console.error('❌ Ошибка загрузки слайда:', e.target.src);
+              onError={() => {
                 // Переключаемся на следующий слайд при ошибке
                 if (backgroundData.images.length > 1) {
                   setCurrentSlideIndex(prev => (prev + 1) % backgroundData.images.length);
                 }
               }}
-              onLoad={() => console.log(`✅ Слайд ${currentSlideIndex + 1} загружен`)}
+              onLoad={() => {}}
             />
 
           </div>

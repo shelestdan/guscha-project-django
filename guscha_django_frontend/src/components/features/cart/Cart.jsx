@@ -11,8 +11,6 @@ export const CartIcon = () => {
   const cartCount = useCartStore((state) => state.count);
   const toggleCart = useCartStore((state) => state.toggleCart);
 
-  console.log('🛒 CartIcon render, count:', cartCount);
-
   return (
     <button className="cart-icon" onClick={toggleCart}>
       <img src={InstrumentCartIcon} alt="Корзина" width={28} height={28} />

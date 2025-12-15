@@ -2,6 +2,17 @@
 
 .variable-proximity {
   font-family: "Roboto Flex", sans-serif;
+  /* GPU acceleration для плавной анимации font-variation-settings */
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  /* Оптимизация рендеринга текста */
+  text-rendering: optimizeSpeed;
+  -webkit-font-smoothing: antialiased;
+}
+
+.variable-proximity span {
+  /* Каждая буква на своём слое для независимой анимации */
+  will-change: font-variation-settings;
 }
 
 .sr-only {
