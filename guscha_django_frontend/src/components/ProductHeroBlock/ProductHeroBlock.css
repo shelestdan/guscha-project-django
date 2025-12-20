@@ -9,7 +9,7 @@
 
 .category-diptych__container {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 2fr 1fr;
   max-width: 1800px;
   margin: 0 auto;
 }
@@ -29,13 +29,14 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
+  margin-left: 17px; /* Сдвиг картинки вправо — регулируй это значение */
 }
 
 .category-diptych__image--main img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
+  object-position: 80% center; /* Смещение вправо: 50% = центр, 60-70% = правее, 100% = правый край */
   opacity: 0;
   transition: opacity 0.5s ease;
 }

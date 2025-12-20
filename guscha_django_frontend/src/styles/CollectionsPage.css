@@ -22,6 +22,12 @@
   padding: 0;
 }
 
+.collection-content-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
 .collection-header {
   padding: 3rem 2rem;
   text-align: center;
@@ -46,41 +52,24 @@
 
 /* Description */
 .collection-description {
-  padding: 2rem;
-  max-width: 100%;
-  margin: 0;
-  text-align: left;
+  margin-bottom: 3rem;
+  text-align: justify;
 }
 
-.description-content {
+.description-text {
   color: rgba(255, 255, 255, 0.8);
   line-height: 1.8;
-  font-size: 1.15rem;
-}
-
-.description-content p {
-  margin-bottom: 1rem;
-}
-
-.description-content p:last-child {
-  margin-bottom: 0;
+  font-size: 1.1rem;
+  font-family: var(--font-primary);
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  display: block;
+  text-align: justify;
 }
 
 /* Gallery */
 .collection-gallery {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-/* Выравнивание описания с галереей */
-.collection-description {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
+  min-height: 600px;
 }
 
 .gallery-item {

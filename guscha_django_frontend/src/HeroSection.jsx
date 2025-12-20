@@ -28,6 +28,7 @@ const HeroSection = () => {
   const secondaryCopyRef = useRef(null);
   const [bgUrl, setBgUrl] = useState(null);
   const [videoData, setVideoData] = useState(null);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -40,16 +41,45 @@ const HeroSection = () => {
         const data = res?.data;
 
         if (data?.content_type === 'video') {
-          // Для видео сохраняем данные для отображения в правой части
-          const videoUrl = data.platform === 'file'
-            ? data.embed_url
-            : (data.video_url || data.embed_url);
-          if (isMounted) {
-            setVideoData({
-              url: videoUrl,
-              loop: data.loop !== false,
-              platform: data.platform
-            });
+          // Проверяем режим плейлиста и наличие items
+          const isPlaylist = data.playlist_mode && data.items && data.items.length > 1;
+          
+          if (isPlaylist) {
+            // Режим плейлиста - сохраняем все видео
+            const sortedItems = [...data.items].sort((a, b) => a.order - b.order);
+            const videos = sortedItems.map(item => ({
+              url: item.platform === 'file' ? item.embed_url : (item.video_url || item.embed_url),
+              platform: item.platform
+            }));
+            
+            if (isMounted) {
+              setVideoData({
+                videos: videos,
+                loop: data.loop !== false,
+                playlistMode: true,
+                autoplay: data.autoplay !== false,
+                muted: data.muted !== false
+              });
+            }
+          } else {
+            // Одиночное видео (или первое из items)
+            let videoUrl;
+            if (data.items && data.items.length > 0) {
+              const firstItem = data.items.sort((a, b) => a.order - b.order)[0];
+              videoUrl = firstItem.platform === 'file' ? firstItem.embed_url : (firstItem.video_url || firstItem.embed_url);
+            } else {
+              videoUrl = data.platform === 'file' ? data.embed_url : (data.video_url || data.embed_url);
+            }
+            
+            if (isMounted) {
+              setVideoData({
+                videos: [{ url: videoUrl, platform: data.platform }],
+                loop: data.loop !== false,
+                playlistMode: false,
+                autoplay: data.autoplay !== false,
+                muted: data.muted !== false
+              });
+            }
           }
           return;
         } else if (data?.content_type === 'image' && data.image_url) {
@@ -84,6 +114,22 @@ const HeroSection = () => {
       isMounted = false;
     };
   }, []);
+
+  // Обработчик окончания видео для плейлиста
+  const handleVideoEnded = useCallback(() => {
+    if (!videoData?.playlistMode || !videoData?.videos) return;
+    
+    const nextIndex = currentVideoIndex + 1;
+    
+    if (nextIndex < videoData.videos.length) {
+      setCurrentVideoIndex(nextIndex);
+    } else if (videoData.loop) {
+      setCurrentVideoIndex(0);
+    }
+  }, [videoData, currentVideoIndex]);
+
+  // Получаем текущий URL видео
+  const currentVideoUrl = videoData?.videos?.[currentVideoIndex]?.url;
 
   // Объединённый useEffect для всех GSAP анимаций - избегаем множественных контекстов
   useEffect(() => {
@@ -236,12 +282,14 @@ const HeroSection = () => {
         ref={rightRef}
         style={bgUrl ? { backgroundImage: `url(${bgUrl})` } : undefined}
       >
-        {videoData && (
+        {videoData && currentVideoUrl && (
           <VideoPlayer
-            url={videoData.url}
+            key={currentVideoIndex}
+            url={currentVideoUrl}
             autoplay={true}
             muted={true}
-            loop={videoData.loop}
+            loop={!videoData.playlistMode && videoData.loop}
+            onEnded={videoData.playlistMode ? handleVideoEnded : null}
             className="hero-video-player"
           />
         )}
