@@ -34,10 +34,19 @@
   .cart-icon-fixed {
     right: 1rem !important;
   }
+  
+  /* Выравниваем иконку корзины с логотипом */
+  .header-cart-icon.portal {
+    top: 12px !important;
+  }
 }
 
 @media (max-width: 480px) {
   .cart-icon-fixed {
     right: 0.5rem !important;
+  }
+  
+  .header-cart-icon.portal {
+    top: 10px !important;
   }
 }

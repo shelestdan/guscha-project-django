@@ -7,12 +7,31 @@ import { useCartStore } from '../../../store/cartStore';
 import '../../../styles/Header.css';
 import './HeaderCartIcon.css';
 
+// Hook для определения мобильного размера
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = React.useState(
+    typeof window !== 'undefined' ? window.innerWidth <= 768 : false
+  );
+
+  React.useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return isMobile;
+};
+
 const Header = memo(({ isHome, isBurgerMenuOpen, setIsBurgerMenuOpen, mainRef }) => {
   // Получаем направление и позицию скролла (слушаем mainRef если передан)
   const { scrollDirection, scrollPosition } = useScrollDirection(mainRef);
+  const isMobile = useIsMobile();
 
   // Состояние корзины — запрет скрытия хедера, если корзина открыта
   const cartIsOpen = useCartStore((state) => state.isOpen);
+
+  // Размер логотипа в зависимости от устройства (должен помещаться в header)
+  const logoSize = isMobile ? 80 : 128;
 
   const isAtTop = scrollPosition < 100;
   // Разрешаем скрытие шапки только если оба панели (бургер и корзина) закрыты
@@ -51,7 +70,7 @@ const Header = memo(({ isHome, isBurgerMenuOpen, setIsBurgerMenuOpen, mainRef })
             />
           </div>
           <div className="header-center">
-            <Logo isVisible={showLogo} black={black} size={128} />
+            <Logo isVisible={showLogo} black={black} size={logoSize} />
           </div>
           <div className="header-right">
             <HeaderCartIcon isDark={black} />
@@ -75,7 +94,7 @@ const Header = memo(({ isHome, isBurgerMenuOpen, setIsBurgerMenuOpen, mainRef })
           />
         </div>
         <div className="header-center">
-          <Logo isVisible={true} black={true} size={128} />
+          <Logo isVisible={true} black={true} size={logoSize} />
         </div>
         <div className="header-right">
           <HeaderCartIcon isDark={true} />

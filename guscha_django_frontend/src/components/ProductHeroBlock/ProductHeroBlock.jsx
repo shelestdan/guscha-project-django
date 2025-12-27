@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useMemo, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import GridDistortion from '../GridDistortion/GridDistortion';
 import './ProductHeroBlock.css';
 
 const ProductHeroBlock = memo(({
@@ -67,20 +68,18 @@ const ProductHeroBlock = memo(({
       variants={containerVariants}
     >
       <div className="category-diptych__container">
-        {/* Колонка 1 - большое фото модели */}
+        {/* Колонка 1 - большое фото модели с эффектом GridDistortion */}
         <motion.div className="category-diptych__col category-diptych__col--1" variants={modelVariants}>
           <div className="category-diptych__link">
             {modelImage && !modelImageError ? (
-              <div className="category-diptych__image category-diptych__image--main">
-                {!modelImageLoaded && <div className="category-diptych__skeleton" />}
-                <img
-                  src={modelImage}
-                  alt={title}
-                  className={modelImageLoaded ? 'loaded' : ''}
-                  onLoad={handleModelLoad}
-                  onError={handleModelError}
-                  width="558"
-                  height="630"
+              <div className="category-diptych__image category-diptych__image--main category-diptych__image--distortion">
+                <GridDistortion
+                  imageSrc={modelImage}
+                  grid={10}
+                  mouse={0.1}
+                  strength={0.15}
+                  relaxation={0.9}
+                  className="category-diptych__grid-distortion"
                 />
               </div>
             ) : (

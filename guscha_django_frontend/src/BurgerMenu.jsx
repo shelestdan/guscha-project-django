@@ -82,11 +82,23 @@ const BurgerMenu = ({
       }
       
       const headerLeft = document.querySelector('.header-left');
-      if (headerLeft) {
-        const rect = headerLeft.getBoundingClientRect();
+      const headerCenter = document.querySelector('.header-center');
+      
+      if (headerLeft && headerCenter) {
+        const leftRect = headerLeft.getBoundingClientRect();
+        const centerRect = headerCenter.getBoundingClientRect();
+        // Выравниваем по вертикальному центру логотипа
         const btnHeight = 40;
-        const top = rect.top + rect.height / 2 - btnHeight / 2;
-        const left = rect.left + 8;
+        const top = centerRect.top + centerRect.height / 2 - btnHeight / 2;
+        const left = leftRect.left + 8;
+        setBtnTop(`${Math.max(top, 8)}px`);
+        setBtnLeft(`${Math.max(left, 8)}px`);
+      } else if (header && headerLeft) {
+        const headerRect = header.getBoundingClientRect();
+        const leftRect = headerLeft.getBoundingClientRect();
+        const btnHeight = 40;
+        const top = headerRect.top + headerRect.height / 2 - btnHeight / 2;
+        const left = leftRect.left + 8;
         setBtnTop(`${Math.max(top, 8)}px`);
         setBtnLeft(`${Math.max(left, 8)}px`);
       } else {

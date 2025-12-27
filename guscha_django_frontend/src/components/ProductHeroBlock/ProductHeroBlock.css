@@ -45,6 +45,25 @@
   opacity: 1;
 }
 
+/* GridDistortion wrapper */
+.category-diptych__image--distortion {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 630px;
+}
+
+.category-diptych__grid-distortion {
+  width: 100%;
+  height: 100%;
+}
+
+.category-diptych__grid-distortion canvas {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+}
+
 .category-diptych__placeholder {
   width: 100%;
   height: 100%;
@@ -237,6 +256,10 @@
     max-height: 500px;
   }
 
+  .category-diptych__image--distortion {
+    min-height: 500px;
+  }
+
   .category-diptych__col--2 {
     padding: 30px 25px 40px;
   }
@@ -289,6 +312,10 @@
     max-height: 400px;
   }
 
+  .category-diptych__image--distortion {
+    min-height: 400px;
+  }
+
   .category-diptych__col--2 {
     padding: 25px 20px 35px;
   }
@@ -322,6 +349,10 @@
 
   .category-diptych__image--main {
     max-height: 350px;
+  }
+
+  .category-diptych__image--distortion {
+    min-height: 350px;
   }
 
   .category-diptych__col--2 {

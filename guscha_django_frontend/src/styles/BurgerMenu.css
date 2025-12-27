@@ -251,6 +251,51 @@
   }
 }
 
+@media (max-width: 768px) {
+  .burger-menu-label {
+    font-size: 14px;
+  }
+
+  .burger-menu-label-animated {
+    margin-right: 8px;
+  }
+
+  .burger-menu-label-hidden {
+    margin-right: 8px;
+  }
+
+  .burger-menu-icon {
+    width: 22px;
+    height: 16px;
+  }
+
+  .burger-menu-bar {
+    width: 22px;
+    height: 1.5px;
+  }
+
+  .burger-menu-bar.top {
+    top: 2px;
+  }
+
+  .burger-menu-bar.middle {
+    top: 7px;
+  }
+
+  .burger-menu-bar.bottom {
+    top: 12px;
+  }
+
+  .burger-menu-btn.open .burger-menu-bar.top,
+  .burger-menu-btn.open .burger-menu-bar.bottom {
+    top: 7px;
+  }
+
+  .burger-menu-btn {
+    padding: 0.5rem;
+  }
+}
+
 @media (max-width: 600px) {
   .burger-panel {
     width: 100vw;
@@ -329,6 +374,19 @@
   position: fixed;
   z-index: 3002;
   pointer-events: auto;
+}
+
+/* Мобильная версия - выравниваем кнопку с логотипом */
+@media (max-width: 768px) {
+  .burger-menu-btn.portal {
+    top: 16px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .burger-menu-btn.portal {
+    top: 14px !important;
+  }
 }
 
 /* Portal root should not block page layout; keep it fixed and allow children to be interactive explicitly */

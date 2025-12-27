@@ -25,10 +25,23 @@ const throttle = (fn, delay) => {
 const HeaderCartIcon = ({ isDark = false }) => {
   const [iconTop, setIconTop] = useState('28px');
   const [iconRight, setIconRight] = useState('24px');
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' ? window.innerWidth <= 768 : false
+  );
   
   const cartCount = useCartStore((state) => state.count);
   const toggleCart = useCartStore((state) => state.toggleCart);
   const isCartOpen = useCartStore((state) => state.isOpen);
+
+  // Отслеживание размера экрана
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Размер иконки в зависимости от устройства
+  const iconSize = isMobile ? 20 : 24;
 
   // Функция для обновления позиции иконки корзины
   const updateIconPos = useCallback(() => {
@@ -40,11 +53,23 @@ const HeaderCartIcon = ({ isDark = false }) => {
     }
     
     const headerRight = document.querySelector('.header-right');
-    if (headerRight) {
-      const rect = headerRight.getBoundingClientRect();
+    const headerCenter = document.querySelector('.header-center');
+    
+    if (headerRight && headerCenter) {
+      const rightRect = headerRight.getBoundingClientRect();
+      const centerRect = headerCenter.getBoundingClientRect();
+      // Выравниваем по вертикальному центру логотипа
       const iconHeight = 40;
-      const top = rect.top + rect.height / 2 - iconHeight / 2;
-      const right = window.innerWidth - rect.right + 8;
+      const top = centerRect.top + centerRect.height / 2 - iconHeight / 2;
+      const right = window.innerWidth - rightRect.right + 8;
+      setIconTop(`${Math.max(top, 8)}px`);
+      setIconRight(`${Math.max(right, 8)}px`);
+    } else if (header && headerRight) {
+      const headerRect = header.getBoundingClientRect();
+      const rightRect = headerRight.getBoundingClientRect();
+      const iconHeight = 40;
+      const top = headerRect.top + headerRect.height / 2 - iconHeight / 2;
+      const right = window.innerWidth - rightRect.right + 8;
       setIconTop(`${Math.max(top, 8)}px`);
       setIconRight(`${Math.max(right, 8)}px`);
     } else {
@@ -114,8 +139,8 @@ const HeaderCartIcon = ({ isDark = false }) => {
         <img
           src={InstrumentCartIcon}
           alt="Корзина"
-          width={24}
-          height={24}
+          width={iconSize}
+          height={iconSize}
           className={`header-cart-icon-filter ${isDark ? 'light' : 'dark'}`}
         />
         {cartCount > 0 && <span className="header-cart-badge">{cartCount}</span>}
