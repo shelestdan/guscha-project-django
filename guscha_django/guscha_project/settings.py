@@ -293,17 +293,28 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 SITE_ID = 1
 
 # Cache configuration
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": os.getenv("REDIS_URL", "redis://redis:6379/1"),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        },
+_redis_url = os.getenv("REDIS_URL")
+if _redis_url:
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": _redis_url,
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            },
+        }
     }
-}
+else:
+    # Если REDIS_URL не задан (например, на Render без Redis),
+    # используем in-memory кэш, чтобы приложение не падало.
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "default-cache",
+        }
+    }
 
-# Для локальных тестов без поднятого Redis переключаемся на локальную память
+# Для локальных тестов без поднятого Redis всегда используем локальную память
 if "test" in sys.argv and not os.getenv("FORCE_REDIS_FOR_TESTS"):
     CACHES = {
         "default": {
