@@ -117,9 +117,9 @@ db.sqlite3
 db.sqlite3-journal
 
 # Django static files
-static_root/
+
 staticfiles/
-guscha_django/static_root/
+
 guscha_django/staticfiles/
 
 # Exception for media files (logos, icons, etc)
