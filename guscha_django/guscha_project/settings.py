@@ -107,7 +107,9 @@ INSTALLED_APPS += [
 ]
 
 # В тестах убираем зависимость от shared cache (ratelimit) и лишние проверки
-if "test" in sys.argv:
+if "test" in sys.argv or not os.getenv("REDIS_URL"):
+    # В тестах и в окружениях без Redis убираем django_ratelimit,
+    # чтобы избежать требований к shared cache и системных ошибок.
     INSTALLED_APPS = [app for app in INSTALLED_APPS if app != "django_ratelimit"]
 
 # Минимальный набор middleware для тестов
