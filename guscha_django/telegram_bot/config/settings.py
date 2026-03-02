@@ -4,6 +4,7 @@ import os
 from dataclasses import dataclass
 from typing import Optional
 from django.conf import settings
+import logging
 
 
 @dataclass(frozen=True)
@@ -31,7 +32,12 @@ class BotSettings:
         """Создает настройки из Django settings."""
         token = getattr(settings, 'TELEGRAM_BOT_TOKEN', None)
         if not token:
-            raise ValueError("TELEGRAM_BOT_TOKEN не настроен в Django settings")
+            # В продакшн-развёртывании Telegram может быть не настроен.
+            # Не падаем с ошибкой, а просто помечаем интеграцию как отключённую.
+            logging.getLogger(__name__).warning(
+                "TELEGRAM_BOT_TOKEN не настроен в Django settings, Telegram интеграция отключена"
+            )
+            token = "disabled"
         
         return cls(
             token=token,
