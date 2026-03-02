@@ -142,12 +142,13 @@ elif DEBUG:
         "allauth.account.middleware.AccountMiddleware",
     ]
 else:
-    # Полная middleware цепочка для продакшена
+    # Полная middleware цепочка для продакшена (упрощена для Render: без corsheaders)
     MIDDLEWARE = [
         "django.middleware.security.SecurityMiddleware",
         "csp.middleware.CSPMiddleware",
         "django.contrib.sessions.middleware.SessionMiddleware",
-        "corsheaders.middleware.CorsMiddleware",  # CORS middleware для frontend-backend взаимодействия
+        # CORS не нужен при обслуживании фронта и API с одного домена
+        # "corsheaders.middleware.CorsMiddleware",
         "apps.core.middleware.SecurityMonitoringMiddleware",  # Security monitoring
         "apps.core.middleware.SecurityMetricsMiddleware",  # Security metrics
         # "apps.core.middleware.RateLimitBypassMiddleware",  # Before rate limiting - временно отключен
