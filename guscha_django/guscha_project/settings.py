@@ -149,8 +149,8 @@ else:
         "django.contrib.sessions.middleware.SessionMiddleware",
         # CORS не нужен при обслуживании фронта и API с одного домена
         # "corsheaders.middleware.CorsMiddleware",
-        "apps.core.middleware.SecurityMonitoringMiddleware",  # Security monitoring
-        "apps.core.middleware.SecurityMetricsMiddleware",  # Security metrics
+        # "apps.core.middleware.SecurityMonitoringMiddleware",  # Security monitoring (отключено для портфолио-деплоя)
+        # "apps.core.middleware.SecurityMetricsMiddleware",  # Security metrics (отключено для портфолио-деплоя)
         # "apps.core.middleware.RateLimitBypassMiddleware",  # Before rate limiting - временно отключен
         # "apps.core.middleware.RateLimitMiddleware",  # Rate limiting - временно отключен
         "django.middleware.common.CommonMiddleware",
@@ -162,7 +162,7 @@ else:
         "django.contrib.messages.middleware.MessageMiddleware",
         "django.middleware.clickjacking.XFrameOptionsMiddleware",
         "apps.core.middleware.SecurityHeadersMiddleware",
-        "apps.core.middleware.SecurityAuditMiddleware",  # Security audit
+        # "apps.core.middleware.SecurityAuditMiddleware",  # Security audit (отключено для портфолио-деплоя)
         "allauth.account.middleware.AccountMiddleware",
     ]
 
