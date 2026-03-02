@@ -1,8 +1,30 @@
-# ============================================================================
-# SIMPLE DOCKERFILE FOR DJANGO DEVELOPMENT
-# ============================================================================
+###############################################################################
+# MULTI-STAGE DOCKERFILE: REACT FRONTEND BUILD + DJANGO BACKEND (Render)
+###############################################################################
 
-FROM python:3.11.6-slim as production
+########################
+# 1) FRONTEND BUILD   #
+########################
+
+FROM node:20-alpine AS frontend-build
+
+WORKDIR /frontend
+
+# Кэшируем установки зависимостей
+COPY guscha_django_frontend/package*.json ./
+RUN npm install
+
+# Копируем исходники фронтенда и собираем
+COPY guscha_django_frontend/ ./
+ENV DISABLE_ESLINT_PLUGIN=true
+RUN npm run build
+
+
+########################
+# 2) BACKEND + GUNICORN
+########################
+
+FROM python:3.11.6-slim AS production
 
 # Environment variables
 ENV PYTHONUNBUFFERED=1 \
@@ -20,23 +42,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Set work directory
 WORKDIR /app
 
-# Copy requirements first (for caching)
-COPY requirements.txt /tmp/requirements.txt
+# Copy backend requirements first (for caching)
+COPY guscha_django/requirements.txt /tmp/requirements.txt
 
-# Install dependencies
+# Install Python dependencies
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
-# Copy project
-COPY . .
+# Copy Django project
+COPY guscha_django/ /app
 
-# Create necessary directories
-RUN mkdir -p logs static_root media
+# Copy built frontend into Django static_root
+RUN mkdir -p static_root
+COPY --from=frontend-build /frontend/build/ /app/static_root/
 
-# Collect static files
-RUN python manage.py collectstatic --noinput || true
-
-# Expose port (Render будет пробрасывать свой $PORT)
+# Expose port (Render пробрасывает свой $PORT)
 EXPOSE 8000
 
-# Run command: apply migrations, then start Gunicorn on $PORT (Render sets PORT)
-CMD ["sh", "-c", "python manage.py migrate --noinput && gunicorn --bind 0.0.0.0:$PORT --workers 3 guscha_project.wsgi:application"]
+# Apply migrations, collectstatic (на всякий случай) и запустить Gunicorn
+CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py collectstatic --noinput || true && gunicorn --bind 0.0.0.0:$PORT --workers 3 guscha_project.wsgi:application"]
