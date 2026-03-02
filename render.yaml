@@ -1,0 +1,74 @@
+services:
+  - type: web
+    name: guscha-portfolio
+    env: docker
+    plan: free
+    rootDir: guscha_django
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+    healthCheckPath: /
+    envVars:
+      # ВАЖНО: значения задаются в панели Render, а не в репозитории
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: "your-render-subdomain.onrender.com,your-custom-domain.ru"
+
+      # Подключение к базе данных (Render Postgres создаст DATABASE_URL автоматически)
+      # settings.py уже умеет работать с DATABASE_URL, если она задана.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: guscha-db
+          property: connectionString
+
+      # Redis (опционально, если будете использовать Render Redis)
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: guscha-redis
+          property: connectionString
+
+      # Email / SMTP
+      - key: EMAIL_HOST
+        value: "smtp.timeweb.ru"
+      - key: EMAIL_PORT
+        value: "25"
+      - key: EMAIL_USE_TLS
+        value: "False"
+      - key: EMAIL_HOST_USER
+        value: "your_mailbox@your-domain.ru"
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        value: "noreply@your-domain.ru"
+
+      # Админка и безопасность
+      - key: ADMIN_URL
+        value: "secure-admin-guscha-random-path/"
+      - key: ADMIN_IP_WHITELIST
+        value: ""
+
+      # Дополнительные секреты (заполните в панели Render)
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: JWT_SECRET_KEY
+        sync: false
+      - key: FRONTEND_URL
+        value: "https://your-custom-domain.ru"
+
+databases:
+  - name: guscha-db
+    databaseName: guscha
+    user: guscha
+    plan: free
+
+redis:
+  - name: guscha-redis
+    plan: free
+
