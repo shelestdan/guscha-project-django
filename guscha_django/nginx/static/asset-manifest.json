@@ -1,0 +1,26 @@
+{
+  "files": {
+    "main.css": "/static/css/main.dd25931e.css",
+    "main.js": "/static/js/main.c5924236.js",
+    "static/css/564.27938003.chunk.css": "/static/css/564.27938003.chunk.css",
+    "static/js/564.a4898b41.chunk.js": "/static/js/564.a4898b41.chunk.js",
+    "static/js/963.cba9c89e.chunk.js": "/static/js/963.cba9c89e.chunk.js",
+    "static/js/808.c70014b9.chunk.js": "/static/js/808.c70014b9.chunk.js",
+    "static/js/989.49bee9fd.chunk.js": "/static/js/989.49bee9fd.chunk.js",
+    "static/js/337.81ab7b8f.chunk.js": "/static/js/337.81ab7b8f.chunk.js",
+    "static/js/767.022eaa2f.chunk.js": "/static/js/767.022eaa2f.chunk.js",
+    "static/js/465.03a04941.chunk.js": "/static/js/465.03a04941.chunk.js",
+    "static/js/206.4588d44f.chunk.js": "/static/js/206.4588d44f.chunk.js",
+    "static/js/430.73e202c8.chunk.js": "/static/js/430.73e202c8.chunk.js",
+    "static/media/Guscha_back.png": "/static/media/Guscha_back.9c39fd7fc40e8eb6c14d.png",
+    "static/media/Tovar.otf": "/static/media/Tovar.d7d8c00fc2a306c9cac4.otf",
+    "static/media/logo.svg": "/static/media/logo.9f279452f6c3d59ccd6eb8fbe720443d.svg",
+    "static/media/instrument_x4fdrqsfczqn.svg": "/static/media/instrument_x4fdrqsfczqn.4a7efb845c2b844e443b92e46d63e8cc.svg",
+    "index.html": "/index.html",
+    "static/media/TelegramIcon.svg": "/static/media/TelegramIcon.3a0e1444dfc60df021cef070260a88fc.svg"
+  },
+  "entrypoints": [
+    "static/css/main.dd25931e.css",
+    "static/js/main.c5924236.js"
+  ]
+}

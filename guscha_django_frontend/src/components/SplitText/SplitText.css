@@ -1,0 +1,10 @@
+.split-text-container {
+  display: block;
+  text-align: justify;
+}
+
+.split-text-element {
+  display: inline;
+  opacity: 0;
+  will-change: transform, opacity;
+}

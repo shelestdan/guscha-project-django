@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Link } from 'react-router-dom';
 import { fetchPreorders } from '../../../api/preordersApi';
 import "../../../styles/ProductShowcase.css";
@@ -9,7 +9,9 @@ export default function ProductShowcase() {
   const [current, setCurrent] = useState(0);
   const [animating, setAnimating] = useState(false);
   const [nextIndex, setNextIndex] = useState(null);
-  const [preloadedImages, setPreloadedImages] = useState(new Set());
+  // Используем ref вместо state для preloadedImages - избегаем лишних ре-рендеров
+  const preloadedImagesRef = useRef(new Set());
+  const animationTimeoutRef = useRef(null);
   
   useEffect(() => {
     setStatus('loading');
@@ -24,23 +26,22 @@ export default function ProductShowcase() {
           setStatus('empty');
         }
       })
-      .catch((error) => {
-        console.error("Could not fetch preorders:", error);
+      .catch(() => {
         setStatus('error');
       });
   }, []);
 
 
 
-  // Предзагрузка изображений
+  // Предзагрузка изображений - оптимизировано без лишних ре-рендеров
   useEffect(() => {
     if (products.length > 0) {
       const preloadImage = (src) => {
-        if (src && !preloadedImages.has(src)) {
+        if (src && !preloadedImagesRef.current.has(src)) {
           const img = new Image();
           img.src = src;
           img.onload = () => {
-            setPreloadedImages(prev => new Set([...prev, src]));
+            preloadedImagesRef.current.add(src);
           };
         }
       };
@@ -53,21 +54,33 @@ export default function ProductShowcase() {
         preloadImage(nextProduct.product_image || nextProduct.image_url);
       }
     }
-  }, [current, products, preloadedImages]);
+  }, [current, products]);
+  
+  // Очистка при размонтировании
+  useEffect(() => {
+    return () => {
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+      }
+      // Очищаем Set при размонтировании компонента
+      preloadedImagesRef.current.clear();
+    };
+  }, []);
 
-  const nextProductHandler = () => {
+  const nextProductHandler = useCallback(() => {
     if (animating || products.length <= 1) return;
     
     const ni = (current + 1) % products.length;
     setNextIndex(ni);
     setAnimating(true);
     
-    setTimeout(() => {
+    // Сохраняем ref на timeout для очистки
+    animationTimeoutRef.current = setTimeout(() => {
       setCurrent(ni);
       setNextIndex(null);
       setAnimating(false);
     }, 350);
-  };
+  }, [animating, products.length, current]);
 
   if (status === 'loading') {
     return <div className="product-showcase-root status-message">Загрузка предзаказов...</div>;

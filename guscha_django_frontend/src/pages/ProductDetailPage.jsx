@@ -8,11 +8,13 @@ const ProductDetailPage = () => {
   const [status, setStatus] = useState('loading');
 
   useEffect(() => {
+    const abortController = new AbortController();
+    
     const fetchProduct = async () => {
       setStatus('loading');
       try {
         const response = await fetch(`/api/products/products/${slug}/`, {
-
+          signal: abortController.signal,
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
@@ -23,10 +25,13 @@ const ProductDetailPage = () => {
         setProduct(data.product || data);
         setStatus('success');
       } catch (error) {
+        if (error.name === 'AbortError') return;
         setStatus('error');
       }
     };
     fetchProduct();
+    
+    return () => abortController.abort();
   }, [slug]);
 
   if (status === 'loading') return <div className="pdp-status">Loading...</div>;

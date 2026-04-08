@@ -17,19 +17,19 @@ const PhoneChange = ({ user, onUserUpdate }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [codeExpiry, setCodeExpiry] = useState(null);
   const [timeLeft, setTimeLeft] = useState('');
-  
+
   const { showSuccess, showError, showInfo } = useToast();
 
   // Таймер для отображения времени до истечения кода
   useEffect(() => {
     let interval = null;
-    
+
     if (codeExpiry) {
       interval = setInterval(() => {
         const now = new Date();
         const expiry = new Date(codeExpiry);
         const diff = expiry - now;
-        
+
         if (diff <= 0) {
           setTimeLeft('');
           setCodeExpiry(null);
@@ -44,7 +44,7 @@ const PhoneChange = ({ user, onUserUpdate }) => {
         }
       }, 1000);
     }
-    
+
     return () => {
       if (interval) clearInterval(interval);
     };
@@ -62,8 +62,7 @@ const PhoneChange = ({ user, onUserUpdate }) => {
       const response = await fetch('/api/accounts/phone-change/send-current-code/', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Content-Type': 'application/json'
         },
         credentials: 'include',
         body: JSON.stringify({
@@ -81,7 +80,6 @@ const PhoneChange = ({ user, onUserUpdate }) => {
         showError(data.error || 'Ошибка отправки кода');
       }
     } catch (error) {
-      console.error('Ошибка отправки кода:', error);
       showError('Ошибка отправки кода. Попробуйте позже.');
     } finally {
       setIsLoading(false);
@@ -100,8 +98,7 @@ const PhoneChange = ({ user, onUserUpdate }) => {
       const response = await fetch('/api/accounts/phone-change/verify-current/', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Content-Type': 'application/json'
         },
         credentials: 'include',
         body: JSON.stringify({
@@ -120,7 +117,6 @@ const PhoneChange = ({ user, onUserUpdate }) => {
         showError(data.error || 'Неверный код');
       }
     } catch (error) {
-      console.error('Ошибка проверки кода:', error);
       showError('Ошибка проверки кода. Попробуйте позже.');
     } finally {
       setIsLoading(false);
@@ -139,8 +135,7 @@ const PhoneChange = ({ user, onUserUpdate }) => {
       const response = await fetch('/api/accounts/phone-change/request-change/', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Content-Type': 'application/json'
         },
         credentials: 'include',
         body: JSON.stringify({
@@ -158,7 +153,6 @@ const PhoneChange = ({ user, onUserUpdate }) => {
         showError(data.error || 'Ошибка запроса смены номера');
       }
     } catch (error) {
-      console.error('Ошибка запроса смены номера:', error);
       showError('Ошибка запроса смены номера. Попробуйте позже.');
     } finally {
       setIsLoading(false);
@@ -172,7 +166,7 @@ const PhoneChange = ({ user, onUserUpdate }) => {
       const response = await fetch('/api/accounts/phone-change/status/', {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Content-Type': 'application/json'
         },
         credentials: 'include'
       });
@@ -197,7 +191,6 @@ const PhoneChange = ({ user, onUserUpdate }) => {
         showError(data.error || 'Ошибка проверки статуса');
       }
     } catch (error) {
-      console.error('Ошибка проверки статуса:', error);
       showError('Ошибка проверки статуса. Попробуйте позже.');
     } finally {
       setIsLoading(false);
@@ -233,9 +226,9 @@ const PhoneChange = ({ user, onUserUpdate }) => {
               </p>
             )}
           </div>
-          
+
           {user.phone ? (
-            <button 
+            <button
               className="btn-primary"
               onClick={handleSendCurrentPhoneCode}
               disabled={isLoading}
@@ -254,7 +247,7 @@ const PhoneChange = ({ user, onUserUpdate }) => {
         <div className="phone-change-step">
           <h3>Подтверждение текущего номера</h3>
           <p>Введите 6-значный код, отправленный в ваш Telegram</p>
-          
+
           <div className="form-group">
             <label>Код подтверждения</label>
             <input
@@ -273,13 +266,13 @@ const PhoneChange = ({ user, onUserUpdate }) => {
           </div>
 
           <div className="button-group">
-            <button 
+            <button
               className="btn-secondary"
               onClick={handleReset}
             >
               Отмена
             </button>
-            <button 
+            <button
               className="btn-primary"
               onClick={handleVerifyCurrentCode}
               disabled={isLoading || currentPhoneCode.length !== 6}
@@ -294,7 +287,7 @@ const PhoneChange = ({ user, onUserUpdate }) => {
         <div className="phone-change-step">
           <h3>Новый номер телефона</h3>
           <p>Введите новый номер телефона, который хотите привязать к аккаунту</p>
-          
+
           <div className="form-group">
             <label>Новый номер телефона</label>
             <PhoneInput
@@ -308,13 +301,13 @@ const PhoneChange = ({ user, onUserUpdate }) => {
           </div>
 
           <div className="button-group">
-            <button 
+            <button
               className="btn-secondary"
               onClick={handleReset}
             >
               Отмена
             </button>
-            <button 
+            <button
               className="btn-primary"
               onClick={handleSubmitNewPhone}
               disabled={isLoading || !newPhone || !isValidPhoneNumber(newPhone)}
@@ -329,11 +322,11 @@ const PhoneChange = ({ user, onUserUpdate }) => {
         <div className="phone-change-step">
           <h3>Подтверждение в Telegram</h3>
           <p>Для завершения смены номера перейдите по ссылке в Telegram и подтвердите операцию</p>
-          
+
           <div className="telegram-link-container">
-            <a 
-              href={telegramLink} 
-              target="_blank" 
+            <a
+              href={telegramLink}
+              target="_blank"
               rel="noopener noreferrer"
               className="telegram-link"
             >
@@ -353,13 +346,13 @@ const PhoneChange = ({ user, onUserUpdate }) => {
           </p>
 
           <div className="button-group">
-            <button 
+            <button
               className="btn-secondary"
               onClick={handleReset}
             >
               Отмена
             </button>
-            <button 
+            <button
               className="btn-primary"
               onClick={handleCheckChangeStatus}
               disabled={isLoading}

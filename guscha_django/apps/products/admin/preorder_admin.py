@@ -26,8 +26,8 @@ from django.forms import (
 from unfold.widgets import UnfoldAdminImageFieldWidget, UnfoldAdminTextInputWidget, UnfoldAdminTextareaWidget
 
 from .base_admin import BaseProductAdmin, BaseImageInline, BaseSizeInline
-from ..models import Preorder, PreorderSize, PreorderImage
-from ..forms import PreorderSizeForm, PreorderImageForm
+from ..models import Preorder, PreorderSize, PreorderImage, PreorderColor
+from ..forms import PreorderSizeForm, PreorderImageForm, PreorderColorForm
 
 
 class PreorderSizeAdmin(admin.ModelAdmin):
@@ -141,6 +141,56 @@ class PreorderImageInline(BaseImageInline):
     fields = ['image', 'image_url', 'alt_text', 'image_type', 'sort_order', 'image_preview']
     readonly_fields = ['image_preview']
 
+
+class PreorderColorInline(admin.TabularInline):
+    """
+    Inline для управления цветами предзаказов.
+    
+    Позволяет добавлять цвета с HEX кодами и отслеживать наличие.
+    """
+    model = PreorderColor
+    form = PreorderColorForm
+    verbose_name = _("Цвет")
+    verbose_name_plural = _("Цвета")
+    extra = 1
+    min_num = 0
+    max_num = 20
+    tab = True
+    fields = ['name', 'hex_code', 'color_preview', 'stock_quantity', 'is_active']
+    readonly_fields = ['color_preview']
+    can_delete = True
+    show_change_link = True
+    
+    def color_preview(self, obj):
+        """Предварительный просмотр цвета"""
+        if obj.hex_code:
+            return format_html(
+                '<div style="width: 30px; height: 30px; background-color: {}; border-radius: 50%; border: 1px solid #ccc;"></div>',
+                obj.hex_code
+            )
+        return "—"
+    color_preview.short_description = "Превью"
+
+
+class PreorderColorAdmin(admin.ModelAdmin):
+    """Администрирование цветов предзаказов"""
+    list_display = ['preorder', 'name', 'color_preview', 'hex_code', 'stock_quantity', 'is_active']
+    list_filter = ['is_active']
+    search_fields = ['preorder__name', 'name', 'hex_code']
+    list_editable = ['stock_quantity', 'is_active']
+    autocomplete_fields = ['preorder']
+    
+    def color_preview(self, obj):
+        """Предварительный просмотр цвета"""
+        if obj.hex_code:
+            return format_html(
+                '<div style="width: 25px; height: 25px; background-color: {}; border-radius: 50%; border: 1px solid #ccc; display: inline-block;"></div>',
+                obj.hex_code
+            )
+        return "—"
+    color_preview.short_description = "Цвет"
+
+
 @admin.register(Preorder)
 class PreorderAdmin(BaseProductAdmin):
     """
@@ -205,8 +255,8 @@ class PreorderAdmin(BaseProductAdmin):
         })
     )
     
-    # Размеры и изображения управляются через inline-формы в отдельных вкладках
-    inlines = [PreorderSizeInline, PreorderImageInline]
+    # Размеры, цвета и изображения управляются через inline-формы в отдельных вкладках
+    inlines = [PreorderSizeInline, PreorderColorInline, PreorderImageInline]
     
     def image_preview(self, obj):
         """Предварительный просмотр изображения предзаказа"""
@@ -279,6 +329,7 @@ class PreorderAdmin(BaseProductAdmin):
         return super().render_change_form(request, context, add, change, form_url, obj)
 
 
-# Регистрируем отдельные админ-классы для размеров и изображений предзаказов
+# Регистрируем отдельные админ-классы для размеров, цветов и изображений предзаказов
 admin.site.register(PreorderSize, PreorderSizeAdmin)
 admin.site.register(PreorderImage, PreorderImageAdmin)
+admin.site.register(PreorderColor, PreorderColorAdmin)

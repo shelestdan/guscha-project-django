@@ -17,7 +17,8 @@ from .models import (
     BackgroundImage,
     Slideshow,
     SlideshowImage,
-    BackgroundVideo
+    BackgroundVideo,
+    BackgroundVideoItem
 )
 
 
@@ -52,47 +53,6 @@ class SlideshowImageForm(forms.ModelForm):
         }
 
 
-class EnhancedBackgroundContentForm(forms.ModelForm):
-    """Улучшенная форма для управления фоновым контентом"""
-    
-    # Поля для видео
-    video_url = forms.URLField(
-        required=False,
-        widget=UnfoldAdminTextInputWidget(attrs={
-            'placeholder': 'https://www.youtube.com/watch?v=... или https://vimeo.com/...',
-            'class': 'vLargeTextField'
-        }),
-        label='URL видео',
-        help_text='Ссылка на YouTube или Vimeo видео'
-    )
-    platform = forms.ChoiceField(
-        choices=[('youtube', 'YouTube'), ('vimeo', 'Vimeo')],
-        required=False,
-        initial='youtube',
-        widget=UnfoldAdminSelectWidget(),
-        label='Платформа'
-    )
-    autoplay = forms.BooleanField(
-        required=False,
-        initial=True,
-        label='Автовоспроизведение'
-    )
-    muted = forms.BooleanField(
-        required=False,
-        initial=True,
-        label='Без звука'
-    )
-    loop = forms.BooleanField(
-        required=False,
-        initial=True,
-        label='Зацикливание'
-    )
-    
-    class Meta:
-        model = BackgroundContent
-        fields = ['content_type', 'title', 'is_active']
-
-
 class UnifiedBackgroundContentForm(forms.ModelForm):
     """Унифицированная форма для всех типов фонового контента"""
     
@@ -110,13 +70,13 @@ class UnifiedBackgroundContentForm(forms.ModelForm):
         label='Название'
     )
     
-    # Поля для изображения
+    # Поля для изображения (оставляем для быстрого создания)
     image = forms.ImageField(
         required=False,
         widget=UnfoldAdminImageFieldWidget(attrs={
             'accept': 'image/jpeg,image/png,image/webp'
         }),
-        label='Изображение'
+        label='Изображение (для типа "Изображение")'
     )
     width = forms.IntegerField(
         required=False,
@@ -154,39 +114,6 @@ class UnifiedBackgroundContentForm(forms.ModelForm):
         help_text='Длительность анимации перехода в миллисекундах'
     )
     
-    # Поля для видео
-    video_url = forms.URLField(
-        required=False,
-        widget=UnfoldAdminTextInputWidget(attrs={
-            'placeholder': 'https://www.youtube.com/watch?v=... или https://vimeo.com/...',
-            'class': 'vLargeTextField'
-        }),
-        label='URL видео',
-        help_text='Ссылка на YouTube или Vimeo видео'
-    )
-    platform = forms.ChoiceField(
-        choices=[('youtube', 'YouTube'), ('vimeo', 'Vimeo')],
-        required=False,
-        initial='youtube',
-        widget=UnfoldAdminSelectWidget(),
-        label='Платформа'
-    )
-    autoplay = forms.BooleanField(
-        required=False,
-        initial=True,
-        label='Автовоспроизведение'
-    )
-    muted = forms.BooleanField(
-        required=False,
-        initial=True,
-        label='Без звука'
-    )
-    loop = forms.BooleanField(
-        required=False,
-        initial=True,
-        label='Зацикливание'
-    )
-    
     class Meta:
         model = BackgroundContent
         fields = ['content_type', 'title', 'is_active']
@@ -199,12 +126,6 @@ class UnifiedBackgroundContentForm(forms.ModelForm):
             self.fields['single_image'].widget.attrs.update({'class': 'content-type-field enhanced-field'})
         if 'auto_resize' in self.fields:
             self.fields['auto_resize'].widget.attrs.update({'class': 'content-type-field enhanced-field'})
-        
-        # Добавляем CSS классы для полей видео
-        for fld in ('video_url', 'platform', 'autoplay', 'muted', 'loop'):
-            if fld in self.fields:
-                existing = self.fields[fld].widget.attrs.get('class', '')
-                self.fields[fld].widget.attrs['class'] = (existing + ' video-field content-type-field').strip()
         
         # ---------- ДОБАВЛЕНО: обеспечить классы для новых полей ----------
         for fld in ('image', 'width', 'height', 'scaling_mode'):
@@ -220,15 +141,11 @@ class UnifiedBackgroundContentForm(forms.ModelForm):
     def save(self, commit=True):
         """Переопределяем сохранение для корректной обработки всех полей"""
         instance = super().save(commit=False)
-        
-        # Явно устанавливаем title из cleaned_data
         if 'title' in self.cleaned_data:
             instance.title = self.cleaned_data['title']
-            
         if commit:
             instance.save()
         return instance
-
 
 
 class SlideshowImageInlineForSlideshow(TabularInline):
@@ -261,13 +178,6 @@ class SlideshowImageInlineForSlideshow(TabularInline):
             'all': ('background_content/css/multiple_images.css',)
         }
         js = ('background_content/js/multiple_image_inline.js',)
-
-
-
-
-
-# Удаляем проблемный inline класс - он будет заменен на SlideshowInline
-# который правильно работает с промежуточной моделью Slideshow
 
 
 class SlideshowInline(StackedInline):
@@ -315,9 +225,6 @@ class SlideshowInline(StackedInline):
     images_info.short_description = "Изображения слайдшоу"
 
 
-
-
-
 class BackgroundImageInline(TabularInline):
     """Inline для одиночного фонового изображения"""
     model = BackgroundImage
@@ -347,6 +254,31 @@ class BackgroundImageInline(TabularInline):
         js = ('admin/js/background_image.js',)
 
 
+class BackgroundVideoItemInline(TabularInline):
+    """Inline для видео элементов (плейлист)"""
+    model = BackgroundVideoItem
+    extra = 1
+    fields = ['platform', 'video_url', 'file', 'order']
+    ordering = ['order']
+    verbose_name = "Видео файл/ссылка"
+    verbose_name_plural = "Видео файлы и ссылки"
+    
+    formfield_overrides = {
+        models.URLField: {'widget': UnfoldAdminTextInputWidget(attrs={'placeholder': 'https://...'})},
+        models.PositiveIntegerField: {'widget': UnfoldAdminTextInputWidget(attrs={'style': 'width: 60px'})},
+    }
+
+
+class BackgroundVideoInline(StackedInline):
+    """Inline для настроек видео"""
+    model = BackgroundVideo
+    extra = 0
+    min_num = 1
+    max_num = 1
+    can_delete = False
+    fields = ['autoplay', 'muted', 'loop', 'playlist_mode']
+    verbose_name = "Настройки видео (звук/автозапуск)"
+    verbose_name_plural = "Настройки видео"
 
 
 @admin.register(BackgroundContent)
@@ -372,20 +304,15 @@ class BackgroundContentAdmin(ModelAdmin):
             'background_content/js/background_content_admin.js',
         )
     
-    # Исправленные fieldsets - только поля модели BackgroundContent
+    # Исправленные fieldsets - только поля модели BackgroundContent и общие настройки
     fieldsets = (
         ('Основная информация', {
             'fields': ('content_type', 'title', 'is_active')
         }),
-        ('Настройки изображения', {
-            'fields': ('image', 'width', 'height', 'scaling_mode'),
-            'classes': ('collapse', 'image-section'),
-            'description': 'Настройки для фонового изображения'
-        }),
-        ('Настройки видео', {
-            'fields': ('video_url', 'platform', 'autoplay', 'muted', 'loop'),
-            'classes': ('collapse', 'video-section'),
-            'description': 'Настройки для фонового видео с YouTube или Vimeo'
+        ('Быстрые настройки (только для создания)', {
+             'fields': ('image', 'width', 'height', 'scaling_mode', 'interval', 'transition_duration'),
+             'classes': ('collapse', 'advanced-settings'),
+             'description': 'Здесь можно задать начальные настройки. Детальное управление доступно после сохранения.'
         }),
     )
     
@@ -398,6 +325,9 @@ class BackgroundContentAdmin(ModelAdmin):
                 inlines.append(BackgroundImageInline)
             elif obj.content_type == 'slideshow':
                 inlines.append(SlideshowInline)
+            elif obj.content_type == 'video':
+                inlines.append(BackgroundVideoInline)
+                inlines.append(BackgroundVideoItemInline)
         
         return inlines
     
@@ -409,93 +339,45 @@ class BackgroundContentAdmin(ModelAdmin):
         if obj.content_type == 'image':
             self._save_image_data(obj, form)
         elif obj.content_type == 'video':
-            self._save_video_data(obj, form)
+            self._ensure_video_settings(obj)
         elif obj.content_type == 'slideshow':
             self._save_slideshow_data(obj, form)
     
     def _save_image_data(self, obj, form):
         """Сохраняет данные для фонового изображения"""
-        # Создаем BackgroundImage только если тип контента - 'image'
-        if obj.content_type != 'image':
-            return
-            
+        if obj.content_type != 'image': return
         image_data = {
             'width': form.cleaned_data.get('width', 1920),
             'height': form.cleaned_data.get('height', 1080),
             'scaling_mode': form.cleaned_data.get('scaling_mode', 'cover'),
         }
-        
         if form.cleaned_data.get('image'):
             image_data['image'] = form.cleaned_data['image']
         
-        # Проверяем, существует ли уже BackgroundImage для этого контента
-        try:
-            background_image = BackgroundImage.objects.get(background_content=obj)
-            # Обновляем существующий объект
-            for key, value in image_data.items():
-                if value:  # Обновляем только если есть значение
-                    setattr(background_image, key, value)
-            background_image.save()
-        except BackgroundImage.DoesNotExist:
-            # Создаем новый объект только если есть изображение
-            if image_data.get('image'):
-                BackgroundImage.objects.create(
-                    background_content=obj,
-                    **image_data
-                )
+        BackgroundVideo.objects.filter(background_content=obj).delete() # Очистка видео если сменили тип? Нет, это опасно.
+        # Лучше просто GetOrUpdate
+        
+        bg_image, created = BackgroundImage.objects.get_or_create(background_content=obj)
+        for k, v in image_data.items():
+            if v: setattr(bg_image, k, v)
+        bg_image.save()
     
     def _save_slideshow_data(self, obj, form):
         """Сохраняет данные для слайдшоу"""
-        # Создаем Slideshow только если тип контента - 'slideshow'
-        if obj.content_type != 'slideshow':
-            return
-            
+        if obj.content_type != 'slideshow': return
         slideshow_data = {
             'interval': form.cleaned_data.get('interval', 5000),
             'transition_duration': form.cleaned_data.get('transition_duration', 1000),
         }
-        
-        slideshow, created = Slideshow.objects.get_or_create(
-            background_content=obj,
-            defaults=slideshow_data
-        )
-        
-        if not created:
-            for key, value in slideshow_data.items():
-                setattr(slideshow, key, value)
-            slideshow.save()
+        slideshow, _ = Slideshow.objects.get_or_create(background_content=obj)
+        for k, v in slideshow_data.items():
+            setattr(slideshow, k, v)
+        slideshow.save()
     
-    def _save_video_data(self, obj, form):
-        """Сохранение данных видео"""
-        # Создаем BackgroundVideo только если тип контента - 'video'
-        if obj.content_type != 'video':
-            return
-            
-        video_url = form.cleaned_data.get('video_url')
-        platform = form.cleaned_data.get('platform', 'youtube')
-        autoplay = form.cleaned_data.get('autoplay', True)
-        muted = form.cleaned_data.get('muted', True)
-        loop = form.cleaned_data.get('loop', True)
-        
-        if video_url:
-            video_obj, created = BackgroundVideo.objects.get_or_create(
-                background_content=obj,
-                defaults={
-                    'video_url': video_url,
-                    'platform': platform,
-                    'autoplay': autoplay,
-                    'muted': muted,
-                    'loop': loop,
-                }
-            )
-            # Если объект уже существует, обновляем его
-            if not created:
-                video_obj.video_url = video_url
-                video_obj.platform = platform
-                video_obj.autoplay = autoplay
-                video_obj.muted = muted
-                video_obj.loop = loop
-                video_obj.save()
+    def _ensure_video_settings(self, obj):
+        """Гарантирует существование настроек видео"""
+        if obj.content_type != 'video': return
+        BackgroundVideo.objects.get_or_create(background_content=obj)
     
 
     

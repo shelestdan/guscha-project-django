@@ -174,6 +174,31 @@ class ProductSize(BaseModel):
         return self.is_active and not self.is_sold_out and self.stock_quantity > 0
 
 
+class ProductColor(BaseModel):
+    """Модель цвета товара"""
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='colors', 
+                              verbose_name='Товар')
+    name = models.CharField(max_length=50, verbose_name='Название цвета')
+    hex_code = models.CharField(max_length=7, verbose_name='HEX код цвета',
+                               help_text='Например: #FF0000 для красного')
+    stock_quantity = models.IntegerField(default=0, verbose_name='Количество на складе')
+    is_active = models.BooleanField(default=True, verbose_name='Активен')
+    sort_order = models.IntegerField(default=0, verbose_name='Порядок сортировки')
+    
+    class Meta:
+        verbose_name = 'Цвет товара'
+        verbose_name_plural = 'Цвета товаров'
+        ordering = ['sort_order']
+    
+    def __str__(self):
+        return f"{self.product.name} - {self.name}"
+    
+    @property
+    def is_available(self):
+        """Проверка доступности цвета"""
+        return self.is_active and self.stock_quantity > 0
+
+
 class ProductImage(BaseModel):
     """Модель изображения товара"""
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_images', 
@@ -436,16 +461,30 @@ class Preorder(BaseModel):
         """Получение изображения модели"""
         model_image = self.preorder_images.filter(image_type='model').first()
         if model_image:
-            return model_image.get_image_url
-        return None
+            url = model_image.get_image_url
+            if url:
+                return url
+        # Fallback: пробуем первое изображение
+        first_image = self.preorder_images.first()
+        if first_image:
+            return first_image.get_image_url
+        return self.image_url
     
     @property
     def product_image(self):
         """Получение изображения товара"""
         product_image = self.preorder_images.filter(image_type='product').first()
         if product_image:
-            return product_image.get_image_url
-        return None
+            url = product_image.get_image_url
+            if url:
+                return url
+        # Fallback: пробуем второе изображение или первое
+        images = list(self.preorder_images.all()[:2])
+        if len(images) > 1:
+            return images[1].get_image_url
+        elif len(images) == 1:
+            return images[0].get_image_url
+        return self.image_url
 
 
 class PreorderImage(BaseModel):
@@ -511,6 +550,31 @@ class PreorderImage(BaseModel):
         if self.is_primary and self.pk is not None:
             self.preorder.image_url = self.get_image_url
             self.preorder.save(update_fields=['image_url'])
+
+
+class PreorderColor(BaseModel):
+    """Модель цвета предзаказа"""
+    preorder = models.ForeignKey(Preorder, on_delete=models.CASCADE, related_name='colors', 
+                               verbose_name='Предзаказ')
+    name = models.CharField(max_length=50, verbose_name='Название цвета')
+    hex_code = models.CharField(max_length=7, verbose_name='HEX код цвета',
+                               help_text='Например: #FF0000 для красного')
+    stock_quantity = models.IntegerField(default=0, verbose_name='Количество на складе')
+    is_active = models.BooleanField(default=True, verbose_name='Активен')
+    sort_order = models.IntegerField(default=0, verbose_name='Порядок сортировки')
+    
+    class Meta:
+        verbose_name = 'Цвет предзаказа'
+        verbose_name_plural = 'Цвета предзаказов'
+        ordering = ['sort_order']
+    
+    def __str__(self):
+        return f"{self.preorder.name} - {self.name}"
+    
+    @property
+    def is_available(self):
+        """Проверка доступности цвета"""
+        return self.is_active and self.stock_quantity > 0
 
 
 class PreorderSize(BaseModel):

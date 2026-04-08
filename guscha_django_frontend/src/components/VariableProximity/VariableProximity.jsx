@@ -1,17 +1,41 @@
-import { forwardRef, useMemo, useRef, useEffect } from "react";
+import { forwardRef, useMemo, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import "./VariableProximity.css";
 
-function useAnimationFrame(callback) {
+// Оптимизированный RAF hook с поддержкой паузы когда элемент не виден
+function useAnimationFrame(callback, containerRef) {
+  const frameIdRef = useRef(null);
+  const isVisibleRef = useRef(false);
+
   useEffect(() => {
-    let frameId;
+    const container = containerRef?.current;
+    if (!container) return;
+
+    // IntersectionObserver для паузы анимации когда элемент не виден
+    const observer = new IntersectionObserver(
+      (entries) => {
+        isVisibleRef.current = entries[0]?.isIntersecting ?? false;
+      },
+      { threshold: 0 }
+    );
+    observer.observe(container);
+
     const loop = () => {
-      callback();
-      frameId = requestAnimationFrame(loop);
+      // Пропускаем кадры если элемент не виден - КРИТИЧНО для производительности
+      if (isVisibleRef.current) {
+        callback();
+      }
+      frameIdRef.current = requestAnimationFrame(loop);
     };
-    frameId = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(frameId);
-  }, [callback]);
+    frameIdRef.current = requestAnimationFrame(loop);
+
+    return () => {
+      if (frameIdRef.current) {
+        cancelAnimationFrame(frameIdRef.current);
+      }
+      observer.disconnect();
+    };
+  }, [callback, containerRef]);
 }
 
 function useMousePositionRef(containerRef) {
@@ -84,10 +108,10 @@ const VariableProximity = forwardRef((props, ref) => {
     }));
   }, [fromFontVariationSettings, toFontVariationSettings]);
 
-  const calculateDistance = (x1, y1, x2, y2) =>
-    Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+  const calculateDistance = useCallback((x1, y1, x2, y2) =>
+    Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2), []);
 
-  const calculateFalloff = (distance) => {
+  const calculateFalloff = useCallback((distance) => {
     const norm = Math.min(Math.max(1 - distance / radius, 0), 1);
     switch (falloff) {
       case "exponential": return norm ** 2;
@@ -95,9 +119,10 @@ const VariableProximity = forwardRef((props, ref) => {
       case "linear":
       default: return norm;
     }
-  };
+  }, [radius, falloff]);
 
-  useAnimationFrame(() => {
+  // Мемоизируем callback для RAF чтобы избежать пересоздания
+  const animationCallback = useCallback(() => {
     if (!containerRef?.current) return;
     const containerRect = containerRef.current.getBoundingClientRect();
     const { x, y } = mousePositionRef.current;
@@ -136,7 +161,9 @@ const VariableProximity = forwardRef((props, ref) => {
       interpolatedSettingsRef.current[index] = newSettings;
       letterRef.style.fontVariationSettings = newSettings;
     });
-  });
+  }, [containerRef, radius, fromFontVariationSettings, parsedSettings, calculateDistance, calculateFalloff]);
+
+  useAnimationFrame(animationCallback, containerRef);
 
   const words = label.split(" ");
   let letterIndex = 0;

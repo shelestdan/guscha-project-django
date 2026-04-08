@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import './Toast.css';
 
 const Toast = ({ 
@@ -10,21 +10,33 @@ const Toast = ({
 }) => {
   const [isVisible, setIsVisible] = useState(true);
   const [isLeaving, setIsLeaving] = useState(false);
+  const closeTimeoutRef = useRef(null);
+  const onCloseRef = useRef(onClose);
+  
+  // Обновляем ref при изменении onClose
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsLeaving(true);
-    setTimeout(() => {
+    closeTimeoutRef.current = setTimeout(() => {
       setIsVisible(false);
-      if (onClose) onClose();
+      if (onCloseRef.current) onCloseRef.current();
     }, 300); // Время анимации
-  };
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       handleClose();
     }, duration);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+    };
   }, [duration, handleClose]);
 
   const getIcon = () => {

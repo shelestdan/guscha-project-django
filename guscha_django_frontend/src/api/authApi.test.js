@@ -49,7 +49,8 @@ describe('authApi', () => {
     it('should login successfully and save token', async () => {
       const mockResponse = {
         data: {
-          token: 'test-token',
+          access_token: 'test-token',
+          refresh_token: 'test-refresh',
           user: { id: 1, email: 'test@example.com' }
         }
       };
@@ -59,10 +60,8 @@ describe('authApi', () => {
 
       expect(mockedAxios.post).toHaveBeenCalledWith(
         '/api/accounts/users/login/',
-        { email: 'test@example.com', password: 'password123' },
-        { withCredentials: true }
+        { email: 'test@example.com', password: 'password123' }
       );
-      expect(localStorageMock.setItem).toHaveBeenCalledWith('token', 'test-token');
       expect(result).toEqual(mockResponse.data);
     });
 
@@ -81,7 +80,8 @@ describe('authApi', () => {
     it('should register successfully and save token', async () => {
       const mockResponse = {
         data: {
-          token: 'test-token',
+          access_token: 'test-token',
+          refresh_token: 'test-refresh',
           user: { id: 1, email: 'test@example.com' },
           verification_id: 'verification-123'
         }
@@ -99,10 +99,8 @@ describe('authApi', () => {
 
       expect(mockedAxios.post).toHaveBeenCalledWith(
         '/api/accounts/users/',
-        userData,
-        { withCredentials: true }
+        userData
       );
-      expect(localStorageMock.setItem).toHaveBeenCalledWith('token', 'test-token');
       expect(result).toEqual(mockResponse.data);
     });
 
@@ -202,10 +200,7 @@ describe('authApi', () => {
 
       const result = await fetchProfile();
 
-      expect(mockedAxios.get).toHaveBeenCalledWith(
-        '/api/accounts/users/me/',
-        { withCredentials: true }
-      );
+      expect(mockedAxios.get).toHaveBeenCalledWith('/api/accounts/users/me/');
       expect(result).toEqual(mockResponse.data);
     });
 
@@ -223,12 +218,7 @@ describe('authApi', () => {
 
       await logout();
 
-      expect(mockedAxios.post).toHaveBeenCalledWith(
-        '/api/accounts/users/logout/',
-        {},
-        { withCredentials: true }
-      );
-      expect(localStorageMock.removeItem).toHaveBeenCalledWith('token');
+      expect(mockedAxios.post).toHaveBeenCalledWith('/api/accounts/users/logout/', {});
     });
 
     it('should remove token even if logout request fails', async () => {
@@ -236,7 +226,6 @@ describe('authApi', () => {
       mockedAxios.post.mockRejectedValue(mockError);
 
       await expect(logout()).rejects.toThrow('Server error');
-      expect(localStorageMock.removeItem).toHaveBeenCalledWith('token');
     });
   });
 
@@ -244,7 +233,6 @@ describe('authApi', () => {
     it('should change password successfully and update token', async () => {
       const mockResponse = {
         data: {
-          token: 'new-token',
           message: 'Password changed successfully'
         }
       };
@@ -258,10 +246,8 @@ describe('authApi', () => {
           old_password: 'oldPassword',
           new_password: 'newPassword',
           new_password_confirm: 'newPassword'
-        },
-        { withCredentials: true }
+        }
       );
-      expect(localStorageMock.setItem).toHaveBeenCalledWith('token', 'new-token');
       expect(result).toEqual(mockResponse.data);
     });
 

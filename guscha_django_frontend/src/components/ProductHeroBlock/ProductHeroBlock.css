@@ -1,0 +1,396 @@
+/* ============================================
+   Category Diptych — точно по референсу Aigle
+   ============================================ */
+
+.category-diptych {
+  width: 100%;
+  background: #fff;
+}
+
+.category-diptych__container {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  max-width: 1800px;
+  margin: 0 auto;
+}
+
+/* ===== КОЛОНКА 1 - МОДЕЛЬ ===== */
+.category-diptych__col--1 {
+  position: relative;
+}
+
+.category-diptych__link {
+  display: block;
+  height: 100%;
+}
+
+.category-diptych__image--main {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  margin-left: 17px; /* Сдвиг картинки вправо — регулируй это значение */
+}
+
+.category-diptych__image--main img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 80% center; /* Смещение вправо: 50% = центр, 60-70% = правее, 100% = правый край */
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.category-diptych__image--main img.loaded {
+  opacity: 1;
+}
+
+/* GridDistortion wrapper */
+.category-diptych__image--distortion {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 630px;
+}
+
+.category-diptych__grid-distortion {
+  width: 100%;
+  height: 100%;
+}
+
+.category-diptych__grid-distortion canvas {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+}
+
+.category-diptych__placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 630px;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+}
+
+.category-diptych__skeleton {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #f5f5f5 0%, #e8e8e8 50%, #f5f5f5 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ===== КОЛОНКА 2 ===== */
+.category-diptych__col--2 {
+  display: flex;
+  flex-direction: column;
+  padding: 40px 50px;
+}
+
+/* ===== КОНТЕЙНЕР С 2 ФОТО - НАКЛАДЫВАЮТСЯ ===== */
+.category-diptych__col--2-images {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 0;
+  margin-bottom: 40px;
+  position: relative;
+  padding-left: 50px; /* Отступ от левого края = padding колонки */
+}
+
+.category-diptych__image--1,
+.category-diptych__image--2 {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+.category-diptych__image--1 img,
+.category-diptych__image--2 img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.category-diptych__image--1 img.loaded,
+.category-diptych__image--2 img.loaded {
+  opacity: 1;
+}
+
+.category-diptych__img-skeleton {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #f5f5f5 0%, #e8e8e8 50%, #f5f5f5 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  min-height: 300px;
+}
+
+/* Фото 1 - слева, накладывается на фото 2 */
+.category-diptych__image--1 {
+  width: 400px;
+  z-index: 2;
+  margin-right: -60px; /* Накладывается на второе фото */
+}
+
+/* Фото 2 - справа, под фото 1 */
+.category-diptych__image--2 {
+  width: 400px;
+  z-index: 1;
+  margin-top: 90px; /* Смещено вниз */
+}
+
+/* ===== ТЕКСТОВЫЙ КОНТЕНТ ===== */
+.category-diptych__col--2-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  text-align: left;
+  padding-bottom: 40px;
+  padding-left: 50px; /* Такой же отступ как у фото */
+}
+
+.category-diptych__title {
+  margin: 0 0 10px;
+  font-family: 'Arial Black', 'Helvetica Neue', sans-serif;
+  font-size: 36px;
+  font-weight: 900;
+  color: #000;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  line-height: 1.1;
+}
+
+.category-diptych__subtitle {
+  margin: 0 0 18px;
+  font-family: 'Arial', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.category-diptych__description {
+  margin: 0 0 28px;
+}
+
+.category-diptych__description p {
+  margin: 0;
+  font-family: 'Arial', sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: #555;
+  line-height: 1.6;
+  max-width: 500px;
+}
+
+/* ===== КНОПКА ===== */
+.category-diptych__btn {
+  display: inline-block;
+  width: fit-content;
+  padding: 12px 30px;
+  background: transparent;
+  border: 1px solid #000;
+  color: #000;
+  font-family: 'Arial', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+.category-diptych__btn:hover {
+  background: #000;
+  color: #fff;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 1200px) {
+  .category-diptych__col--2 {
+    padding: 35px 40px;
+  }
+
+  .category-diptych__image--1,
+  .category-diptych__image--2 {
+    width: 480px;
+  }
+
+  .category-diptych__image--1 {
+    margin-right: -60px;
+  }
+
+  .category-diptych__image--2 {
+    margin-top: 100px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .category-diptych__container {
+    grid-template-columns: 1fr;
+  }
+
+  .category-diptych__col--1 {
+    max-height: 500px;
+  }
+
+  .category-diptych__image--main {
+    max-height: 500px;
+  }
+
+  .category-diptych__image--distortion {
+    min-height: 500px;
+  }
+
+  .category-diptych__col--2 {
+    padding: 30px 25px 40px;
+  }
+
+  .category-diptych__col--2-images {
+    justify-content: center;
+    margin-bottom: 30px;
+    padding-left: 0;
+  }
+
+  .category-diptych__image--1,
+  .category-diptych__image--2 {
+    width: 320px;
+  }
+
+  .category-diptych__image--1 {
+    margin-right: -40px;
+  }
+
+  .category-diptych__image--2 {
+    margin-top: 70px;
+  }
+
+  .category-diptych__col--2-content {
+    text-align: center;
+    align-items: center;
+    padding-bottom: 0;
+    padding-left: 0;
+  }
+
+  .category-diptych__description p {
+    max-width: 100%;
+  }
+
+  .category-diptych__title {
+    font-size: 30px;
+  }
+
+  .category-diptych__description p {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .category-diptych__col--1 {
+    max-height: 400px;
+  }
+
+  .category-diptych__image--main {
+    max-height: 400px;
+  }
+
+  .category-diptych__image--distortion {
+    min-height: 400px;
+  }
+
+  .category-diptych__col--2 {
+    padding: 25px 20px 35px;
+  }
+
+  .category-diptych__image--1,
+  .category-diptych__image--2 {
+    width: 260px;
+  }
+
+  .category-diptych__image--1 {
+    margin-right: -35px;
+  }
+
+  .category-diptych__image--2 {
+    margin-top: 55px;
+  }
+
+  .category-diptych__title {
+    font-size: 26px;
+  }
+
+  .category-diptych__description p {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .category-diptych__col--1 {
+    max-height: 350px;
+  }
+
+  .category-diptych__image--main {
+    max-height: 350px;
+  }
+
+  .category-diptych__image--distortion {
+    min-height: 350px;
+  }
+
+  .category-diptych__col--2 {
+    padding: 20px 16px 30px;
+  }
+
+  .category-diptych__col--2-images {
+    margin-bottom: 25px;
+  }
+
+  .category-diptych__image--1,
+  .category-diptych__image--2 {
+    width: 200px;
+  }
+
+  .category-diptych__image--1 {
+    margin-right: -25px;
+  }
+
+  .category-diptych__image--2 {
+    margin-top: 45px;
+  }
+
+  .category-diptych__title {
+    font-size: 22px;
+  }
+
+  .category-diptych__subtitle {
+    font-size: 9px;
+    margin-bottom: 12px;
+  }
+
+  .category-diptych__description p {
+    font-size: 10px;
+  }
+
+  .category-diptych__btn {
+    padding: 11px 26px;
+    font-size: 10px;
+  }
+}

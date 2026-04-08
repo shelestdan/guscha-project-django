@@ -19,25 +19,22 @@ const AddressForm = ({ address, addressType, onSuccess, onCancel }) => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        console.log('🏠 AddressForm: загружаем данные пользователя');
-        const token = localStorage.getItem("token");
-        if (token) {
-          const response = await fetch(
-            "http://localhost/api/accounts/users/me/",
-            {
-              headers: {
-                Authorization: `Token ${token}`
-              }
-            }
-          );
-          if (response.ok) {
-            const user = await response.json();
-            console.log('🏠 AddressForm: данные пользователя загружены:', user);
-            setUserData(user);
+        // Токен теперь в httpOnly cookie
+        const response = await fetch(
+          "/api/accounts/users/me/",
+          {
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            credentials: 'include'
           }
+        );
+        if (response.ok) {
+          const user = await response.json();
+          setUserData(user);
         }
       } catch (error) {
-        console.error("Ошибка загрузки данных пользователя:", error);
+        // Ошибка загрузки данных пользователя
       }
     };
 
@@ -45,13 +42,11 @@ const AddressForm = ({ address, addressType, onSuccess, onCancel }) => {
   }, []);
 
   useEffect(() => {
-    console.log('🏠 AddressForm: получен объект address для редактирования:', address);
     if (address) {
       // Проверяем, есть ли все необходимые поля в объекте address
       const hasCompleteData = address.address_line1 && address.city && address.postal_code;
-      
+
       if (hasCompleteData) {
-        console.log('🏠 AddressForm: заполняем форму полными данными:', address);
         setFormData({
           address_type: address.address_type || addressType || "shipping",
           address_line1: address.address_line1 || "",
@@ -62,22 +57,17 @@ const AddressForm = ({ address, addressType, onSuccess, onCancel }) => {
         });
       } else if (address.id) {
         // Если данные неполные, но есть ID, загружаем полные данные с сервера
-        console.log('🏠 AddressForm: данные неполные, загружаем с сервера по ID:', address.id);
         fetchAddressById(address.id);
       }
-    } else {
-      console.log('🏠 AddressForm: address не передан, используем пустую форму');
     }
   }, [address, addressType]);
 
   const fetchAddressById = async (addressId) => {
     try {
       setLoading(true);
-      console.log('🏠 AddressForm: загружаем адрес по ID:', addressId);
       const response = await addressesApi.getAddress(addressId);
       const addressData = response.data;
-      
-      console.log('🏠 AddressForm: получены полные данные адреса:', addressData);
+
       setFormData({
         address_type: addressData.address_type || addressType || "shipping",
         address_line1: addressData.address_line1 || "",
@@ -87,7 +77,7 @@ const AddressForm = ({ address, addressType, onSuccess, onCancel }) => {
         is_default: addressData.is_default || false
       });
     } catch (error) {
-      console.error('❌ Ошибка загрузки адреса:', error);
+      // Ошибка загрузки адреса
     } finally {
       setLoading(false);
     }
@@ -144,7 +134,6 @@ const AddressForm = ({ address, addressType, onSuccess, onCancel }) => {
       }
       onSuccess(savedAddress);
     } catch (error) {
-      console.error("Error saving address:", error);
       if (error.response?.data) {
         setErrors(error.response.data);
       }

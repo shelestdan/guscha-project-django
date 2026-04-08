@@ -24,48 +24,57 @@ export const useAuth = () => {
   // Обновление токена доступа
   const refreshAccessToken = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return null;
-
-      // Определяем тип токена и соответствующий заголовок
-      const authHeader = token.includes('.') ? `Bearer ${token}` : `Token ${token}`;
+      const refreshToken = localStorage.getItem('refresh_token');
+      if (!refreshToken) return null;
 
       const baseURL = getBaseURL();
       const response = await fetch(
-        `${baseURL}/api/accounts/users/me/`,
+        `${baseURL}/api/auth/token/refresh/`,
         {
-          method: 'GET',
+          method: 'POST',
           headers: {
-            Authorization: authHeader
+            'Content-Type': 'application/json',
           },
+          body: JSON.stringify({
+            refresh: refreshToken
+          }),
           credentials: 'include'
         }
       );
 
       if (response.ok) {
-        return token;
-      } else {
-        localStorage.removeItem('token');
-        setIsLoggedIn(false);
-        setUser(null);
-        return null;
+        const data = await response.json();
+        const newAccessToken = data.access;
+        if (newAccessToken) {
+          localStorage.setItem('access_token', newAccessToken);
+          return newAccessToken;
+        }
       }
+
+      return null;
     } catch (error) {
-      console.error('Ошибка обновления токена:', error);
       return null;
     }
   };
 
   // Выполнение запросов с аутентификацией
   const fetchWithAuth = async (url, options = {}) => {
-    let token = localStorage.getItem('token');
+    let token = localStorage.getItem('access_token');
 
     const makeRequest = async (authToken) => {
       if (!authToken) {
-        throw new Error('No auth token available');
+        // Если нет токена, делаем запрос без авторизации
+        return fetch(url, {
+          ...options,
+          headers: {
+            ...options.headers,
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        });
       }
       // Определяем тип токена и соответствующий заголовок
-      const authHeader = authToken.includes('.') ? `Bearer ${authToken}` : `Token ${authToken}`;
+      const authHeader = `Bearer ${authToken}`;
       
       return fetch(url, {
         ...options,
@@ -107,13 +116,14 @@ export const useAuth = () => {
         setUser(data);
         setIsLoggedIn(true);
       } else {
-        localStorage.removeItem('token');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
         setIsLoggedIn(false);
         setUser(null);
       }
     } catch (error) {
-      console.error('Ошибка получения профиля:', error);
-      localStorage.removeItem('token');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
       setIsLoggedIn(false);
       setUser(null);
     }
@@ -134,12 +144,12 @@ export const useAuth = () => {
         }
 
         // Проверяем токен доступа
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         if (token) {
           await fetchUserProfile();
         }
       } catch (error) {
-        console.error('Ошибка инициализации:', error);
+        // Ошибка инициализации
       } finally {
         setLoading(false);
       }
@@ -168,7 +178,8 @@ export const useAuth = () => {
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.setItem('token', data.token);
+        localStorage.setItem('access_token', data.access_token);
+        localStorage.setItem('refresh_token', data.refresh_token);
         setUser(data.user);
         setIsLoggedIn(true);
       } else {
@@ -214,7 +225,8 @@ export const useAuth = () => {
         }
         
         // Обычная регистрация без Telegram-верификации
-        localStorage.setItem('token', data.token);
+        localStorage.setItem('access_token', data.access_token);
+        localStorage.setItem('refresh_token', data.refresh_token);
         setUser(data.user);
         setIsLoggedIn(true);
         return {
@@ -242,14 +254,15 @@ export const useAuth = () => {
         headers: {
           'Content-Type': 'application/json',
           ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
-          Authorization: `Token ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`
         },
         credentials: 'include'
       });
     } catch (error) {
-      console.error('Ошибка при выходе из системы:', error);
+      // Ошибка при выходе из системы
     } finally {
-      localStorage.removeItem('token');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
       setIsLoggedIn(false);
       setUser(null);
     }
@@ -311,7 +324,6 @@ export const useAuth = () => {
 
       if (response.ok) {
         // После успешной верификации устанавливаем пользователя как авторизованного
-        console.log('Ответ сервера при верификации Telegram:', data);
         
         // Если требуется регистрация, не устанавливаем токен и не логиним пользователя
         if (data.requires_registration) {
@@ -321,8 +333,7 @@ export const useAuth = () => {
         // Проверяем различные возможные поля для токена
         const token = data.access_token || data.token || data.access;
         if (token) {
-          localStorage.setItem('token', token);
-          console.log('Telegram-верификация завершена:', data.user || data);
+          localStorage.setItem('access_token', token);
           // Если есть refresh_token, сохраняем и его
           if (data.refresh_token) {
             localStorage.setItem('refresh_token', data.refresh_token);

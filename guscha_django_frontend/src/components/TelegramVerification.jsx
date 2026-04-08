@@ -54,7 +54,7 @@ const TelegramVerification = ({ verificationId, phoneNumber, onVerificationCompl
             setExpiresAt(status.expires_at);
           }
         } catch (error) {
-          console.error('Ошибка проверки статуса бота:', error);
+          // Ошибка проверки статуса бота
         } finally {
           isCheckingRef.current = false;
         }
@@ -118,7 +118,7 @@ const TelegramVerification = ({ verificationId, phoneNumber, onVerificationCompl
           showSuccess('Бот активирован! Теперь получите код в Telegram');
         }
       } catch (error) {
-        console.error('Ошибка быстрой проверки статуса:', error);
+        // Ошибка быстрой проверки статуса
       }
     }, 2000); // Проверяем через 2 секунды после клика
   };
@@ -128,7 +128,6 @@ const TelegramVerification = ({ verificationId, phoneNumber, onVerificationCompl
     
     // 🛡️ ЗАЩИТА ОТ БОТОВ: Проверка honeypot полей
     if (honeypotData.email || honeypotData.username || honeypotData.website) {
-      console.warn('🚫 Обнаружен бот в Telegram верификации: заполнены honeypot поля');
       showError('Ошибка верификации. Попробуйте позже.');
       return;
     }
@@ -137,7 +136,6 @@ const TelegramVerification = ({ verificationId, phoneNumber, onVerificationCompl
     const verificationTime = Date.now() - verificationStartTime;
     const minVerificationTime = 5000; // Минимум 5 секунд для верификации
     if (verificationTime < minVerificationTime) {
-      console.warn(`🚫 Обнаружен бот в Telegram верификации: слишком быстрая верификация (${verificationTime}мс < ${minVerificationTime}мс)`);
       showError('Пожалуйста, подождите немного перед отправкой кода.');
       return;
     }
@@ -151,8 +149,6 @@ const TelegramVerification = ({ verificationId, phoneNumber, onVerificationCompl
     
     try {
       const result = await verifyTelegramCode(phoneNumber, telegramCode);
-      
-      console.log('Результат верификации Telegram:', result);
       
       // Проверяем, требуется ли завершить регистрацию
       if (result.requires_registration) {
@@ -171,7 +167,6 @@ const TelegramVerification = ({ verificationId, phoneNumber, onVerificationCompl
         showError('Ошибка верификации кода');
       }
     } catch (error) {
-      console.error('Ошибка верификации:', error);
       const errorMessage = error.message || 'Неверный код верификации';
       showError(errorMessage);
     } finally {

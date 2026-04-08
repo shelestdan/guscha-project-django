@@ -134,7 +134,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class ProductViewSet(viewsets.ModelViewSet):
     """ViewSet для работы с товарами"""
     queryset = Product.objects.all()
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [AllowAny]
     lookup_field = 'slug'
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = ProductFilter
@@ -262,6 +262,24 @@ class PreorderViewSet(viewsets.ReadOnlyModelViewSet):
                 queryset = queryset.filter(is_active=True)
             else:
                 queryset = queryset.filter(is_active=False)
+        
+        # Фильтрация по рекомендуемым предзаказам (для hero блока)
+        is_featured = self.request.query_params.get('is_featured')
+        if is_featured is not None:
+            is_featured = is_featured.lower() == 'true'
+            if is_featured:
+                queryset = queryset.filter(is_featured=True)
+            else:
+                queryset = queryset.filter(is_featured=False)
+        
+        # Ограничение количества результатов
+        limit = self.request.query_params.get('limit')
+        if limit is not None:
+            try:
+                limit = int(limit)
+                queryset = queryset[:limit]
+            except ValueError:
+                pass
         
         return queryset
 

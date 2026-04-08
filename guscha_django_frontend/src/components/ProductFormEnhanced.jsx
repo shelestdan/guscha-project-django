@@ -107,8 +107,6 @@ const ProductFormEnhanced = ({ product, onSave, onCancel }) => {
         throw new Error('Сервер не вернул данные товара');
       }
     } catch (error) {
-      console.error('Ошибка сохранения товара:', error.response?.data || error.message);
-      
       let errorMessage = 'Произошла ошибка при сохранении';
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message;

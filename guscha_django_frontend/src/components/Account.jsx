@@ -71,21 +71,21 @@ const Account = () => {
                 onClick={() => setActiveTab("password-reset")}
                 type="button"
               >
-                СБРОС ПАРОЛЯ
+                СМЕНИТЬ ПАРОЛЬ
               </button>
               <button
                 className={`account-figma-menu-item account-menu-item-nowrap${activeTab === "phone-change" ? " account-figma-menu-item-active" : ""}`}
                 onClick={() => setActiveTab("phone-change")}
                 type="button"
               >
-                СМЕНА НОМЕРА
+                СМЕНИТЬ ТЕЛЕФОН
               </button>
               <button
                 className="account-figma-menu-item account-menu-item-nowrap"
                 onClick={handleLogout}
                 type="button"
               >
-                ВЫХОД
+                ВЫЙТИ
               </button>
             </div>
           </div>
@@ -131,7 +131,6 @@ const Account = () => {
           }}
           onTelegramLogin={async (data) => {
             // Обработка входа через Telegram
-            console.log('Telegram login data:', data);
             if (data && data.user) {
               setUserWithLogin(data.user);
               showSuccess('Вход через Telegram выполнен успешно!');

@@ -28,8 +28,10 @@ class CollectionImageSerializer(serializers.ModelSerializer):
             'image_url',
             'thumbnail_url',
             'alt_text',
-            'order',
+            'caption',
+            'sort_order',
             'is_active',
+            'is_primary',
             'created_at',
             'updated_at'
         ]

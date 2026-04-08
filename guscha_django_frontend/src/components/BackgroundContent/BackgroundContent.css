@@ -10,7 +10,7 @@
 }
 
 .background-content.loading {
-  background: black;
+  background: transparent;
   color: white;
   display: flex;
   align-items: center;
@@ -121,33 +121,9 @@
   transform: none;
 }
 
-.fallback-background {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-  opacity: 0.3;
-}
-
+.fallback-background,
 .fallback-pattern {
-  width: 100%;
-  height: 100%;
-  background: 
-    linear-gradient(45deg, transparent 40%, rgba(255, 255, 255, 0.1) 50%, transparent 60%),
-    linear-gradient(-45deg, transparent 40%, rgba(255, 255, 255, 0.05) 50%, transparent 60%);
-  background-size: 60px 60px;
-  animation: fallbackMove 20s linear infinite;
-}
-
-@keyframes fallbackMove {
-  0% {
-    background-position: 0 0, 0 0;
-  }
-  100% {
-    background-position: 60px 60px, -60px 60px;
-  }
+  display: none;
 }
 
 /* Фоновые изображения */

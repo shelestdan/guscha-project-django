@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-// Оптимизированный хук: слушает прокрутку на window, document, documentElement,
-// и опционально на переданном containerRef. Мгновенная инициализация для немедленной работы анимации.
+// Оптимизированный хук для определения направления скролла
+// Использует RAF throttling для предотвращения лишних ре-рендеров
 const useScrollDirection = (containerRef = null) => {
   const [scrollDirection, setScrollDirection] = useState('up');
   const [scrollPosition, setScrollPosition] = useState(0);
   const lastScrollY = useRef(0);
+  const rafIdRef = useRef(null);
+  const ticking = useRef(false);
 
   const readScrollY = useCallback(() => {
     try {
@@ -13,22 +15,14 @@ const useScrollDirection = (containerRef = null) => {
         const el = containerRef.current;
         const isScrollable = el.scrollHeight > el.clientHeight;
         if (isScrollable) {
-          const val = el.scrollTop;
-          return val;
+          return el.scrollTop;
         }
       }
     } catch (err) {
-      // Fallback to document/window on error
+      // Fallback to window on error
     }
 
-    const docEl = document.documentElement;
-    const body = document.body;
-    const winVal = (typeof window !== 'undefined' && window.pageYOffset) ? window.pageYOffset : 0;
-    const docVal = docEl ? docEl.scrollTop : 0;
-    const bodyVal = body ? body.scrollTop : 0;
-
-    const resolved = Math.max(winVal || 0, docVal || 0, bodyVal || 0);
-    return resolved;
+    return window.pageYOffset || document.documentElement.scrollTop || 0;
   }, [containerRef]);
 
   useEffect(() => {
@@ -37,90 +31,50 @@ const useScrollDirection = (containerRef = null) => {
     setScrollPosition(initialScrollY);
     lastScrollY.current = initialScrollY;
     
-    const onScroll = () => {
+    // Throttled scroll handler через RAF
+    const updateScrollState = () => {
       const scrollY = readScrollY();
-
-
-
-      setScrollPosition(scrollY);
-
-      if (scrollY > lastScrollY.current) {
-        if (lastScrollY.current !== scrollY) {
+      
+      // Обновляем только если значение изменилось
+      if (scrollY !== lastScrollY.current) {
+        setScrollPosition(scrollY);
+        
+        if (scrollY > lastScrollY.current) {
           setScrollDirection('down');
-        }
-      } else if (scrollY < lastScrollY.current) {
-        if (lastScrollY.current !== scrollY) {
+        } else {
           setScrollDirection('up');
         }
+        
+        lastScrollY.current = scrollY;
       }
-
-      lastScrollY.current = scrollY;
+      
+      ticking.current = false;
     };
-
-    const targets = [];
-
-    if (typeof window !== 'undefined') {
-      targets.push(window);
-    }
-    if (typeof document !== 'undefined') {
-      targets.push(document);
-      if (document.documentElement) {
-        targets.push(document.documentElement);
-      }
-    }
-
-    if (containerRef && containerRef.current) {
-      try {
-        const el = containerRef.current;
-        if (el.scrollHeight > el.clientHeight) {
-          targets.push(el);
-        }
-      } catch (err) {
-        // Error checking container
-      }
-    }
-
-    // discovery set for dynamically found scrollable ancestors (via wheel)
-    const discovered = new Set();
-
-    const onWheelDetect = (e) => {
-      // find nearest ancestor that is scrollable
-      let el = e.target;
-      let found = null;
-      while (el && el !== document && el !== document.documentElement) {
-        try {
-          if (el.scrollHeight > el.clientHeight) {
-            found = el;
-            break;
-          }
-        } catch (err) {
-          break;
-        }
-        el = el.parentElement;
-      }
-
-      if (found) {
-        if (!discovered.has(found)) {
-          discovered.add(found);
-          found.addEventListener('scroll', onScroll, { passive: true });
-        }
+    
+    const onScroll = () => {
+      if (!ticking.current) {
+        rafIdRef.current = requestAnimationFrame(updateScrollState);
+        ticking.current = true;
       }
     };
 
-    targets.forEach((t) => t.addEventListener('scroll', onScroll, { passive: true }));
-
-    // Listen to wheel/touchmove for diagnostics (to detect which element receives scroll events)
-    document.addEventListener('wheel', onWheelDetect, { passive: true, capture: true });
-    document.addEventListener('touchmove', onWheelDetect, { passive: true, capture: true });
-
-    // Initialize once
-    onScroll();
+    // Слушаем только window - это покрывает большинство случаев
+    window.addEventListener('scroll', onScroll, { passive: true });
+    
+    // Опционально слушаем containerRef если передан
+    const container = containerRef?.current;
+    if (container && container.scrollHeight > container.clientHeight) {
+      container.addEventListener('scroll', onScroll, { passive: true });
+    }
 
     return () => {
-      targets.forEach((t) => t.removeEventListener('scroll', onScroll));
-      discovered.forEach((el) => el.removeEventListener('scroll', onScroll));
-      document.removeEventListener('wheel', onWheelDetect, { capture: true });
-      document.removeEventListener('touchmove', onWheelDetect, { capture: true });
+      window.removeEventListener('scroll', onScroll);
+      if (container) {
+        container.removeEventListener('scroll', onScroll);
+      }
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
     };
   }, [readScrollY, containerRef]);
 

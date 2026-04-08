@@ -8,7 +8,7 @@ const getBaseURL = () => {
   if (process.env.REACT_APP_API_URL) {
     return process.env.REACT_APP_API_URL;
   }
-  
+
   // Для контейнеризованного развертывания с nginx используем текущий origin
   // Это работает как для разработки, так и для продакшена
   return window.location.origin;
@@ -36,38 +36,26 @@ function getCSRFToken() {
 
 // Добавляем токены ко всем запросам
 instance.interceptors.request.use((config) => {
-  // Добавляем токен аутентификации из localStorage
-  const token = localStorage.getItem('token');
-  if (token) {
-    // Проверяем, является ли токен JWT (содержит точки) или обычным Django Token
-    if (token.includes('.')) {
-      // JWT токен - используем Bearer
-      config.headers['Authorization'] = `Bearer ${token}`;
-    } else {
-      // Обычный Django Token
-      config.headers['Authorization'] = `Token ${token}`;
-    }
+  // Добавляем JWT токен если он есть в localStorage
+  const accessToken = localStorage.getItem('access_token');
+  if (accessToken) {
+    config.headers['Authorization'] = `Bearer ${accessToken}`;
   }
   
   // 🔒 CSRF защита: добавляем CSRF токен для всех небезопасных запросов
   if (['post', 'put', 'delete', 'patch'].includes(config.method?.toLowerCase())) {
     const csrfToken = getCSRFToken();
-    
+
     if (csrfToken) {
       config.headers['X-CSRFToken'] = csrfToken;
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🔒 CSRF токен добавлен к запросу');
-      }
-    } else {
-      console.warn('⚠️ CSRF токен не найден');
     }
   }
-  
+
   // Добавляем cart session ID для всех запросов к корзине
   if (config.url && config.url.includes('/api/cart/')) {
     config.headers['X-Session-ID'] = getCartSessionId();
   }
-  
+
   return config;
 });
 
@@ -75,19 +63,17 @@ instance.interceptors.request.use((config) => {
 instance.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('🔥 Axios error:', error);
-    
     // Не показываем toast для ошибок корзины и регистрации (обрабатываются отдельно)
-    if (!error.config?.url?.includes('/api/cart/') && 
-        !error.config?.url?.includes('/api/accounts/users/')) {
-      const message = error.response?.data?.detail || 
-                      error.response?.data?.message || 
-                      error.message || 
-                      'Ошибка запроса';
-      
+    if (!error.config?.url?.includes('/api/cart/') &&
+      !error.config?.url?.includes('/api/accounts/users/')) {
+      const message = error.response?.data?.detail ||
+        error.response?.data?.message ||
+        error.message ||
+        'Ошибка запроса';
+
       toast.error(message);
     }
-    
+
     return Promise.reject(error);
   }
 );

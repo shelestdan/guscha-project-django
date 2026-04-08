@@ -1,57 +1,301 @@
-import React from 'react';
-import useScrollDirection from './hooks/useScrollDirection';
-import BackgroundContent from './components/BackgroundContent/BackgroundContent';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import heroImage from './assets/images/Guscha_back.png';
+import backgroundApi from './api/backgroundApi';
+import VideoPlayer from './components/VideoPlayer';
 import './styles/App.css';
+import './styles/HeroParallax.css';
 
-// Стрелка для скролла с интегрированной логикой анимации
-function ScrollDownArrow({ visible }) {
-  const handleClick = () => {
-    const el = document.getElementById('products');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-  
-  
-  return (
-    <button
-      onClick={handleClick}
-      className={`scroll-down-arrow ${visible ? 'visible' : 'hidden'}`}
-      aria-label="Прокрутить к товарам"
-    >
-      <svg
-        viewBox="0 0 32 32"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        width={48}
-        height={48}
-      >
-        <path d="M16 8V24" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"></path>
-        <path d="M8 16L16 24L24 16" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"></path>
-      </svg>
-    </button>
-  );
+// Регистрируем плагин один раз
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
 }
+
+const preloadImage = (url) =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(url);
+    img.onerror = reject;
+    img.src = url;
+  });
 
 const HeroSection = () => {
-  const hookResult = useScrollDirection();
-  const scrollPosition = hookResult.scrollPosition;
-  
-  // Логика анимации стрелки: показываем в самом верху, плавно скрываем при скролле
-  const showArrow = scrollPosition < 150;
-  
+  const containerRef = useRef(null);
+  const rightRef = useRef(null);
+  const logoRef = useRef(null);
+  const primaryCopyRef = useRef(null);
+  const secondaryCopyRef = useRef(null);
+  const [bgUrl, setBgUrl] = useState(null);
+  const [videoData, setVideoData] = useState(null);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadBg = async () => {
+      let candidateUrl = null;
+
+      try {
+        const res = await backgroundApi.getActiveBackground();
+        const data = res?.data;
+
+        if (data?.content_type === 'video') {
+          // Проверяем режим плейлиста и наличие items
+          const isPlaylist = data.playlist_mode && data.items && data.items.length > 1;
+          
+          if (isPlaylist) {
+            // Режим плейлиста - сохраняем все видео
+            const sortedItems = [...data.items].sort((a, b) => a.order - b.order);
+            const videos = sortedItems.map(item => ({
+              url: item.platform === 'file' ? item.embed_url : (item.video_url || item.embed_url),
+              platform: item.platform
+            }));
+            
+            if (isMounted) {
+              setVideoData({
+                videos: videos,
+                loop: data.loop !== false,
+                playlistMode: true,
+                autoplay: data.autoplay !== false,
+                muted: data.muted !== false
+              });
+            }
+          } else {
+            // Одиночное видео (или первое из items)
+            let videoUrl;
+            if (data.items && data.items.length > 0) {
+              const firstItem = data.items.sort((a, b) => a.order - b.order)[0];
+              videoUrl = firstItem.platform === 'file' ? firstItem.embed_url : (firstItem.video_url || firstItem.embed_url);
+            } else {
+              videoUrl = data.platform === 'file' ? data.embed_url : (data.video_url || data.embed_url);
+            }
+            
+            if (isMounted) {
+              setVideoData({
+                videos: [{ url: videoUrl, platform: data.platform }],
+                loop: data.loop !== false,
+                playlistMode: false,
+                autoplay: data.autoplay !== false,
+                muted: data.muted !== false
+              });
+            }
+          }
+          return;
+        } else if (data?.content_type === 'image' && data.image_url) {
+          candidateUrl = data.image_url;
+        } else if (data?.content_type === 'slideshow' && data.images?.length) {
+          const primary = data.images.find((i) => i.is_primary) || data.images[0];
+          candidateUrl = primary?.image_url || null;
+        }
+      } catch (e) {
+        // keep fallback logic below
+      }
+
+      // Иначе используем полученный URL
+      const finalUrl = candidateUrl;
+
+      if (!finalUrl) {
+        if (isMounted) setBgUrl(null);
+        return;
+      }
+
+      try {
+        await preloadImage(finalUrl);
+        if (isMounted) setBgUrl(finalUrl);
+      } catch (e) {
+        if (isMounted) setBgUrl(null);
+      }
+    };
+
+    loadBg();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Обработчик окончания видео для плейлиста
+  const handleVideoEnded = useCallback(() => {
+    if (!videoData?.playlistMode || !videoData?.videos) return;
+    
+    const nextIndex = currentVideoIndex + 1;
+    
+    if (nextIndex < videoData.videos.length) {
+      setCurrentVideoIndex(nextIndex);
+    } else if (videoData.loop) {
+      setCurrentVideoIndex(0);
+    }
+  }, [videoData, currentVideoIndex]);
+
+  // Получаем текущий URL видео
+  const currentVideoUrl = videoData?.videos?.[currentVideoIndex]?.url;
+
+  // Объединённый useEffect для всех GSAP анимаций - избегаем множественных контекстов
+  useEffect(() => {
+    if (!containerRef.current) return undefined;
+
+    const ctx = gsap.context(() => {
+      // === INTRO ANIMATIONS ===
+      const tl = gsap.timeline({ defaults: { ease: 'power2.out' }, delay: 0.2 });
+
+      // Чёрная панель собирается
+      tl.from('.hero-split-left', {
+        clipPath: 'inset(0 100% 0 0)',
+        duration: 0.6,
+      });
+
+      // Текст слева по очереди
+      tl.from(
+        '.hero-left-inner > *',
+        {
+          y: 24,
+          opacity: 0,
+          stagger: 0.12,
+          duration: 0.5,
+        },
+        '-=0.2'
+      );
+
+      // Фото справа
+      if (rightRef.current) {
+        tl.from(
+          rightRef.current,
+          {
+            opacity: 0,
+            scale: 1.06,
+            y: 20,
+            duration: 0.6,
+          },
+          '-=0.25'
+        );
+      }
+
+      // Надпись RAVIX (обёртка)
+      if (logoRef.current) {
+        tl.from(
+          logoRef.current,
+          {
+            opacity: 0,
+            y: -12,
+            duration: 0.55,
+          },
+          '-=0.35'
+        );
+      }
+
+      // === SCROLL PARALLAX ANIMATIONS ===
+      const createConfig = (overrides = {}) => ({
+        trigger: containerRef.current,
+        start: 'top top',
+        end: '+=160%',
+        scrub: 1.2,
+        ...overrides,
+      });
+
+      // Логотип — без параллакса (фиксированная позиция)
+      if (logoRef.current) {
+        gsap.set(logoRef.current, { yPercent: 0 });
+      }
+
+      // Основной текст - сильно отстаёт от скролла
+      if (primaryCopyRef.current) {
+        gsap.fromTo(
+          primaryCopyRef.current,
+          { yPercent: 0 },
+          {
+            yPercent: 140,
+            ease: 'none',
+            scrollTrigger: createConfig({ end: '+=140%' }),
+          }
+        );
+      }
+
+      // Вторичный текст - ещё больше отстаёт (каскадный эффект)
+      if (secondaryCopyRef.current) {
+        gsap.fromTo(
+          secondaryCopyRef.current,
+          { yPercent: 0 },
+          {
+            yPercent: 180,
+            ease: 'none',
+            scrollTrigger: createConfig({ start: 'top+=30 top', end: '+=130%' }),
+          }
+        );
+      }
+
+      // Фотография - быстрая реакция на скролл
+      if (rightRef.current) {
+        gsap.fromTo(
+          rightRef.current,
+          { yPercent: 0 },
+          {
+            yPercent: 35,
+            ease: 'none',
+            scrollTrigger: createConfig({
+              end: '+=140%',
+              scrub: 0.3,
+            }),
+          }
+        );
+      }
+    }, containerRef);
+
+    return () => {
+      ctx.revert();
+      // Дополнительная очистка ScrollTrigger instances
+      ScrollTrigger.getAll().forEach(trigger => {
+        if (trigger.vars.trigger === containerRef.current) {
+          trigger.kill();
+        }
+      });
+    };
+  }, []);
+
   return (
-    <section 
-      className="hero-section hero-section-main" 
-      style={{
-        marginTop: -96,
-        position: 'relative'
-      }}
-    >
-      <BackgroundContent />
-      <ScrollDownArrow visible={showArrow} />
+    <section ref={containerRef} className="hero-section hero-split">
+      <div className="hero-logo-overlay" ref={logoRef}>
+        RAVIX
+      </div>
+
+      <div className="hero-split-left">
+        <div className="hero-left-inner">
+          <p className="hero-left-copy" ref={primaryCopyRef}>
+            REWRITE THE RULES
+            <br />
+            UNAPOLOGETIC STYLE,
+            <br />
+            FEARLESS VIBE
+          </p>
+          <p className="hero-left-copy hero-left-copy--secondary" ref={secondaryCopyRef}>
+            BEYOND LIMITS
+            <br />
+            PURE ADRENALINE
+            <br />
+            OWN THE MOMENT
+          </p>
+        </div>
+      </div>
+
+      <div
+        className="hero-split-right"
+        ref={rightRef}
+        style={bgUrl ? { backgroundImage: `url(${bgUrl})` } : undefined}
+      >
+        {videoData && currentVideoUrl && (
+          <VideoPlayer
+            key={currentVideoIndex}
+            url={currentVideoUrl}
+            autoplay={true}
+            muted={true}
+            loop={!videoData.playlistMode && videoData.loop}
+            onEnded={videoData.playlistMode ? handleVideoEnded : null}
+            className="hero-video-player"
+          />
+        )}
+      </div>
     </section>
   );
-}
+};
 
 export default HeroSection;

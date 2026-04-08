@@ -13,7 +13,6 @@ export const fetchUserAddresses = async () => {
     const { data } = await axios.get('/api/addresses/');
     return data;
   } catch (error) {
-    console.error('Ошибка при получении адресов:', error);
     throw error;
   }
 };
@@ -28,7 +27,6 @@ export const addUserAddress = async (addressData) => {
     const { data } = await axios.post('/api/addresses/', addressData);
     return data;
   } catch (error) {
-    console.error('Ошибка при добавлении адреса:', error);
     throw error;
   }
 };
@@ -44,7 +42,6 @@ export const updateUserAddress = async (addressId, addressData) => {
     const { data } = await axios.put(`/api/addresses/${addressId}/`, addressData);
     return data;
   } catch (error) {
-    console.error('Ошибка при обновлении адреса:', error);
     throw error;
   }
 };
@@ -59,7 +56,6 @@ export const deleteUserAddress = async (addressId) => {
     await axios.delete(`/api/addresses/${addressId}/`);
     return true;
   } catch (error) {
-    console.error('Ошибка при удалении адреса:', error);
     throw error;
   }
 };
@@ -74,7 +70,6 @@ export const setDefaultAddress = async (addressId) => {
     const { data } = await axios.post(`/api/addresses/${addressId}/set_default/`);
     return data;
   } catch (error) {
-    console.error('Ошибка при установке адреса по умолчанию:', error);
     throw error;
   }
 };

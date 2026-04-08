@@ -27,9 +27,9 @@ from django.forms import (
 )
 
 from .base_admin import BaseProductAdmin, BaseImageInline, BaseSizeInline
-from ..models import Product, ProductSize, ProductImage
+from ..models import Product, ProductSize, ProductImage, ProductColor
 from ..services.product_service import ProductService
-from ..forms import ProductSizeForm, ProductImageForm
+from ..forms import ProductSizeForm, ProductImageForm, ProductColorForm
 
 # Создаем экземпляр сервиса
 product_service = ProductService()
@@ -148,6 +148,55 @@ class ProductImageInline(BaseImageInline):
     readonly_fields = ['image_preview']
 
 
+class ProductColorInline(admin.TabularInline):
+    """
+    Inline для управления цветами товаров.
+    
+    Позволяет добавлять цвета с HEX кодами и отслеживать наличие.
+    """
+    model = ProductColor
+    form = ProductColorForm
+    verbose_name = _("Цвет")
+    verbose_name_plural = _("Цвета")
+    extra = 1
+    min_num = 0
+    max_num = 20
+    tab = True
+    fields = ['name', 'hex_code', 'color_preview', 'stock_quantity', 'is_active']
+    readonly_fields = ['color_preview']
+    can_delete = True
+    show_change_link = True
+    
+    def color_preview(self, obj):
+        """Предварительный просмотр цвета"""
+        if obj.hex_code:
+            return format_html(
+                '<div style="width: 30px; height: 30px; background-color: {}; border-radius: 50%; border: 1px solid #ccc;"></div>',
+                obj.hex_code
+            )
+        return "—"
+    color_preview.short_description = "Превью"
+
+
+class ProductColorAdmin(admin.ModelAdmin):
+    """Администрирование цветов товаров"""
+    list_display = ['product', 'name', 'color_preview', 'hex_code', 'stock_quantity', 'is_active']
+    list_filter = ['is_active', 'product__category']
+    search_fields = ['product__name', 'name', 'hex_code']
+    list_editable = ['stock_quantity', 'is_active']
+    autocomplete_fields = ['product']
+    
+    def color_preview(self, obj):
+        """Предварительный просмотр цвета"""
+        if obj.hex_code:
+            return format_html(
+                '<div style="width: 25px; height: 25px; background-color: {}; border-radius: 50%; border: 1px solid #ccc; display: inline-block;"></div>',
+                obj.hex_code
+            )
+        return "—"
+    color_preview.short_description = "Цвет"
+
+
 @admin.register(Product)
 class ProductAdmin(BaseProductAdmin):
     """
@@ -194,8 +243,8 @@ class ProductAdmin(BaseProductAdmin):
         })
     )
     
-    # Размеры и изображения управляются через inline-формы в отдельных вкладках
-    inlines = [ProductSizeInline, ProductImageInline]
+    # Размеры, цвета и изображения управляются через inline-формы в отдельных вкладках
+    inlines = [ProductSizeInline, ProductColorInline, ProductImageInline]
     
     # Настройки формы - официальные Unfold виджеты для всех полей
     formfield_overrides = {
@@ -298,3 +347,4 @@ class ProductAdmin(BaseProductAdmin):
 # Регистрация дополнительных админ-классов
 admin.site.register(ProductSize, ProductSizeAdmin)
 admin.site.register(ProductImage, ProductImageAdmin)
+admin.site.register(ProductColor, ProductColorAdmin)

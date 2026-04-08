@@ -1,0 +1,113 @@
+/* Стили для админки - убираем белый фон при наведении на поля ввода */
+
+/* Убираем белый фон при наведении и фокусе на поля ввода */
+input:hover,
+input:focus {
+    background-color: transparent !important;
+}
+
+/* Специфичные поля */
+.field-name input:hover,
+.field-name input:focus,
+.field-quantity input:hover,
+.field-quantity input:focus {
+    background-color: transparent !important;
+}
+
+/* Поля Django админки */
+.vTextField:hover,
+.vTextField:focus,
+.vIntegerField:hover,
+.vIntegerField:focus {
+    background-color: transparent !important;
+}
+
+/* Поля в inline формах */
+.inline-group input:hover,
+.inline-group input:focus {
+    background-color: transparent !important;
+}
+
+/* Скрываем стандартные элементы добавления */
+tr.add-row,
+a.addlink,
+div.add-row {
+    display: none !important;
+}
+
+/* Стили для контейнера кнопки */
+.add-button-container {
+    text-align: right !important;
+    margin: 10px 0 !important;
+    padding: 10px !important;
+}
+
+/* Темная тема поддержка */
+@media (prefers-color-scheme: dark) {
+    .add-row {
+        background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%) !important;
+        border-color: #4a5568 !important;
+    }
+    
+    .inline-group .tabular .add-row {
+        background: linear-gradient(135deg, #2a4a6b 0%, #1e3a5f 100%) !important;
+        border-color: #007cba !important;
+    }
+}
+
+/* Дополнительные улучшения для лучшего UX */
+.custom-add-size-btn:focus {
+    outline: 3px solid rgba(0, 124, 186, 0.3) !important;
+    outline-offset: 2px !important;
+}
+
+/* Анимация загрузки при добавлении новой формы */
+.dynamic-form {
+    animation: slideInDown 0.4s ease-out !important;
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Улучшение видимости в админке Django Unfold */
+.unfold .custom-add-size-btn {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+    border-color: #1d4ed8 !important;
+}
+
+.unfold .custom-add-size-btn:hover {
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
+    border-color: #1e40af !important;
+}
+
+/* Убираем белый фон при наведении на input поля */
+input:hover,
+input:focus,
+.field-name input:hover,
+.field-name input:focus,
+.field-quantity input:hover,
+.field-quantity input:focus,
+.vTextField:hover,
+.vTextField:focus,
+.vIntegerField:hover,
+.vIntegerField:focus {
+    background-color: transparent !important;
+    background: transparent !important;
+}
+
+/* Убираем белый фон для всех полей ввода в inline формах */
+.inline-group input:hover,
+.inline-group input:focus,
+.inline-related input:hover,
+.inline-related input:focus {
+    background-color: transparent !important;
+    background: transparent !important;
+}

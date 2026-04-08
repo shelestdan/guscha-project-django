@@ -13,7 +13,6 @@ export const fetchUserOrders = async () => {
     const { data } = await axios.get('/api/orders/');
     return data;
   } catch (error) {
-    console.error('Ошибка при получении заказов:', error);
     throw error;
   }
 };
@@ -28,7 +27,6 @@ export const fetchOrderDetails = async (orderId) => {
     const { data } = await axios.get(`/api/orders/${orderId}/`);
     return data;
   } catch (error) {
-    console.error('Ошибка при получении деталей заказа:', error);
     throw error;
   }
 };
@@ -43,7 +41,6 @@ export const createOrder = async (orderData) => {
     const { data } = await axios.post('/api/orders/', orderData);
     return data;
   } catch (error) {
-    console.error('Ошибка при создании заказа:', error);
     throw error;
   }
 };
@@ -58,7 +55,6 @@ export const cancelOrder = async (orderId) => {
     const { data } = await axios.post(`/api/orders/${orderId}/cancel/`);
     return data;
   } catch (error) {
-    console.error('Ошибка при отмене заказа:', error);
     throw error;
   }
 };
@@ -73,7 +69,6 @@ export const fetchOrderStatusHistory = async (orderId) => {
     const { data } = await axios.get(`/api/orders/${orderId}/status-history/`);
     return data;
   } catch (error) {
-    console.error('Ошибка при получении истории статусов:', error);
     throw error;
   }
 };
@@ -88,7 +83,6 @@ export const reorderOrder = async (orderId) => {
     const { data } = await axios.post(`/api/orders/${orderId}/reorder/`);
     return data;
   } catch (error) {
-    console.error('Ошибка при повторном заказе:', error);
     throw error;
   }
 };

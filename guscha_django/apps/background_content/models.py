@@ -228,11 +228,28 @@ class SlideshowImage(models.Model):
         return f"Слайд {self.order} для {self.slideshow.background_content.title}{primary_text}"
 
 
+def background_video_upload_path(instance, filename):
+    """Генерация пути для загрузки фоновых видео"""
+    import uuid
+    from pathlib import Path
+    
+    # Получаем расширение файла
+    ext = Path(filename).suffix.lower()
+    # Генерируем уникальное имя файла
+    unique_filename = f"{uuid.uuid4().hex}{ext}"
+    
+    return f"backgrounds/videos/{unique_filename}"
+
+
 class BackgroundVideo(models.Model):
-    """Модель для фоновых видео с поддержкой YouTube и Vimeo"""
+    """Модель для настроек и хранения фоновых видео"""
+    # Сохраняем это только для настроек (autoplay, muted, loop)
+    # Можно использовать для single-video legacy, но лучше переходить на Items
+    
     PLATFORMS = [
         ('youtube', 'YouTube'),
         ('vimeo', 'Vimeo'),
+        ('file', 'Локальный файл'),
     ]
     
     background_content = models.OneToOneField(
@@ -241,10 +258,26 @@ class BackgroundVideo(models.Model):
         related_name='background_video',
         verbose_name='Фоновый контент'
     )
+    # Legacy fields (optional now)
     video_url = models.URLField(
         max_length=500,
         verbose_name='URL видео',
-        help_text='Ссылка на YouTube или Vimeo видео'
+        help_text='Ссылка на YouTube или Vimeo видео',
+        blank=True,
+        null=True
+    )
+    file = models.FileField(
+        upload_to=background_video_upload_path,
+        verbose_name='Видео файл',
+        help_text='Локальный видео файл (mp4, webm)',
+        blank=True,
+        null=True,
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=['mp4', 'webm'],
+                message='Поддерживаемые форматы: MP4, WebM'
+            )
+        ]
     )
     platform = models.CharField(
         max_length=20,
@@ -252,6 +285,8 @@ class BackgroundVideo(models.Model):
         default='youtube',
         verbose_name='Платформа'
     )
+    
+    # Settings
     autoplay = models.BooleanField(
         default=True,
         verbose_name='Автовоспроизведение'
@@ -265,65 +300,115 @@ class BackgroundVideo(models.Model):
         verbose_name='Зацикливание'
     )
     
-    # Настройки плейлиста
     playlist_order = models.PositiveIntegerField(default=0, verbose_name="Порядок в плейлисте")
     playlist_mode = models.BooleanField(default=False, verbose_name="Режим плейлиста")
     
     class Meta:
-        verbose_name = 'Фоновое видео'
-        verbose_name_plural = 'Фоновые видео'
+        verbose_name = 'Настройки видео'
+        verbose_name_plural = 'Настройки видео'
     
     def __str__(self):
         return f"Видео для {self.background_content.title}"
     
     def clean(self):
-        """Валидация URL видео для поддерживаемых платформ"""
+        """Валидация (мягкая, так как теперь используем Items)"""
         super().clean()
-        
-        youtube_pattern = r'(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w\-_]+)'
-        vimeo_pattern = r'(?:https?:\/\/)?(?:www\.)?vimeo\.com\/(\d+)'
-        
-        if self.platform == 'youtube':
-            if not re.match(youtube_pattern, self.video_url):
-                raise ValidationError('Неверный формат URL для YouTube видео')
-        elif self.platform == 'vimeo':
-            if not re.match(vimeo_pattern, self.video_url):
-                raise ValidationError('Неверный формат URL для Vimeo видео')
+        # Старая валидация мешает, убираем строгие проверки, если есть Items
+        # Но если Items нет, можно проверить? 
+        # Пока просто уберем строгую валидацию здесь, перенесем её в Items.
+        pass
     
     def get_embed_url(self):
-        """Получение URL для встраивания видео"""
-        if self.platform == 'youtube':
+        # Legacy support
+        if self.platform == 'file' and self.file:
+            return self.file.url
+        if self.platform == 'youtube' and self.video_url:
+            # ... existing logic ...
             youtube_pattern = r'(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w\-_]+)'
             match = re.match(youtube_pattern, self.video_url)
             if match:
-                video_id = match.group(1)
-                params = []
-                if self.autoplay:
-                    params.append('autoplay=1')
-                if self.muted:
-                    params.append('mute=1')
-                if self.loop:
-                    params.append(f'loop=1&playlist={video_id}')
-                params.append('controls=0')
-                params.append('showinfo=0')
-                params.append('rel=0')
-                param_string = '&'.join(params)
-                return f'https://www.youtube.com/embed/{video_id}?{param_string}'
-        
-        elif self.platform == 'vimeo':
-            vimeo_pattern = r'(?:https?:\/\/)?(?:www\.)?vimeo\.com\/(\d+)'
-            match = re.match(vimeo_pattern, self.video_url)
-            if match:
-                video_id = match.group(1)
-                params = []
-                if self.autoplay:
-                    params.append('autoplay=1')
-                if self.muted:
-                    params.append('muted=1')
-                if self.loop:
-                    params.append('loop=1')
-                params.append('background=1')
-                param_string = '&'.join(params)
-                return f'https://player.vimeo.com/video/{video_id}?{param_string}'
-        
+                 return f'https://www.youtube.com/embed/{match.group(1)}?controls=0&showinfo=0&rel=0&autoplay=1&mute=1&loop=1'
+        return self.video_url
+
+
+class BackgroundVideoItem(models.Model):
+    """Элемент списка воспроизведения видео"""
+    PLATFORMS = [
+        ('youtube', 'YouTube'),
+        ('vimeo', 'Vimeo'),
+        ('file', 'Локальный файл'),
+    ]
+    
+    background_content = models.ForeignKey(
+        BackgroundContent,
+        on_delete=models.CASCADE,
+        related_name='video_items',
+        verbose_name='Фоновый контент'
+    )
+    
+    platform = models.CharField(
+        max_length=20,
+        choices=PLATFORMS,
+        default='youtube',
+        verbose_name='Платформа'
+    )
+    
+    video_url = models.URLField(
+        max_length=500,
+        verbose_name='URL видео',
+        help_text='Ссылка на YouTube или Vimeo видео',
+        blank=True,
+        null=True
+    )
+    
+    file = models.FileField(
+        upload_to=background_video_upload_path,
+        verbose_name='Видео файл',
+        help_text='Локальный видео файл (mp4, webm)',
+        blank=True,
+        null=True,
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=['mp4', 'webm'],
+                message='Поддерживаемые форматы: MP4, WebM'
+            )
+        ]
+    )
+    
+    order = models.PositiveIntegerField(
+        default=0,
+        verbose_name='Порядок'
+    )
+    
+    class Meta:
+        verbose_name = 'Видео элемент'
+        verbose_name_plural = 'Видео элементы'
+        ordering = ['order']
+
+    def clean(self):
+        """Валидация: Или файл, Или URL"""
+        # Если загружен файл, принудительно ставим платформу 'file'
+        if self.file:
+            self.platform = 'file'
+
+        if self.platform == 'file':
+            if not self.file:
+                # Если это создание нового и файл не выбран
+                if not self.pk:
+                     raise ValidationError({'file': 'Необходимо загрузить файл.'})
+            # Очищаем URL если выбран файл
+            if self.video_url:
+                self.video_url = None
+                
+        elif self.platform in ['youtube', 'vimeo']:
+            if not self.video_url:
+                raise ValidationError({'video_url': 'Необходимо указать URL.'})
+            
+            # Очищаем файл если выбран URL
+            if self.file:
+                self.file = None
+
+    def get_url(self):
+        if self.platform == 'file' and self.file:
+            return self.file.url
         return self.video_url

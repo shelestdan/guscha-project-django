@@ -1,7 +1,26 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import './styles/BurgerMenu.css';
+
+// Throttle helper для оптимизации resize events
+const throttle = (fn, delay) => {
+  let lastCall = 0;
+  let timeoutId = null;
+  return (...args) => {
+    const now = Date.now();
+    if (now - lastCall >= delay) {
+      lastCall = now;
+      fn(...args);
+    } else if (!timeoutId) {
+      timeoutId = setTimeout(() => {
+        lastCall = Date.now();
+        timeoutId = null;
+        fn(...args);
+      }, delay - (now - lastCall));
+    }
+  };
+};
 
 const BurgerMenu = ({
   black = false,
@@ -63,11 +82,23 @@ const BurgerMenu = ({
       }
       
       const headerLeft = document.querySelector('.header-left');
-      if (headerLeft) {
-        const rect = headerLeft.getBoundingClientRect();
+      const headerCenter = document.querySelector('.header-center');
+      
+      if (headerLeft && headerCenter) {
+        const leftRect = headerLeft.getBoundingClientRect();
+        const centerRect = headerCenter.getBoundingClientRect();
+        // Выравниваем по вертикальному центру логотипа
         const btnHeight = 40;
-        const top = rect.top + rect.height / 2 - btnHeight / 2;
-        const left = rect.left + 8;
+        const top = centerRect.top + centerRect.height / 2 - btnHeight / 2;
+        const left = leftRect.left + 8;
+        setBtnTop(`${Math.max(top, 8)}px`);
+        setBtnLeft(`${Math.max(left, 8)}px`);
+      } else if (header && headerLeft) {
+        const headerRect = header.getBoundingClientRect();
+        const leftRect = headerLeft.getBoundingClientRect();
+        const btnHeight = 40;
+        const top = headerRect.top + headerRect.height / 2 - btnHeight / 2;
+        const left = leftRect.left + 8;
         setBtnTop(`${Math.max(top, 8)}px`);
         setBtnLeft(`${Math.max(left, 8)}px`);
       } else {
@@ -77,7 +108,11 @@ const BurgerMenu = ({
     };
 
     updateBtnPos();
-    window.addEventListener('resize', updateBtnPos);
+    
+    // Throttled версия для resize
+    const throttledUpdateBtnPos = throttle(updateBtnPos, 100);
+    
+    window.addEventListener('resize', throttledUpdateBtnPos, { passive: true });
 
     const header = document.querySelector('.header-container');
     let observer = null;
@@ -102,7 +137,7 @@ const BurgerMenu = ({
     }
 
     return () => {
-      window.removeEventListener('resize', updateBtnPos);
+      window.removeEventListener('resize', throttledUpdateBtnPos);
       if (observer) observer.disconnect();
       if (debounceTimer) clearTimeout(debounceTimer);
     };
@@ -180,7 +215,7 @@ const BurgerMenu = ({
             Аккаунт
           </Link>
           <button className="burger-nav-button" onClick={() => scrollToSection('box-office')}>
-            BOX OFFICE
+            RAVIX
           </button>
           <button className="burger-nav-button" onClick={() => scrollToSection('contacts')}>
             Контакты

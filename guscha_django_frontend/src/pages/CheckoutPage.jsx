@@ -40,35 +40,18 @@ const CheckoutPage = () => {
 
   // Функция для загрузки сохраненных адресов
   const fetchSavedAddresses = async () => {
-    console.log('🔥 НАЧАЛО fetchSavedAddresses - функция вызвана!');
     try {
-      const token = localStorage.getItem('token'); // Исправлено: используем 'token' вместо 'access_token'
-      console.log('🔥 Проверяем токен:', token ? 'найден' : 'НЕ НАЙДЕН');
-      
-      if (!token) {
-        console.log('🏠 Токен не найден, пропускаем загрузку адресов');
-        return;
-      }
-      
-      console.log('🏠 Загружаем сохраненные адреса...');
+      // Токен теперь в httpOnly cookie, поэтому просто пробуем загрузить адреса
       const response = await addressesApi.getAddresses();
-      console.log('🔥 Ответ от API:', response);
-      
+
       if (response.data) {
         // API возвращает массив адресов напрямую
         const addresses = Array.isArray(response.data) ? response.data : response.data.results || [];
-        console.log('🏠 Загружено адресов:', addresses.length, addresses);
         setSavedAddresses(addresses);
-      } else {
-        console.log('🔥 response.data пустой:', response.data);
       }
     } catch (error) {
-      console.error('🔥 ОШИБКА в fetchSavedAddresses:', error);
-      console.error('🔥 Детали ошибки:', error.response?.data);
-      console.error('🔥 Статус ошибки:', error.response?.status);
       // Не показываем ошибку пользователю, так как это не критично
     }
-    console.log('🔥 КОНЕЦ fetchSavedAddresses');
   };
 
   // Загрузка данных пользователя, если он авторизован
@@ -88,63 +71,63 @@ const CheckoutPage = () => {
         }));
       }
     } catch (error) {
-      console.error('Ошибка загрузки данных пользователя:', error);
+      // Ошибка загрузки данных пользователя
     }
   };
 
   // Создание резервирований для товаров в корзине
   const createReservations = async () => {
     try {
-      console.log('🛒 Создаем резервирования для товаров в корзине...');
       const result = await createCartReservations();
-      console.log('🛒 Резервирования созданы:', result);
-      
+
       if (result.errors && result.errors.length > 0) {
-        console.warn('🛒 Некоторые товары не удалось зарезервировать:', result.errors);
         showError('Некоторые товары могут быть недоступны. Проверьте корзину.');
         return;
       }
-      
+
       // Подсчитываем новые и существующие резервирования
       const newReservations = result.reservations_created?.filter(r => r.status === 'created') || [];
-      const existingReservations = result.reservations_created?.filter(r => r.status === 'already_exists') || [];
-      
+
       if (newReservations.length > 0) {
-        console.log(`🛒 Создано новых резервирований: ${newReservations.length}`);
         showSuccess(`Товары зарезервированы на 30 минут (${newReservations.length} новых)`);
-      } else if (existingReservations.length > 0) {
-        console.log(`🛒 Все товары уже зарезервированы: ${existingReservations.length}`);
-        // Не показываем уведомление, если все резервирования уже существуют
-      } else {
-        console.log('🛒 Нет товаров для резервирования');
       }
     } catch (error) {
-      console.error('🛒 Ошибка создания резервирований:', error);
       showError('Не удалось зарезервировать товары. Некоторые позиции могут быть недоступны.');
     }
   };
 
   // Проверяем, есть ли товары в корзине и загружаем адреса и данные пользователя
   useEffect(() => {
-    console.log('🔥 useEffect ЗАПУЩЕН! items.length:', items.length);
+    let isMounted = true;
+    
     if (items.length === 0) {
-      console.log('🔥 Корзина пуста, перенаправляем на главную');
       navigate('/');
       showError('Корзина пуста. Добавьте товары перед оформлением заказа.');
     } else {
-      console.log('🔥 Корзина НЕ пуста, загружаем данные...');
       // Создаем резервирования для товаров в корзине
-      createReservations();
-      console.log('🔥 Вызываем fetchSavedAddresses...');
-      fetchSavedAddresses();
-      console.log('🔥 Вызываем fetchUserData...');
-      fetchUserData();
+      if (isMounted) createReservations();
+      if (isMounted) fetchSavedAddresses();
+      if (isMounted) fetchUserData();
     }
+    
+    return () => {
+      isMounted = false;
+    };
   }, [items.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Проверка валидности формы
+  const isFormValid = 
+    formData.billing_address.first_name.trim() !== '' &&
+    formData.billing_address.last_name.trim() !== '' &&
+    formData.billing_address.email.trim() !== '' &&
+    formData.billing_address.phone.trim() !== '' &&
+    formData.billing_address.address_line1.trim() !== '' &&
+    formData.billing_address.city.trim() !== '' &&
+    formData.billing_address.postal_code.trim() !== '';
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     if (name.includes('.')) {
       const [section, field] = name.split('.');
       setFormData({
@@ -167,15 +150,6 @@ const CheckoutPage = () => {
     const address = savedAddresses.find(addr => addr.id === parseInt(addressId));
     if (!address) return;
 
-    console.log('🏠 Выбран адрес:', address);
-    console.log('🏠 full_address:', address.full_address);
-    console.log('🏠 Отдельные поля:', {
-      address_line1: address.address_line1,
-      address_line2: address.address_line2,
-      city: address.city,
-      postal_code: address.postal_code
-    });
-
     // Парсим full_name в first_name и last_name
     const fullName = address.full_name || `${address.first_name || ''} ${address.last_name || ''}`.trim();
     const nameParts = fullName.split(' ');
@@ -195,51 +169,29 @@ const CheckoutPage = () => {
 
     // Если есть full_address, попробуем извлечь из него данные
     if (address.full_address) {
-      console.log('🏠 Парсим full_address:', address.full_address);
-      
       // Разделяем по запятым и анализируем структуру
       const addressParts = address.full_address.split(',').map(part => part.trim());
-      console.log('🏠 Части адреса:', addressParts);
-      
+
       // Реальный формат: "Улица дом", "Квартира", "Город", "Индекс", "Страна" (5 частей)
-      // Исправляем логику парсинга согласно фактическому формату
       if (addressParts.length >= 1) {
-        // Первая часть - улица и номер дома
         addressData.address_line1 = addressParts[0];
       }
       if (addressParts.length >= 2) {
-        // Вторая часть - квартира
         addressData.address_line2 = addressParts[1];
       }
       if (addressParts.length >= 3) {
-        // Третья часть - город
         addressData.city = addressParts[2];
       }
       if (addressParts.length >= 4) {
-        // Четвертая часть - почтовый индекс
         addressData.postal_code = addressParts[3];
       }
       if (addressParts.length >= 5) {
-        // Пятая часть - страна
         addressData.country = addressParts[4];
       }
-      
-      console.log('🏠 Результат парсинга:', addressData);
     }
 
     setSelectedBillingAddress(addressId);
     setFormData({
-      ...formData,
-      billing_address: {
-        ...formData.billing_address,
-        ...addressData,
-        // Email и phone берем из адреса, если есть, иначе оставляем из профиля
-        email: formData.billing_address.email, // Email остается из профиля пользователя
-        phone: address.phone || formData.billing_address.phone // Phone из адреса или профиля
-      }
-    });
-    
-    console.log('🏠 Финальные данные формы:', {
       ...formData,
       billing_address: {
         ...formData.billing_address,
@@ -249,8 +201,6 @@ const CheckoutPage = () => {
       }
     });
   };
-
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -269,25 +219,22 @@ const CheckoutPage = () => {
         payment_method: formData.payment_method,
         notes: formData.notes
       };
-      
+
       // Если выбран сохраненный адрес, добавляем его ID
       if (selectedBillingAddress) {
         checkoutData.billing_address_id = parseInt(selectedBillingAddress);
       }
-      
-      console.log('Отправляем данные заказа:', checkoutData);
-      
+
       const orderResult = await createOrder(checkoutData);
-      
+
       // Очищаем корзину после успешного оформления заказа
       await clearCart();
-      
+
       showSuccess('Заказ успешно оформлен!');
-      
+
       // Перенаправляем на страницу подтверждения заказа
       navigate(`/order-confirmation/${orderResult.id}`);
     } catch (error) {
-      console.error('Ошибка при создании заказа:', error);
       showError(error.response?.data?.detail || error.response?.data?.message || 'Произошла ошибка при оформлении заказа');
     } finally {
       setLoading(false);
@@ -297,12 +244,12 @@ const CheckoutPage = () => {
   return (
     <div className="checkout-page">
       <h1>Оформление заказа</h1>
-      
+
       <div className="checkout-container">
-        <form className="checkout-form" onSubmit={handleSubmit}>
+        <form id="checkout-form" className="checkout-form" onSubmit={handleSubmit}>
           <div className="form-section">
             <h2>Информация о плательщике</h2>
-            
+
             <div className="form-group">
               <label htmlFor="billing_address_select">Сохранённые адреса</label>
               <select
@@ -314,7 +261,7 @@ const CheckoutPage = () => {
                 <option value="">-- Выберите адрес или введите новый --</option>
                 {savedAddresses.map((address) => (
                   <option key={address.id} value={address.id}>
-                    {address.full_name || `${address.first_name || ''} ${address.last_name || ''}`.trim()} | 
+                    {address.full_name || `${address.first_name || ''} ${address.last_name || ''}`.trim()} |
                     {address.full_address || (
                       `${address.address_line1 || ''}${address.address_line2 ? `, ${address.address_line2}` : ''}, ${address.city || ''}, ${address.postal_code || ''}`
                     )}
@@ -322,7 +269,7 @@ const CheckoutPage = () => {
                 ))}
               </select>
             </div>
-            
+
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="billing_first_name">Имя*</label>
@@ -347,7 +294,7 @@ const CheckoutPage = () => {
                 />
               </div>
             </div>
-            
+
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="billing_email">Email*</label>
@@ -372,7 +319,7 @@ const CheckoutPage = () => {
                 />
               </div>
             </div>
-            
+
             <div className="form-group">
               <label htmlFor="billing_address_line1">Адрес*</label>
               <input
@@ -385,7 +332,7 @@ const CheckoutPage = () => {
                 required
               />
             </div>
-            
+
             <div className="form-group">
               <label htmlFor="billing_address_line2">Квартира/Офис</label>
               <input
@@ -397,7 +344,7 @@ const CheckoutPage = () => {
                 placeholder="Квартира, офис, подъезд"
               />
             </div>
-            
+
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="billing_city">Город*</label>
@@ -423,7 +370,7 @@ const CheckoutPage = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="form-section">
             <h2>Способ доставки</h2>
             <div className="radio-group">
@@ -441,7 +388,7 @@ const CheckoutPage = () => {
                   <span className="radio-description">3-5 рабочих дней</span>
                 </label>
               </div>
-              
+
               <div className="radio-option">
                 <input
                   type="radio"
@@ -458,7 +405,7 @@ const CheckoutPage = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="form-section">
             <h2>Способ оплаты</h2>
             <div className="radio-group">
@@ -475,7 +422,7 @@ const CheckoutPage = () => {
                   <span className="radio-title">СБП</span>
                 </label>
               </div>
-              
+
               <div className="radio-option">
                 <input
                   type="radio"
@@ -489,7 +436,7 @@ const CheckoutPage = () => {
                   <span className="radio-title">Банковская карта</span>
                 </label>
               </div>
-              
+
               <div className="radio-option">
                 <input
                   type="radio"
@@ -503,7 +450,7 @@ const CheckoutPage = () => {
                   <span className="radio-title">Зарубежная карта</span>
                 </label>
               </div>
-              
+
               <div className="radio-option">
                 <input
                   type="radio"
@@ -517,7 +464,7 @@ const CheckoutPage = () => {
                   <span className="radio-title">Долями</span>
                 </label>
               </div>
-              
+
               <div className="radio-option">
                 <input
                   type="radio"
@@ -533,7 +480,7 @@ const CheckoutPage = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="form-section">
             <h2>Дополнительная информация</h2>
             <div className="form-group">
@@ -547,19 +494,16 @@ const CheckoutPage = () => {
               />
             </div>
           </div>
-          
-          <button type="submit" className="checkout-button" disabled={loading}>
-            {loading ? 'Оформление...' : 'Оформить заказ'}
-          </button>
+
         </form>
-        
+
         <div className="order-summary">
           <h2>Ваш заказ</h2>
           <div className="order-items">
             {items.map((item) => {
               const productImage = getProductImageUrl(item);
               const productName = getProductName(item);
-              
+
               return (
                 <div key={item.id} className="order-item">
                   {productImage && (
@@ -577,7 +521,7 @@ const CheckoutPage = () => {
               );
             })}
           </div>
-          
+
           <div className="order-totals">
             <div className="total-row">
               <span>Подытог:</span>
@@ -594,6 +538,15 @@ const CheckoutPage = () => {
               </span>
             </div>
           </div>
+
+          <button 
+            type="submit" 
+            form="checkout-form"
+            className="checkout-button" 
+            disabled={loading || !isFormValid}
+          >
+            {loading ? 'Оформление...' : 'Оформить заказ'}
+          </button>
         </div>
       </div>
     </div>

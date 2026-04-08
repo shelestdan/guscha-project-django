@@ -16,7 +16,6 @@ const OrderConfirmationPage = () => {
         setOrder(orderData);
       } catch (err) {
         setError('Не удалось загрузить информацию о заказе. Пожалуйста, попробуйте позже.');
-        console.error('Error fetching order:', err);
       } finally {
         setLoading(false);
       }

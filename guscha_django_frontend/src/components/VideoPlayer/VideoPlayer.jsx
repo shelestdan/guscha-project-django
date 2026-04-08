@@ -2,14 +2,14 @@ import React from 'react';
 import ReactPlayer from 'react-player';
 import './VideoPlayer.css';
 
-const VideoPlayer = ({ 
-  url, 
-  autoplay = false, 
-  muted = false, 
-  loop = false, 
+const VideoPlayer = ({
+  url,
+  autoplay = false,
+  muted = false,
+  loop = false,
   onEnded = null,
   className = '',
-  ...props 
+  ...props
 }) => {
   const playerConfig = {
     youtube: {
@@ -24,7 +24,8 @@ const VideoPlayer = ({
         playsinline: 1,
         autoplay: autoplay ? 1 : 0,
         mute: muted ? 1 : 0,
-        loop: loop ? 1 : 0
+        loop: loop ? 1 : 0,
+        origin: window.location.origin
       },
       embedOptions: {
         host: 'https://www.youtube-nocookie.com'
@@ -58,12 +59,8 @@ const VideoPlayer = ({
         height="100%"
         config={playerConfig}
         onEnded={onEnded}
-        onError={(error) => {
-          console.error('❌ Ошибка воспроизведения видео:', error);
-        }}
-        onReady={() => {
-          console.log('✅ Видео готово к воспроизведению');
-        }}
+        onError={() => {}}
+        onReady={() => {}}
         {...props}
       />
       {/* Защитный слой для предотвращения взаимодействия */}

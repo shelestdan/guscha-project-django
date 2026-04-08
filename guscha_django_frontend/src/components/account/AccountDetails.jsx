@@ -51,7 +51,6 @@ const AccountDetails = ({ user, onUserUpdate }) => {
       setShowEditModal(false);
       showSuccess('Данные успешно обновлены!');
     } catch (error) {
-      console.error('Ошибка обновления данных:', error);
       showError(
         'Произошла ошибка при обновлении данных: ' +
           (error.response?.data?.message || 'Неизвестная ошибка')

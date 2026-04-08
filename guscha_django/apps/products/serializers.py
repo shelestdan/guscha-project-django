@@ -1,8 +1,8 @@
 from rest_framework import serializers
 import json
 from .models import (
-    Category, Product, ProductImage, ProductSize, 
-    ProductVariant, ProductReview, Preorder, PreorderSize, Wishlist
+    Category, Product, ProductImage, ProductSize, ProductColor,
+    ProductVariant, ProductReview, Preorder, PreorderSize, PreorderColor, Wishlist
 )
 
 
@@ -85,6 +85,15 @@ class ProductSizeSerializer(BaseSerializer):
         ]
 
 
+class ProductColorSerializer(BaseSerializer):
+    """Сериализатор для цветов товара"""
+    class Meta:
+        model = ProductColor
+        fields = [
+            'id', 'name', 'hex_code', 'stock_quantity', 'is_active', 'is_available'
+        ]
+
+
 class ProductVariantSerializer(BaseSerializer):
     """Сериализатор для вариантов товара"""
     variant_options = serializers.JSONField()
@@ -123,13 +132,16 @@ class ProductListSerializer(BaseSerializer):
     review_count = serializers.SerializerMethodField()
     is_in_stock = serializers.SerializerMethodField()
     in_wishlist = serializers.SerializerMethodField()
+    sizes = ProductSizeSerializer(many=True, read_only=True)
+    colors = ProductColorSerializer(many=True, read_only=True)
     
     class Meta:
         model = Product
         fields = [
             'id', 'name', 'slug', 'short_description', 'sku', 'category',
             'category_name', 'price', 'compare_price', 'is_active', 'is_featured',
-            'primary_image', 'average_rating', 'review_count', 'is_in_stock', 'in_wishlist'
+            'primary_image', 'average_rating', 'review_count', 'is_in_stock', 'in_wishlist',
+            'sizes', 'colors'
         ]
     
     def get_category_name(self, obj):
@@ -242,6 +254,7 @@ class ProductDetailSerializer(BaseSerializer):
     category_name = serializers.SerializerMethodField()
     product_images = serializers.SerializerMethodField()
     sizes = ProductSizeSerializer(many=True, read_only=True)
+    colors = ProductColorSerializer(many=True, read_only=True)
     variants = ProductVariantSerializer(many=True, read_only=True)
     reviews = serializers.SerializerMethodField()
     average_rating = serializers.SerializerMethodField()
@@ -257,7 +270,7 @@ class ProductDetailSerializer(BaseSerializer):
             'weight', 'dimensions', 'is_active', 'is_featured', 'requires_shipping',
             'is_digital', 'stock_quantity', 'low_stock_threshold', 'track_inventory',
             'allow_backorder', 'meta_title', 'meta_description', 'search_keywords',
-            'image_url', 'product_images', 'sizes', 'variants', 'reviews', 'average_rating',
+            'image_url', 'product_images', 'sizes', 'colors', 'variants', 'reviews', 'average_rating',
             'review_count', 'is_in_stock', 'in_wishlist', 'created_at', 'updated_at'
         ]
     
@@ -438,32 +451,46 @@ class PreorderSizeSerializer(BaseSerializer):
         ]
 
 
+class PreorderColorSerializer(BaseSerializer):
+    """Сериализатор для цветов предзаказа"""
+    class Meta:
+        model = PreorderColor
+        fields = [
+            'id', 'name', 'hex_code', 'stock_quantity', 'is_active', 'is_available'
+        ]
+
+
 class PreorderListSerializer(BaseSerializer):
     """Сериализатор для списка предзаказов"""
     is_active_now = serializers.BooleanField(read_only=True)
     model_image = serializers.SerializerMethodField()
     product_image = serializers.SerializerMethodField()
+    sizes = PreorderSizeSerializer(many=True, read_only=True)
+    colors = PreorderColorSerializer(many=True, read_only=True)
     
     class Meta:
         model = Preorder
         fields = [
-            'id', 'name', 'slug', 'short_description', 'price',
+            'id', 'name', 'slug', 'description', 'short_description', 'price',
             'image_url', 'model_image', 'product_image', 'is_active', 'is_featured', 'is_active_now',
-            'created_at', 'updated_at'
+            'sizes', 'colors', 'created_at', 'updated_at'
         ]
     
     def get_model_image(self, obj):
-        """Получение изображения модели"""
-        return obj.model_image
+        """Получение изображения модели с fallback на основное"""
+        model_img = obj.model_image
+        return model_img if model_img else obj.image_url
     
     def get_product_image(self, obj):
-        """Получение изображения товара"""
-        return obj.product_image
+        """Получение изображения товара с fallback на основное"""
+        product_img = obj.product_image
+        return product_img if product_img else obj.image_url
 
 
 class PreorderDetailSerializer(BaseSerializer):
     """Сериализатор для детальной информации о предзаказе"""
     sizes = PreorderSizeSerializer(many=True, read_only=True)
+    colors = PreorderColorSerializer(many=True, read_only=True)
     is_active_now = serializers.BooleanField(read_only=True)
     model_image = serializers.SerializerMethodField()
     product_image = serializers.SerializerMethodField()
@@ -474,17 +501,19 @@ class PreorderDetailSerializer(BaseSerializer):
         fields = [
             'id', 'name', 'slug', 'description', 'short_description',
             'price', 'image_url', 'model_image', 'product_image', 'product_images', 'is_active', 'is_featured', 
-            'is_active_now', 'meta_title', 'meta_description', 'sizes', 
+            'is_active_now', 'meta_title', 'meta_description', 'sizes', 'colors',
             'created_at', 'updated_at'
         ]
     
     def get_model_image(self, obj):
-        """Получение изображения модели"""
-        return obj.model_image
+        """Получение изображения модели (detail) с fallback"""
+        model_img = obj.model_image
+        return model_img if model_img else obj.image_url
     
     def get_product_image(self, obj):
-        """Получение изображения товара"""
-        return obj.product_image
+        """Получение изображения товара (detail) с fallback"""
+        product_img = obj.product_image
+        return product_img if product_img else obj.image_url
     
     def get_product_images(self, obj):
         """Получение всех изображений предзаказа (основное + дополнительные)"""

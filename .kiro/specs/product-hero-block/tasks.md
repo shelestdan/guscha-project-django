@@ -1,0 +1,88 @@
+# Implementation Plan
+
+- [x] 1. Create ProductHeroBlock component structure
+  - [x] 1.1 Create ProductHeroBlock.jsx component file with basic structure
+    - Create component with props interface (title, price, modelImage, productImage, onPreorder, onNavigate)
+    - Set up three main sections: text-info, model-image, product-image
+    - _Requirements: 1.1, 1.2, 2.2, 3.2_
+  - [x] 1.2 Create ProductHeroBlock.css with base styles
+    - Implement flexbox layout for three-column structure
+    - Set background color #F5F3EE
+    - Add responsive container styles
+    - _Requirements: 1.3, 7.1_
+  - [ ]* 1.3 Write property test for component rendering
+    - **Property 2: Component Renders Required Elements**
+    - **Validates: Requirements 1.1, 4.1, 5.1**
+
+- [x] 2. Implement text info section
+  - [x] 2.1 Create title and price display
+    - Implement large bold typography for title
+    - Create price formatting utility function
+    - Display price in "X XXX.XX ₽" format
+    - _Requirements: 1.1, 1.2_
+  - [ ]* 2.2 Write property test for price formatting
+    - **Property 1: Price Format Consistency**
+    - **Validates: Requirements 1.2**
+  - [x] 2.3 Implement preorder button
+    - Create button with rectangular border and transparent background
+    - Add hover state styles
+    - Connect onPreorder callback
+    - _Requirements: 4.1, 4.2, 4.3_
+  - [ ]* 2.4 Write property test for preorder button click
+    - **Property 3: Click Handler Invocation**
+    - **Validates: Requirements 4.2**
+  - [x] 2.5 Implement navigation arrow
+    - Add right-pointing arrow (→) below button
+    - Connect onNavigate callback
+    - _Requirements: 5.1, 5.2_
+  - [ ]* 2.6 Write property test for navigation click
+    - **Property 4: Navigation Handler Invocation**
+    - **Validates: Requirements 5.2**
+
+- [x] 3. Implement model image with hexagon mask
+  - [x] 3.1 Create hexagonal clip-path mask
+    - Implement CSS clip-path polygon for hexagon shape
+    - Add shadow/depth effect to container
+    - Position image in center-right area
+    - _Requirements: 2.1, 2.2, 2.3_
+  - [x] 3.2 Add image loading and error handling
+    - Implement onError handler with placeholder fallback
+    - Add loading state with skeleton
+    - _Requirements: 2.2_
+
+- [x] 4. Implement product image with textured border
+  - [x] 4.1 Create textured/torn paper edge effect
+    - Implement SVG mask or CSS filter for torn edge
+    - Add slight rotation transform
+    - Position to the right of model image
+    - _Requirements: 3.1, 3.2, 3.3_
+  - [x] 4.2 Add image loading and error handling
+    - Implement onError handler with placeholder fallback
+    - Add loading state
+    - _Requirements: 3.2_
+  - [ ]* 4.3 Write property test for image URL propagation
+    - **Property 5: Image URL Propagation**
+    - **Validates: Requirements 6.1, 6.2, 6.3**
+
+- [x] 5. Implement responsive design
+  - [x] 5.1 Add tablet breakpoint styles (768px)
+    - Stack elements vertically
+    - Adjust image sizes
+    - _Requirements: 7.1, 7.2_
+  - [x] 5.2 Add mobile breakpoint styles (480px)
+    - Further reduce sizes
+    - Adjust typography for readability
+    - _Requirements: 7.3_
+
+- [x] 6. Integrate with existing page
+  - [x] 6.1 Update CollectionsPage to use ProductHeroBlock
+    - Import and render ProductHeroBlock component
+    - Connect to collection data
+    - _Requirements: 6.3_
+  - [x] 6.2 Connect to API data
+    - Fetch hero content from backend
+    - Map API response to component props
+    - _Requirements: 6.1, 6.2, 6.3_
+
+- [ ] 7. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.

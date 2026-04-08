@@ -1,43 +1,25 @@
 import axios from './axiosInstance';
 
 export async function login(email, password) {
-  const { data } = await axios.post('/api/accounts/users/login/', { email, password }, { withCredentials: true });
-  // Сохраняем токен в localStorage
-  localStorage.setItem('token', data.token);
+  const { data } = await axios.post('/api/accounts/users/login/', { email, password });
+  // Токен сохраняется в httpOnly cookie автоматически
   return data;
 }
 
 export async function register(userData) {
   try {
-    console.log('🔄 Отправка запроса регистрации:', userData);
-    const response = await axios.post('/api/accounts/users/', userData, { withCredentials: true });
-    console.log('✅ Успешный ответ сервера:', response.data);
-    // Сохраняем токен в localStorage
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-    }
+    const response = await axios.post('/api/accounts/users/', userData);
+    // Токен сохраняется в httpOnly cookie автоматически
     // Ожидаем, что сервер вернет verification_id для Telegram-верификации
     return response.data;
   } catch (error) {
-    // Выводим детальную информацию об ошибке ДО того, как ее обработает interceptor
-    console.error('🚨 === ДЕТАЛЬНАЯ ИНФОРМАЦИЯ ОБ ОШИБКЕ РЕГИСТРАЦИИ ===');
-    console.error('❌ Полная ошибка:', error);
-    console.error('❌ HTTP статус:', error.response?.status);
-    console.error('❌ Статус текст:', error.response?.statusText);
-    console.error('❌ Данные ошибки от сервера:', error.response?.data);
-    console.error('❌ Заголовки ответа:', error.response?.headers);
-    console.error('❌ URL запроса:', error.config?.url);
-    console.error('❌ Метод запроса:', error.config?.method);
-    console.error('❌ Данные запроса:', error.config?.data);
-    console.error('🚨 === КОНЕЦ ДЕТАЛЬНОЙ ИНФОРМАЦИИ ===');
-    
     // Обрабатываем специфичные ошибки от сервера
     if (error.response?.data) {
       const serverError = error.response.data;
-      
+
       // Проверяем различные возможные форматы ошибок от Django
       let errorMessage = 'Ошибка регистрации';
-      
+
       if (typeof serverError === 'string') {
         errorMessage = serverError;
       } else if (serverError.detail) {
@@ -47,8 +29,8 @@ export async function register(userData) {
       } else if (serverError.error) {
         errorMessage = serverError.error;
       } else if (serverError.non_field_errors) {
-        errorMessage = Array.isArray(serverError.non_field_errors) 
-          ? serverError.non_field_errors.join(', ') 
+        errorMessage = Array.isArray(serverError.non_field_errors)
+          ? serverError.non_field_errors.join(', ')
           : serverError.non_field_errors;
       } else {
         // Проверяем ошибки по конкретным полям
@@ -64,14 +46,13 @@ export async function register(userData) {
           errorMessage = fieldErrors.join('; ');
         }
       }
-      
-      console.error('📝 Обработанное сообщение об ошибке:', errorMessage);
+
       const detailedError = new Error(errorMessage);
       detailedError.response = error.response;
       detailedError.serverData = serverError;
       throw detailedError;
     }
-    
+
     // Если нет данных от сервера, используем общую ошибку
     const fallbackError = new Error('Ошибка регистрации');
     fallbackError.response = error.response;
@@ -80,16 +61,15 @@ export async function register(userData) {
 }
 
 export async function fetchProfile() {
-  const { data } = await axios.get('/api/accounts/users/me/', { withCredentials: true });
+  const { data } = await axios.get('/api/accounts/users/me/');
   return data;
 }
 
 export async function logout() {
   try {
-    await axios.post('/api/accounts/users/logout/', {}, { withCredentials: true });
+    await axios.post('/api/accounts/users/logout/', {});
   } finally {
-    // Удаляем токен из localStorage в любом случае
-    localStorage.removeItem('token');
+    // Токен удаляется из cookie сервером (через Set-Cookie с истекшим сроком)
   }
 }
 
@@ -98,13 +78,9 @@ export async function changePassword(oldPassword, newPassword) {
     old_password: oldPassword,
     new_password: newPassword,
     new_password_confirm: newPassword
-  }, { withCredentials: true });
-  
-  // Обновляем токен в localStorage
-  if (data.token) {
-    localStorage.setItem('token', data.token);
-  }
-  
+  });
+
+  // Токен обновляется в cookie автоматически
   return data;
 }
 

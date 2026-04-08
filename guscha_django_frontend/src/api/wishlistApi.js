@@ -24,7 +24,6 @@ export async function checkInWishlist(productId) {
     const { data } = await axios.get(`/api/wishlist/check/${productId}/`);
     return data.in_wishlist;
   } catch (error) {
-    console.error('Error checking wishlist status:', error);
     return false;
   }
 }

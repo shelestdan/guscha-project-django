@@ -1,0 +1,39 @@
+{
+  "files": {
+    "main.css": "/static/css/main.7ca9f599.css",
+    "main.js": "/static/js/main.7a577239.js",
+    "static/css/564.27938003.chunk.css": "/static/css/564.27938003.chunk.css",
+    "static/js/564.1a9327d4.chunk.js": "/static/js/564.1a9327d4.chunk.js",
+    "static/js/963.a216a15e.chunk.js": "/static/js/963.a216a15e.chunk.js",
+    "static/js/808.83406191.chunk.js": "/static/js/808.83406191.chunk.js",
+    "static/js/989.f7957220.chunk.js": "/static/js/989.f7957220.chunk.js",
+    "static/js/337.6f651301.chunk.js": "/static/js/337.6f651301.chunk.js",
+    "static/js/767.491c7ac3.chunk.js": "/static/js/767.491c7ac3.chunk.js",
+    "static/js/465.266bb5c5.chunk.js": "/static/js/465.266bb5c5.chunk.js",
+    "reactPlayerYouTube.js": "/static/js/reactPlayerYouTube.2be2e8e9.chunk.js",
+    "reactPlayerSoundCloud.js": "/static/js/reactPlayerSoundCloud.4e6bbeae.chunk.js",
+    "reactPlayerVimeo.js": "/static/js/reactPlayerVimeo.c0aabd35.chunk.js",
+    "reactPlayerFacebook.js": "/static/js/reactPlayerFacebook.54d8c842.chunk.js",
+    "reactPlayerStreamable.js": "/static/js/reactPlayerStreamable.9391ff1e.chunk.js",
+    "reactPlayerWistia.js": "/static/js/reactPlayerWistia.48b9c170.chunk.js",
+    "reactPlayerTwitch.js": "/static/js/reactPlayerTwitch.de7d57a9.chunk.js",
+    "reactPlayerDailyMotion.js": "/static/js/reactPlayerDailyMotion.52e22da3.chunk.js",
+    "reactPlayerMixcloud.js": "/static/js/reactPlayerMixcloud.eeb98246.chunk.js",
+    "reactPlayerVidyard.js": "/static/js/reactPlayerVidyard.6b22bdc5.chunk.js",
+    "reactPlayerKaltura.js": "/static/js/reactPlayerKaltura.70ec12a4.chunk.js",
+    "reactPlayerFilePlayer.js": "/static/js/reactPlayerFilePlayer.1352bd1c.chunk.js",
+    "reactPlayerPreview.js": "/static/js/reactPlayerPreview.da723398.chunk.js",
+    "static/js/206.4588d44f.chunk.js": "/static/js/206.4588d44f.chunk.js",
+    "static/js/430.a2a27221.chunk.js": "/static/js/430.a2a27221.chunk.js",
+    "static/media/Guscha_back.png": "/static/media/Guscha_back.9c39fd7fc40e8eb6c14d.png",
+    "static/media/Tovar.otf": "/static/media/Tovar.d7d8c00fc2a306c9cac4.otf",
+    "static/media/logo.svg": "/static/media/logo.9f279452f6c3d59ccd6eb8fbe720443d.svg",
+    "static/media/instrument_x4fdrqsfczqn.svg": "/static/media/instrument_x4fdrqsfczqn.4a7efb845c2b844e443b92e46d63e8cc.svg",
+    "index.html": "/index.html",
+    "static/media/TelegramIcon.svg": "/static/media/TelegramIcon.3a0e1444dfc60df021cef070260a88fc.svg"
+  },
+  "entrypoints": [
+    "static/css/main.7ca9f599.css",
+    "static/js/main.7a577239.js"
+  ]
+}
